@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Chat test</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 480px; margin: 2rem auto; padding: 0 1rem; }
+    #log { border: 1px solid #ddd; border-radius: 8px; padding: 1rem; height: 360px; overflow-y: auto; }
+    .msg { margin: .5rem 0; padding: .5rem .75rem; border-radius: 8px; white-space: pre-wrap; }
+    .you { background: #e8f0fe; text-align: right; }
+    .bot { background: #f1f1f1; }
+    form { display: flex; gap: .5rem; margin-top: 1rem; }
+    input { flex: 1; padding: .6rem; border: 1px solid #ccc; border-radius: 6px; }
+    button { padding: .6rem 1rem; border: 0; border-radius: 6px; background: #1a73e8; color: #fff; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <h2>Big Apple Plumbing (test)</h2>
+  <div id="log"></div>
+  <form id="form">
+    <input id="input" placeholder="Ask a question..." maxlength="500" autocomplete="off" />
+    <button>Send</button>
+  </form>
+
+  <script>
+    const log = document.getElementById("log");
+    const form = document.getElementById("form");
+    const input = document.getElementById("input");
+
+    function addMessage(text, cls) {
+      const div = document.createElement("div");
+      div.className = "msg " + cls;
+      div.textContent = text;
+      log.appendChild(div);
+      log.scrollTop = log.scrollHeight;
+      return div;
+    }
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const message = input.value.trim();
+      if (!message) return;
+      input.value = "";
+      addMessage(message, "you");
+      const bot = addMessage("", "bot");
+
+      const res = await fetch("/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message }),
+      });
+      if (!res.ok) {
+        bot.textContent = "Error: " + (await res.text());
+        return;
+      }
+
+      // Read the streamed answer piece by piece.
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const events = buffer.split("\n\n");
+        buffer = events.pop();
+        for (const ev of events) {
+          const data = ev.replace(/^data: /, "");
+          if (data === "[DONE]") return;
+          const parsed = JSON.parse(data);
+          if (parsed.text) bot.textContent += parsed.text;
+          if (parsed.error) bot.textContent = parsed.error;
+          log.scrollTop = log.scrollHeight;
+        }
+      }
+    });
+  </script>
+</body>
+</html>
