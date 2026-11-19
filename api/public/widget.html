@@ -12,7 +12,7 @@
     .msg { margin: 6px 0; padding: 8px 12px; border-radius: 10px; white-space: pre-wrap; max-width: 85%; }
     .you { background: #e8f0fe; margin-left: auto; }
     .bot { background: #f1f1f1; }
-    form { display: flex; gap: 8px; padding: 12px; border-top: 1px solid #eee; }
+    #form { display: flex; gap: 8px; padding: 12px; border-top: 1px solid #eee; }
     input { flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 8px; font-size: 14px; }
     button { padding: 10px 14px; border: 0; border-radius: 8px; background: #1a73e8; color: #fff; cursor: pointer; }
     button:disabled { opacity: .6; cursor: default; }
@@ -21,10 +21,11 @@
 <body>
   <header id="title"></header>
   <div id="log"></div>
-  <form id="form">
+  <!-- Not a <form>: the embed iframe is sandboxed and browsers block form submits there. -->
+  <div id="form">
     <input id="input" placeholder="Type your question..." maxlength="500" autocomplete="off" />
-    <button id="send">Send</button>
-  </form>
+    <button id="send" type="button">Send</button>
+  </div>
 
   <script>
     // Filled in by the server: bot name, greeting, and the signed session token.
@@ -48,8 +49,7 @@
     // The greeting is fixed text, so it costs no AI tokens.
     addMessage(CONFIG.greeting, "bot");
 
-    form.addEventListener("submit", async function (e) {
-      e.preventDefault();
+    async function sendMessage() {
       var message = input.value.trim();
       if (!message) return;
       input.value = "";
@@ -94,6 +94,14 @@
       } finally {
         send.disabled = false;
         input.focus();
+      }
+    }
+
+    send.addEventListener("click", sendMessage);
+    input.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        if (!send.disabled) sendMessage();
       }
     });
   </script>
