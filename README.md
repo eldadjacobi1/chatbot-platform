@@ -14,6 +14,8 @@ Embeddable AI chatbot for small businesses.
 cd api
 cp .env.example .env      # then put your OpenAI key in .env
 npm install
+npm run db:push   # create tables (needs DATABASE_URL in .env)
+npm run db:seed   # add the demo bot
 npm run dev
 ```
 

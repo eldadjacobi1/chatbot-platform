@@ -49,7 +49,7 @@ app.get("/embed.js", async (_req, reply) => {
 // Only served if the embedding website is on the bot's allowed list.
 app.get("/widget/:botId", async (req, reply) => {
   const { botId } = req.params as { botId: string };
-  const bot = getBot(botId);
+  const bot = await getBot(botId);
   if (!bot || !bot.enabled) return reply.code(404).send("Bot not found.");
 
   const host = hostFromReferer(req.headers.referer);
@@ -83,7 +83,7 @@ app.post("/chat", async (req, reply) => {
   const botId = verifyToken(token);
   if (!botId) return reply.code(401).send({ error: "invalid or expired session" });
 
-  const bot = getBot(botId);
+  const bot = await getBot(botId);
   if (!bot || !bot.enabled) return reply.code(403).send({ error: "bot is not available" });
 
   if (!message) return reply.code(400).send({ error: "message is required" });
