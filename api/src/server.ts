@@ -7,6 +7,7 @@ import { OpenAIProvider, buildSystemPrompt } from "./ai.js";
 import cors from "@fastify/cors";
 import { getBot } from "./bots.js";
 import { checkLimits } from "./limits.js";
+import { cannedReply, getCached, setCached } from "./savings.js";
 import { botRoutes } from "./botRoutes.js";
 import {
   createToken,
@@ -120,10 +121,21 @@ app.post("/chat", async (req, reply) => {
   });
 
   try {
+    // Free answers first: canned replies, then the cache. No AI call.
+    const free = cannedReply(message) ?? getCached(bot.id, bot.name, bot.context, message);
+    if (free) {
+      reply.raw.write(`data: ${JSON.stringify({ text: free })}\n\n`);
+      reply.raw.write("data: [DONE]\n\n");
+      return;
+    }
+
     const systemPrompt = buildSystemPrompt(bot.name, bot.context);
+    let answer = "";
     for await (const text of provider.streamAnswer({ systemPrompt, userMessage: message })) {
+      answer += text;
       reply.raw.write(`data: ${JSON.stringify({ text })}\n\n`);
     }
+    setCached(bot.id, bot.name, bot.context, message, answer);
     reply.raw.write("data: [DONE]\n\n");
   } catch (err) {
     req.log.error(err);
