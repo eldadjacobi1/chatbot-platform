@@ -69,7 +69,8 @@ app.get("/embed.js", async (_req, reply) => {
 app.get("/bot-status/:botId", async (req, reply) => {
   const { botId } = req.params as { botId: string };
   const bot = await getBot(botId);
-  const host = hostFromReferer(req.headers.origin as string | undefined);
+  // Browsers omit Origin on same-site GET requests, so fall back to Referer.
+  const host = hostFromReferer((req.headers.origin as string | undefined) ?? req.headers.referer);
   const show = !!bot && bot.enabled && !!host && isAllowedHost(host, bot.allowedDomains);
   return reply
     .header("Access-Control-Allow-Origin", "*")
