@@ -13,19 +13,22 @@
   var button = document.createElement("button");
   button.type = "button";
   button.setAttribute("aria-label", "Open chat");
-  button.textContent = "💬";
+  button.innerHTML =
+    '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" ' +
+    'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+    '<path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.6 8.6 0 0 1-3.6-.8L3 21l1.9-5.4A8.4 8.4 0 1 1 21 11.5z"/></svg>';
   button.style.cssText =
-    "position:fixed;right:16px;bottom:16px;width:56px;height:56px;border-radius:50%;" +
-    "border:0;background:#1a73e8;color:#fff;font-size:26px;cursor:pointer;" +
-    "box-shadow:0 4px 12px rgba(0,0,0,.25);z-index:2147483646;";
+    "position:fixed;right:20px;bottom:20px;width:58px;height:58px;border-radius:50%;" +
+    "border:0;background:#4338ca;cursor:pointer;display:flex;align-items:center;justify-content:center;" +
+    "box-shadow:0 6px 20px rgba(67,56,202,.35);z-index:2147483646;";
 
   var frame = document.createElement("iframe");
   frame.title = "Chat";
   frame.setAttribute("sandbox", "allow-scripts allow-same-origin");
   frame.style.cssText =
-    "position:fixed;right:16px;bottom:84px;width:min(360px,calc(100vw - 32px));" +
-    "height:min(520px,calc(100vh - 100px));border:0;border-radius:12px;" +
-    "box-shadow:0 8px 24px rgba(0,0,0,.25);background:#fff;display:none;z-index:2147483647;";
+    "position:fixed;right:20px;bottom:90px;width:min(360px,calc(100vw - 32px));" +
+    "height:min(520px,calc(100vh - 100px));border:0;border-radius:20px;" +
+    "box-shadow:0 12px 40px rgba(20,20,43,.25);background:#fff;display:none;z-index:2147483647;";
 
   var loaded = false;
   button.addEventListener("click", function () {
