@@ -16,6 +16,8 @@ type Bot = {
 
 type Form = Omit<Bot, "id">;
 
+type Tab = "overview" | "reports" | "settings" | "install";
+
 type QuestionCount = { question: string; count: number };
 type Report = {
   days: number;
@@ -44,6 +46,7 @@ export default function DashboardPage() {
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
   const [report, setReport] = useState<Report | null>(null);
+  const [tab, setTab] = useState<Tab>("overview");
 
   // Calls the API with the logged-in user's token.
   const call = useCallback(
@@ -101,8 +104,10 @@ export default function DashboardPage() {
       const data = bot
         ? await call(`/api/bots/${bot.id}`, { method: "PUT", body: JSON.stringify(form) })
         : await call("/api/bots", { method: "POST", body: JSON.stringify(form) });
+      const wasNew = !bot;
       setBot(data.bot);
-      setMessage(bot ? "Saved." : "Chatbot created. Copy the code below into your website.");
+      setMessage(wasNew ? "" : "Saved.");
+      if (wasNew) setTab("install");
     } catch (err) {
       setError((err as Error).message);
     } finally {
@@ -132,44 +137,43 @@ export default function DashboardPage() {
         <p>Loading...</p>
       ) : (
         <>
-          <form className="card" onSubmit={save}>
-            <h2>{bot ? "Settings" : "Create your chatbot"}</h2>
+          {bot && (
+            <nav className="tabs">
+              {(["overview", "reports", "settings", "install"] as Tab[]).map((t) => (
+                <button key={t} type="button" className={tab === t ? "tab active" : "tab"} onClick={() => setTab(t)}>
+                  {t === "overview" ? "Overview" : t === "reports" ? "Reports" : t === "settings" ? "Settings" : "Install"}
+                </button>
+              ))}
+            </nav>
+          )}
 
-            <label htmlFor="name">Business name</label>
-            <input id="name" type="text" value={form.name} maxLength={80} required
-              onChange={(e) => update("name", e.target.value)} />
+          {bot && tab === "overview" && (
+            <>
+              <div className="card">
+                <h2>{bot.name}</h2>
+                <p>
+                  Status: <b>{bot.enabled ? "On" : "Off"}</b> &middot; Website: <b>{bot.domain}</b>
+                </p>
+              </div>
+              {report && (
+                <div className="stats">
+                  <div className="card stat"><div className="num">{report.total}</div><div className="hint">questions (last {report.days} days)</div></div>
+                  <div className="card stat"><div className="num">{report.unansweredCount}</div><div className="hint">couldn&apos;t answer</div></div>
+                  <div className="card stat"><div className="num">{report.savedByCache}</div><div className="hint">answered from cache</div></div>
+                </div>
+              )}
+              {report && report.unansweredCount > 0 && (
+                <div className="card">
+                  <p style={{ margin: 0 }}>
+                    Your chatbot couldn&apos;t answer {report.unansweredCount} question{report.unansweredCount === 1 ? "" : "s"}.{" "}
+                    <a href="#" onClick={(e) => { e.preventDefault(); setTab("reports"); }}>See them in Reports</a>
+                  </p>
+                </div>
+              )}
+            </>
+          )}
 
-            <label htmlFor="domain">Your website</label>
-            <input id="domain" type="text" value={form.domain} placeholder="mybusiness.com" required
-              onChange={(e) => update("domain", e.target.value)} />
-            <p className="hint">The chat only works on this website (and its subdomains).</p>
-
-            <label htmlFor="greeting">First message</label>
-            <input id="greeting" type="text" value={form.greeting} maxLength={200} required
-              onChange={(e) => update("greeting", e.target.value)} />
-
-            <label htmlFor="context">Business information</label>
-            <textarea id="context" value={form.context} maxLength={8000} required
-              placeholder="Hours, services, prices, service area, how to book, phone number..."
-              onChange={(e) => update("context", e.target.value)} />
-            <p className="hint">The chatbot answers only from this. The more specific, the better.</p>
-
-            <label className="check">
-              <input type="checkbox" checked={form.enabled}
-                onChange={(e) => update("enabled", e.target.checked)} />
-              Chatbot is on
-            </label>
-
-            <div className="row" style={{ marginTop: 16 }}>
-              <button className="btn" disabled={saving}>
-                {saving ? "Saving..." : bot ? "Save changes" : "Create chatbot"}
-              </button>
-            </div>
-            {message && <p className="ok">{message}</p>}
-            {error && <p className="error">{error}</p>}
-          </form>
-
-          {bot && report && (
+          {bot && tab === "reports" && report && (
             <div className="card">
               <div className="row" style={{ justifyContent: "space-between" }}>
                 <h2 style={{ margin: 0 }}>Report (last {report.days} days)</h2>
@@ -190,7 +194,9 @@ export default function DashboardPage() {
                     ))}
                   </ul>
                   <p className="hint">
-                    Tip: add the answers to these in &quot;Business information&quot; above, so the bot can answer next time.
+                    Tip: add the answers to these in{" "}
+                    <a href="#" onClick={(e) => { e.preventDefault(); setTab("settings"); }}>Settings &rarr; Business information</a>
+                    , so the bot can answer next time.
                   </p>
                 </>
               )}
@@ -208,7 +214,46 @@ export default function DashboardPage() {
             </div>
           )}
 
-          {bot && (
+          {(!bot || tab === "settings") && (
+            <form className="card" onSubmit={save}>
+              <h2>{bot ? "Settings" : "Create your chatbot"}</h2>
+
+              <label htmlFor="name">Business name</label>
+              <input id="name" type="text" value={form.name} maxLength={80} required
+                onChange={(e) => update("name", e.target.value)} />
+
+              <label htmlFor="domain">Your website</label>
+              <input id="domain" type="text" value={form.domain} placeholder="mybusiness.com" required
+                onChange={(e) => update("domain", e.target.value)} />
+              <p className="hint">The chat only works on this website (and its subdomains).</p>
+
+              <label htmlFor="greeting">First message</label>
+              <input id="greeting" type="text" value={form.greeting} maxLength={200} required
+                onChange={(e) => update("greeting", e.target.value)} />
+
+              <label htmlFor="context">Business information</label>
+              <textarea id="context" value={form.context} maxLength={8000} required
+                placeholder="Hours, services, prices, service area, how to book, phone number..."
+                onChange={(e) => update("context", e.target.value)} />
+              <p className="hint">The chatbot answers only from this. The more specific, the better.</p>
+
+              <label className="check">
+                <input type="checkbox" checked={form.enabled}
+                  onChange={(e) => update("enabled", e.target.checked)} />
+                Chatbot is on
+              </label>
+
+              <div className="row" style={{ marginTop: 16 }}>
+                <button className="btn" disabled={saving}>
+                  {saving ? "Saving..." : bot ? "Save changes" : "Create chatbot"}
+                </button>
+              </div>
+              {message && <p className="ok">{message}</p>}
+              {error && <p className="error">{error}</p>}
+            </form>
+          )}
+
+          {bot && tab === "install" && (
             <div className="card">
               <h2>Add it to your website</h2>
               <p>Paste this line just before the closing &lt;/body&gt; tag of your site.</p>
