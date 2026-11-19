@@ -4,7 +4,9 @@ import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { join, dirname } from "node:path";
 import { OpenAIProvider, buildSystemPrompt } from "./ai.js";
+import cors from "@fastify/cors";
 import { getBot } from "./bots.js";
+import { botRoutes } from "./botRoutes.js";
 import {
   createToken,
   verifyToken,
@@ -25,6 +27,20 @@ const app = Fastify({ logger: true });
 
 if (usingTemporarySecret) {
   app.log.warn("SESSION_SECRET not set: using a temporary secret (tokens reset on restart).");
+}
+
+// The dashboard is a different website, so it needs permission to call /api/*.
+const dashboardOrigins = (process.env.DASHBOARD_ORIGIN ?? "http://localhost:3001")
+  .split(",")
+  .map((o) => o.trim());
+await app.register(cors, {
+  origin: dashboardOrigins,
+  methods: ["GET", "POST", "PUT", "OPTIONS"],
+  allowedHeaders: ["Authorization", "Content-Type"],
+});
+await app.register(botRoutes);
+if (!process.env.CLERK_SECRET_KEY) {
+  app.log.warn("CLERK_SECRET_KEY not set: dashboard API requests will be rejected.");
 }
 
 const MAX_MESSAGE_LENGTH = 500;

@@ -14,7 +14,14 @@
   <p><small>Opened at <b id="host"></b>. The demo bot only allows <b>localhost</b>, so the chat will be blocked if you open this page at 127.0.0.1 instead.</small></p>
 
   <!-- This one line is what a customer pastes into their website -->
-  <script src="/embed.js" data-bot="demo-plumbing"></script>
+  <script>
+    // Use /demo?bot=YOUR_BOT_ID to try another bot (its website must be set to "localhost").
+    var botId = new URLSearchParams(location.search).get("bot") || "demo-plumbing";
+    var s = document.createElement("script");
+    s.src = "/embed.js";
+    s.setAttribute("data-bot", botId);
+    document.body.appendChild(s);
+  </script>
 
   <script>document.getElementById("host").textContent = location.hostname;</script>
 </body>

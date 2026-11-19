@@ -1,9 +1,11 @@
 import { pgTable, text, boolean, timestamp } from "drizzle-orm/pg-core";
 
-// One row per chatbot. Accounts and owners are added in the next step.
+// One row per chatbot. The table itself is created by the SQL files in api/migrations.
 export const bots = pgTable("bots", {
   // Public id used in the embed code. Must not contain dots (used in signed tokens).
   id: text("id").primaryKey(),
+  // Clerk user id of the owner. Empty for the built-in demo bot.
+  ownerId: text("owner_id"),
   name: text("name").notNull(),
   greeting: text("greeting").notNull(),
   // The business information the bot answers from.
