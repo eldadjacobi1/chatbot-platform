@@ -6,6 +6,7 @@ import { join, dirname } from "node:path";
 import { OpenAIProvider, buildSystemPrompt } from "./ai.js";
 import cors from "@fastify/cors";
 import { getBot } from "./bots.js";
+import { checkLimits } from "./limits.js";
 import { botRoutes } from "./botRoutes.js";
 import {
   createToken,
@@ -23,7 +24,7 @@ if (!apiKey) {
 }
 
 const provider = new OpenAIProvider(apiKey, process.env.OPENAI_MODEL ?? "gpt-4o-mini");
-const app = Fastify({ logger: true });
+const app = Fastify({ logger: true, trustProxy: true });
 
 if (usingTemporarySecret) {
   app.log.warn("SESSION_SECRET not set: using a temporary secret (tokens reset on restart).");
@@ -106,6 +107,9 @@ app.post("/chat", async (req, reply) => {
   if (message.length > MAX_MESSAGE_LENGTH) {
     return reply.code(400).send({ error: `message too long (max ${MAX_MESSAGE_LENGTH} characters)` });
   }
+
+  const limit = checkLimits(req.ip, token, botId);
+  if (!limit.ok) return reply.code(429).send({ error: limit.reason });
 
   // We write the stream ourselves, so take over the response.
   reply.hijack();

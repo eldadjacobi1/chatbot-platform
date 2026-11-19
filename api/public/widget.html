@@ -64,9 +64,14 @@
           body: JSON.stringify({ message: message, token: CONFIG.token }),
         });
         if (!res.ok) {
-          bot.textContent = res.status === 401
-            ? "This chat session expired. Please close and reopen the chat."
-            : "Sorry, the chat is unavailable right now.";
+          if (res.status === 429) {
+            var info = await res.json().catch(function () { return {}; });
+            bot.textContent = info.error || "Too many requests. Please try again later.";
+          } else {
+            bot.textContent = res.status === 401
+              ? "This chat session expired. Please close and reopen the chat."
+              : "Sorry, the chat is unavailable right now.";
+          }
           return;
         }
 
