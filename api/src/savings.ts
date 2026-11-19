@@ -21,7 +21,7 @@ function looksLikeGibberish(norm: string): boolean {
   if (words.length === 0) return false;
   const bad = words.filter((w) => {
     const vowels = (w.match(/[aeiouy]/g) ?? []).length;
-    return w.length >= 5 && vowels / w.length < 0.2;
+    return vowels === 0 || (w.length >= 5 && vowels / w.length < 0.2);
   });
   return bad.length === words.length;
 }
