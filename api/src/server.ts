@@ -4,7 +4,15 @@ import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { join, dirname } from "node:path";
 import { OpenAIProvider, buildSystemPrompt } from "./ai.js";
-import { sampleBusiness } from "./sampleBusiness.js";
+import { getBot } from "./bots.js";
+import {
+  createToken,
+  verifyToken,
+  isAllowedHost,
+  hostFromReferer,
+  frameAncestorsPolicy,
+  usingTemporarySecret,
+} from "./security.js";
 
 const apiKey = process.env.OPENAI_API_KEY;
 if (!apiKey) {
@@ -15,26 +23,70 @@ if (!apiKey) {
 const provider = new OpenAIProvider(apiKey, process.env.OPENAI_MODEL ?? "gpt-4o-mini");
 const app = Fastify({ logger: true });
 
-const MAX_MESSAGE_LENGTH = 500;
+if (usingTemporarySecret) {
+  app.log.warn("SESSION_SECRET not set: using a temporary secret (tokens reset on restart).");
+}
 
-// Test page so you can chat in the browser: http://localhost:3000
-app.get("/", async (_req, reply) => {
-  const here = dirname(fileURLToPath(import.meta.url));
-  const html = await readFile(join(here, "..", "test", "chat.html"), "utf8");
-  return reply.type("text/html").send(html);
-});
+const MAX_MESSAGE_LENGTH = 500;
+const apiRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
+const readLocal = (...parts: string[]) => readFile(join(apiRoot, ...parts), "utf8");
+
+// --- Demo "customer website" with the widget embedded: http://localhost:3000/demo
+app.get("/", async (_req, reply) => reply.redirect("/demo"));
+app.get("/demo", async (_req, reply) => reply.type("text/html").send(await readLocal("test", "demo.html")));
 
 app.get("/health", async () => ({ ok: true }));
 
-// POST /chat  { "message": "What are your hours?" }
+// --- The script customers paste into their website.
+app.get("/embed.js", async (_req, reply) => {
+  return reply
+    .type("application/javascript")
+    .header("Cache-Control", "public, max-age=300")
+    .send(await readLocal("public", "embed.js"));
+});
+
+// --- The chat window shown inside the iframe.
+// Only served if the embedding website is on the bot's allowed list.
+app.get("/widget/:botId", async (req, reply) => {
+  const { botId } = req.params as { botId: string };
+  const bot = getBot(botId);
+  if (!bot || !bot.enabled) return reply.code(404).send("Bot not found.");
+
+  const host = hostFromReferer(req.headers.referer);
+  if (!host || !isAllowedHost(host, bot.allowedDomains)) {
+    req.log.warn({ botId, host }, "widget blocked: website not allowed");
+    return reply.code(403).send("This chat is not enabled for this website.");
+  }
+
+  const template = await readLocal("public", "widget.html");
+  // "<" is escaped so the config can never break out of the script tag.
+  const config = JSON.stringify({
+    botName: bot.name,
+    greeting: bot.greeting,
+    token: createToken(bot.id),
+  }).replace(/</g, "\\u003c");
+
+  return reply
+    .type("text/html")
+    .header("Content-Security-Policy", frameAncestorsPolicy(bot.allowedDomains))
+    .header("Cache-Control", "no-store")
+    .send(template.replace("__CONFIG__", () => config));
+});
+
+// --- POST /chat  { "message": "...", "token": "..." }
 // Streams the answer back as server-sent events.
 app.post("/chat", async (req, reply) => {
-  const body = req.body as { message?: unknown } | undefined;
+  const body = req.body as { message?: unknown; token?: unknown } | undefined;
   const message = typeof body?.message === "string" ? body.message.trim() : "";
+  const token = typeof body?.token === "string" ? body.token : "";
 
-  if (!message) {
-    return reply.code(400).send({ error: "message is required" });
-  }
+  const botId = verifyToken(token);
+  if (!botId) return reply.code(401).send({ error: "invalid or expired session" });
+
+  const bot = getBot(botId);
+  if (!bot || !bot.enabled) return reply.code(403).send({ error: "bot is not available" });
+
+  if (!message) return reply.code(400).send({ error: "message is required" });
   if (message.length > MAX_MESSAGE_LENGTH) {
     return reply.code(400).send({ error: `message too long (max ${MAX_MESSAGE_LENGTH} characters)` });
   }
@@ -45,12 +97,10 @@ app.post("/chat", async (req, reply) => {
     "Content-Type": "text/event-stream",
     "Cache-Control": "no-cache",
     Connection: "keep-alive",
-    // Open for now. Domain locking per business comes in a later step.
-    "Access-Control-Allow-Origin": "*",
   });
 
   try {
-    const systemPrompt = buildSystemPrompt(sampleBusiness.name, sampleBusiness.context);
+    const systemPrompt = buildSystemPrompt(bot.name, bot.context);
     for await (const text of provider.streamAnswer({ systemPrompt, userMessage: message })) {
       reply.raw.write(`data: ${JSON.stringify({ text })}\n\n`);
     }

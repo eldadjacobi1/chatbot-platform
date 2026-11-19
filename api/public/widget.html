@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Chat</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: system-ui, sans-serif; display: flex; flex-direction: column; height: 100vh; }
+    header { padding: 12px 16px; background: #1a73e8; color: #fff; font-weight: 600; }
+    #log { flex: 1; overflow-y: auto; padding: 12px; }
+    .msg { margin: 6px 0; padding: 8px 12px; border-radius: 10px; white-space: pre-wrap; max-width: 85%; }
+    .you { background: #e8f0fe; margin-left: auto; }
+    .bot { background: #f1f1f1; }
+    form { display: flex; gap: 8px; padding: 12px; border-top: 1px solid #eee; }
+    input { flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 8px; font-size: 14px; }
+    button { padding: 10px 14px; border: 0; border-radius: 8px; background: #1a73e8; color: #fff; cursor: pointer; }
+    button:disabled { opacity: .6; cursor: default; }
+  </style>
+</head>
+<body>
+  <header id="title"></header>
+  <div id="log"></div>
+  <form id="form">
+    <input id="input" placeholder="Type your question..." maxlength="500" autocomplete="off" />
+    <button id="send">Send</button>
+  </form>
+
+  <script>
+    // Filled in by the server: bot name, greeting, and the signed session token.
+    var CONFIG = __CONFIG__;
+
+    var log = document.getElementById("log");
+    var form = document.getElementById("form");
+    var input = document.getElementById("input");
+    var send = document.getElementById("send");
+    document.getElementById("title").textContent = CONFIG.botName;
+
+    function addMessage(text, cls) {
+      var div = document.createElement("div");
+      div.className = "msg " + cls;
+      div.textContent = text;
+      log.appendChild(div);
+      log.scrollTop = log.scrollHeight;
+      return div;
+    }
+
+    // The greeting is fixed text, so it costs no AI tokens.
+    addMessage(CONFIG.greeting, "bot");
+
+    form.addEventListener("submit", async function (e) {
+      e.preventDefault();
+      var message = input.value.trim();
+      if (!message) return;
+      input.value = "";
+      send.disabled = true;
+      addMessage(message, "you");
+      var bot = addMessage("", "bot");
+
+      try {
+        var res = await fetch("/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: message, token: CONFIG.token }),
+        });
+        if (!res.ok) {
+          bot.textContent = res.status === 401
+            ? "This chat session expired. Please close and reopen the chat."
+            : "Sorry, the chat is unavailable right now.";
+          return;
+        }
+
+        // Read the streamed answer piece by piece.
+        var reader = res.body.getReader();
+        var decoder = new TextDecoder();
+        var buffer = "";
+        while (true) {
+          var chunk = await reader.read();
+          if (chunk.done) break;
+          buffer += decoder.decode(chunk.value, { stream: true });
+          var events = buffer.split("\n\n");
+          buffer = events.pop();
+          for (var i = 0; i < events.length; i++) {
+            var data = events[i].replace(/^data: /, "");
+            if (data === "[DONE]") return;
+            var parsed = JSON.parse(data);
+            if (parsed.text) bot.textContent += parsed.text;
+            if (parsed.error) bot.textContent = parsed.error;
+            log.scrollTop = log.scrollHeight;
+          }
+        }
+      } catch (err) {
+        bot.textContent = "Sorry, the chat is unavailable right now.";
+      } finally {
+        send.disabled = false;
+        input.focus();
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Big Apple Plumbing - demo site</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 640px; margin: 3rem auto; padding: 0 1rem; line-height: 1.5; }
+  </style>
+</head>
+<body>
+  <h1>Big Apple Plumbing</h1>
+  <p>This is a fake customer website. Click the chat button in the bottom-right corner.</p>
+  <p><small>Opened at <b id="host"></b>. The demo bot only allows <b>localhost</b>, so the chat will be blocked if you open this page at 127.0.0.1 instead.</small></p>
+
+  <!-- This one line is what a customer pastes into their website -->
+  <script src="/embed.js" data-bot="demo-plumbing"></script>
+
+  <script>document.getElementById("host").textContent = location.hostname;</script>
+</body>
+</html>
