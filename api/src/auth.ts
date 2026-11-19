@@ -22,8 +22,11 @@ export async function requireUser(req: FastifyRequest, reply: FastifyReply) {
   if (!token) return reply.code(401).send({ error: "Please log in." });
 
   try {
-    const payload = await verifyToken(token, { secretKey });
-    req.userId = payload.sub;
+    // Newer SDKs may return { data, errors } instead of throwing.
+    const result: any = await verifyToken(token, { secretKey });
+    const sub = result?.data?.sub ?? result?.sub;
+    if (result?.errors || !sub) throw new Error("invalid token");
+    req.userId = sub;
   } catch {
     return reply.code(401).send({ error: "Your login expired. Please sign in again." });
   }
