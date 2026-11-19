@@ -39,6 +39,8 @@ function isOnlySmallTalk(n: string): boolean {
   return rest === "";
 }
 
+export const GIBBERISH_REPLY = "Sorry, I didn't catch that. Could you rephrase your question?";
+
 // Returns a ready-made answer, or null if the AI should answer.
 export function cannedReply(message: string): string | null {
   const n = normalize(message);
@@ -46,7 +48,7 @@ export function cannedReply(message: string): string | null {
   if (GREETING.test(n)) return "Hi! You can ask me about our hours, services, prices or how to book.";
   if (THANKS.test(n)) return "You're welcome! Is there anything else I can help with?";
   if (BYE.test(n)) return "Thanks for stopping by! Have a great day.";
-  if (looksLikeGibberish(n)) return "Sorry, I didn't catch that. Could you rephrase your question?";
+  if (looksLikeGibberish(n)) return GIBBERISH_REPLY;
   return null;
 }
 

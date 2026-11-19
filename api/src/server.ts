@@ -7,8 +7,8 @@ import { OpenAIProvider, buildSystemPrompt, isUnsure } from "./ai.js";
 import { logQuestion } from "./reports.js";
 import cors from "@fastify/cors";
 import { getBot } from "./bots.js";
-import { checkLimits } from "./limits.js";
-import { cannedReply, getCached, setCached } from "./savings.js";
+import { checkLimits, afterAnswer } from "./limits.js";
+import { cannedReply, getCached, setCached, GIBBERISH_REPLY } from "./savings.js";
 import { botRoutes } from "./botRoutes.js";
 import {
   createToken,
@@ -129,6 +129,9 @@ app.post("/chat", async (req, reply) => {
     if (free) {
       if (cached) logQuestion(bot.id, message, "cache", isUnsure(cached));
       reply.raw.write(`data: ${JSON.stringify({ text: free })}\n\n`);
+      const unhelpful = free === GIBBERISH_REPLY || isUnsure(free);
+      const closing = afterAnswer(token, unhelpful, bot.name);
+      if (closing) reply.raw.write(`data: ${JSON.stringify({ text: "\n\n" + closing })}\n\n`);
       reply.raw.write("data: [DONE]\n\n");
       return;
     }
@@ -141,6 +144,8 @@ app.post("/chat", async (req, reply) => {
     }
     setCached(bot.id, bot.name, bot.context, message, answer);
     logQuestion(bot.id, message, "ai", isUnsure(answer));
+    const closing = afterAnswer(token, isUnsure(answer), bot.name);
+    if (closing) reply.raw.write(`data: ${JSON.stringify({ text: "\n\n" + closing })}\n\n`);
     reply.raw.write("data: [DONE]\n\n");
   } catch (err) {
     req.log.error(err);
