@@ -38,6 +38,13 @@
     frame.style.display = open ? "block" : "none";
   });
 
-  document.body.appendChild(frame);
-  document.body.appendChild(button);
+  // Only show the button if the bot is on and this website is allowed.
+  fetch(base + "/bot-status/" + encodeURIComponent(botId))
+    .then(function (r) { return r.json(); })
+    .then(function (info) {
+      if (!info || !info.show) return;
+      document.body.appendChild(frame);
+      document.body.appendChild(button);
+    })
+    .catch(function () { /* if the check fails, show nothing */ });
 })();

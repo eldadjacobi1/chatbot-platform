@@ -64,6 +64,19 @@ app.get("/embed.js", async (_req, reply) => {
     .send(await readLocal("public", "embed.js"));
 });
 
+// --- Tells embed.js whether to show the chat button at all.
+// Public, returns only yes/no: the bot must be on AND the page must be on the allowed website.
+app.get("/bot-status/:botId", async (req, reply) => {
+  const { botId } = req.params as { botId: string };
+  const bot = await getBot(botId);
+  const host = hostFromReferer(req.headers.origin as string | undefined);
+  const show = !!bot && bot.enabled && !!host && isAllowedHost(host, bot.allowedDomains);
+  return reply
+    .header("Access-Control-Allow-Origin", "*")
+    .header("Cache-Control", "no-store")
+    .send({ show });
+});
+
 // --- The chat window shown inside the iframe.
 // Only served if the embedding website is on the bot's allowed list.
 app.get("/widget/:botId", async (req, reply) => {
