@@ -1,4 +1,4 @@
-import { pgTable, text, boolean, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, boolean, timestamp, bigserial } from "drizzle-orm/pg-core";
 
 // One row per chatbot. The table itself is created by the SQL files in api/migrations.
 export const bots = pgTable("bots", {
@@ -17,3 +17,14 @@ export const bots = pgTable("bots", {
 });
 
 export type Bot = typeof bots.$inferSelect;
+
+// One row per question answered by the AI or the cache (canned replies are not logged).
+export const messages = pgTable("messages", {
+  id: bigserial("id", { mode: "number" }).primaryKey(),
+  botId: text("bot_id").notNull(),
+  question: text("question").notNull(),
+  questionKey: text("question_key").notNull(),
+  source: text("source").notNull(),
+  unanswered: boolean("unanswered").notNull().default(false),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});

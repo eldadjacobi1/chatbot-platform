@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 
 // Ways to answer WITHOUT calling the AI (free): canned replies and a cache.
 
-function normalize(text: string): string {
+export function normalize(text: string): string {
   return text
     .toLowerCase()
     .replace(/[^\p{L}\p{N}\s]/gu, " ")

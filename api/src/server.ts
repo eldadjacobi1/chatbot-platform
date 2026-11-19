@@ -3,7 +3,8 @@ import Fastify from "fastify";
 import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { join, dirname } from "node:path";
-import { OpenAIProvider, buildSystemPrompt } from "./ai.js";
+import { OpenAIProvider, buildSystemPrompt, isUnsure } from "./ai.js";
+import { logQuestion } from "./reports.js";
 import cors from "@fastify/cors";
 import { getBot } from "./bots.js";
 import { checkLimits } from "./limits.js";
@@ -122,8 +123,11 @@ app.post("/chat", async (req, reply) => {
 
   try {
     // Free answers first: canned replies, then the cache. No AI call.
-    const free = cannedReply(message) ?? getCached(bot.id, bot.name, bot.context, message);
+    const canned = cannedReply(message);
+    const cached = canned ? null : getCached(bot.id, bot.name, bot.context, message);
+    const free = canned ?? cached;
     if (free) {
+      if (cached) logQuestion(bot.id, message, "cache", isUnsure(cached));
       reply.raw.write(`data: ${JSON.stringify({ text: free })}\n\n`);
       reply.raw.write("data: [DONE]\n\n");
       return;
@@ -136,6 +140,7 @@ app.post("/chat", async (req, reply) => {
       reply.raw.write(`data: ${JSON.stringify({ text })}\n\n`);
     }
     setCached(bot.id, bot.name, bot.context, message, answer);
+    logQuestion(bot.id, message, "ai", isUnsure(answer));
     reply.raw.write("data: [DONE]\n\n");
   } catch (err) {
     req.log.error(err);

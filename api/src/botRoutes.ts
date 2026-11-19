@@ -4,6 +4,7 @@ import { and, eq } from "drizzle-orm";
 import { db } from "./db/index.js";
 import { bots, type Bot } from "./db/schema.js";
 import { requireUser } from "./auth.js";
+import { getReport } from "./reports.js";
 
 // Free plan limit. Paid plans will raise this later.
 const MAX_BOTS_PER_USER = 1;
@@ -116,5 +117,16 @@ export async function botRoutes(app: FastifyInstance) {
 
     if (!row) return reply.code(404).send({ error: "Chatbot not found." });
     return { bot: toDto(row) };
+  });
+
+  // Owner's report: most asked and unanswered questions (last 30 days).
+  app.get("/api/bots/:id/report", { preHandler: requireUser }, async (req, reply) => {
+    const { id } = req.params as { id: string };
+    const [owned] = await db
+      .select({ id: bots.id })
+      .from(bots)
+      .where(and(eq(bots.id, id), eq(bots.ownerId, req.userId!)));
+    if (!owned) return reply.code(404).send({ error: "Chatbot not found." });
+    return getReport(id);
   });
 }

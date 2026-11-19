@@ -16,6 +16,16 @@ type Bot = {
 
 type Form = Omit<Bot, "id">;
 
+type QuestionCount = { question: string; count: number };
+type Report = {
+  days: number;
+  total: number;
+  unansweredCount: number;
+  savedByCache: number;
+  topQuestions: QuestionCount[];
+  unanswered: QuestionCount[];
+};
+
 const emptyForm: Form = {
   name: "",
   greeting: "Hi! How can I help you today?",
@@ -33,6 +43,7 @@ export default function DashboardPage() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
+  const [report, setReport] = useState<Report | null>(null);
 
   // Calls the API with the logged-in user's token.
   const call = useCallback(
@@ -72,6 +83,14 @@ export default function DashboardPage() {
       .catch((e: Error) => setError(e.message))
       .finally(() => setLoading(false));
   }, [isLoaded, call]);
+
+  // Load the report whenever the bot is known.
+  const botId = bot?.id;
+  const loadReport = useCallback(() => {
+    if (!botId) return;
+    call(`/api/bots/${botId}/report`).then(setReport).catch(() => setReport(null));
+  }, [botId, call]);
+  useEffect(loadReport, [loadReport]);
 
   async function save(e: React.FormEvent) {
     e.preventDefault();
@@ -149,6 +168,45 @@ export default function DashboardPage() {
             {message && <p className="ok">{message}</p>}
             {error && <p className="error">{error}</p>}
           </form>
+
+          {bot && report && (
+            <div className="card">
+              <div className="row" style={{ justifyContent: "space-between" }}>
+                <h2 style={{ margin: 0 }}>Report (last {report.days} days)</h2>
+                <button className="btn secondary" type="button" onClick={loadReport}>Refresh</button>
+              </div>
+              <p>
+                <b>{report.total}</b> questions &middot; <b>{report.unansweredCount}</b> the bot couldn&apos;t answer
+              </p>
+
+              <h3>Unanswered questions</h3>
+              {report.unanswered.length === 0 ? (
+                <p className="hint">None yet. Nice!</p>
+              ) : (
+                <>
+                  <ul>
+                    {report.unanswered.map((q) => (
+                      <li key={q.question}>{q.question} <span className="hint">({q.count}x)</span></li>
+                    ))}
+                  </ul>
+                  <p className="hint">
+                    Tip: add the answers to these in &quot;Business information&quot; above, so the bot can answer next time.
+                  </p>
+                </>
+              )}
+
+              <h3>Most asked questions</h3>
+              {report.topQuestions.length === 0 ? (
+                <p className="hint">No questions yet.</p>
+              ) : (
+                <ul>
+                  {report.topQuestions.map((q) => (
+                    <li key={q.question}>{q.question} <span className="hint">({q.count}x)</span></li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
 
           {bot && (
             <div className="card">
