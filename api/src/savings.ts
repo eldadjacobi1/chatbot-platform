@@ -26,10 +26,23 @@ function looksLikeGibberish(norm: string): boolean {
   return bad.length === words.length;
 }
 
+// True only when the message is nothing but "how are you" style chatter,
+// e.g. "hi, how are you?" or "I am good how are you". A real question
+// in the same message (e.g. "...what time do you open?") goes to the AI.
+function isOnlySmallTalk(n: string): boolean {
+  if (!/\bhow are you\b/.test(n)) return false;
+  const rest = n
+    .replace(/\bhow are you( doing)?( today)?\b/g, " ")
+    .replace(/\b(hi|hello|hey|there|i am|im|i m|doing|good|fine|great|well|ok|okay|and|thanks|thank you)\b/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  return rest === "";
+}
+
 // Returns a ready-made answer, or null if the AI should answer.
 export function cannedReply(message: string): string | null {
   const n = normalize(message);
-  if (HOW_ARE_YOU.test(n) || (n.length < 40 && /\bhow are you\b/.test(n))) return "I'm doing well, thanks! How can I help you today?";
+  if (HOW_ARE_YOU.test(n) || isOnlySmallTalk(n)) return "I'm doing well, thanks! How can I help you today?";
   if (GREETING.test(n)) return "Hi! You can ask me about our hours, services, prices or how to book.";
   if (THANKS.test(n)) return "You're welcome! Is there anything else I can help with?";
   if (BYE.test(n)) return "Thanks for stopping by! Have a great day.";
