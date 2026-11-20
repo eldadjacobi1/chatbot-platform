@@ -2,6 +2,8 @@
 
 export const TONES = ["friendly", "professional", "playful", "concise"] as const;
 export const AUDIENCES = ["general", "kids", "seniors", "professionals"] as const;
+export const THEMES = ["clean", "bold", "soft"] as const;
+export type Theme = (typeof THEMES)[number];
 export const POSITIONS = ["right", "left"] as const;
 
 export type Tone = (typeof TONES)[number];
@@ -9,6 +11,7 @@ export type Audience = (typeof AUDIENCES)[number];
 export type Position = (typeof POSITIONS)[number];
 
 export type Appearance = {
+  theme: Theme;
   color: string;
   title: string;
   avatar: string;
@@ -26,6 +29,10 @@ export function parseAppearance(b: Record<string, unknown>): { value: Partial<Ap
   const out: Partial<Appearance> = {};
   const str = (v: unknown) => (typeof v === "string" ? v.trim() : undefined);
 
+  if (b.theme !== undefined) {
+    if (!THEMES.includes(b.theme as Theme)) return { error: "Unknown design." };
+    out.theme = b.theme as Theme;
+  }
   if (b.color !== undefined) {
     const c = str(b.color);
     if (!c || !/^#[0-9a-fA-F]{6}$/.test(c)) return { error: "Color must look like #4338ca." };
@@ -104,9 +111,10 @@ export const PRESET_COLORS = ["#4338ca", "#0f766e", "#be123c", "#c2410c", "#1d4e
 // downgrade doesn't fail.
 export function paidOnlyError(
   next: Partial<Appearance>,
-  current: { color: string; position: string; instructions: string },
+  current: { theme: string; color: string; position: string; instructions: string },
 ): string | null {
-  const msg = "Custom colors, button position and extra instructions are part of Pro.";
+  const msg = "Designs, custom colors, button position and extra instructions are part of Pro.";
+  if (next.theme !== undefined && next.theme !== current.theme && next.theme !== "clean") return msg;
   if (next.color !== undefined && next.color !== current.color && !PRESET_COLORS.includes(next.color)) return msg;
   if (next.position !== undefined && next.position !== current.position) return msg;
   if (next.instructions !== undefined && next.instructions !== current.instructions) return msg;

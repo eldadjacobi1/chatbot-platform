@@ -48,6 +48,19 @@
       if (!info || !info.show) return;
       var color = /^#[0-9a-fA-F]{6}$/.test(info.color || "") ? info.color : "#4338ca";
       var side = info.position === "left" ? "left" : "right";
+      var theme = info.theme === "bold" || info.theme === "soft" ? info.theme : "clean";
+      var label = theme === "bold" ? "Chat with us" : theme === "soft" ? "Ask us" : "";
+      if (label) {
+        var span = document.createElement("span");
+        span.textContent = label;
+        span.style.cssText = "color:#fff;font:600 15px/1 -apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;margin-left:10px;";
+        button.appendChild(span);
+        button.style.width = "auto";
+        button.style.height = "52px";
+        button.style.padding = "0 20px";
+        button.style.borderRadius = theme === "bold" ? "12px" : "999px";
+      }
+      frame.style.borderRadius = theme === "bold" ? "12px" : theme === "soft" ? "28px" : "20px";
       button.style.background = color;
       button.style.boxShadow = "0 6px 20px " + color + "59";
       button.style.right = button.style.left = "";

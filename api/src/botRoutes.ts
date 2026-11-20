@@ -17,6 +17,7 @@ function toDto(bot: Bot) {
     context: bot.context,
     domain: bot.allowedDomains[0] ?? "",
     enabled: bot.enabled,
+    theme: bot.theme,
     color: bot.color,
     title: bot.title,
     avatar: bot.avatar,
@@ -100,7 +101,7 @@ export async function botRoutes(app: FastifyInstance) {
 
     const { name, greeting, context, domain, enabled, appearance } = parsed.value;
     if ((await getPlanCached(userId)) === "free") {
-      const err = paidOnlyError(appearance, { color: DEFAULT_COLOR, position: "right", instructions: "" });
+      const err = paidOnlyError(appearance, { theme: "clean", color: DEFAULT_COLOR, position: "right", instructions: "" });
       if (err) return reply.code(403).send({ error: err });
     }
     const [row] = await db

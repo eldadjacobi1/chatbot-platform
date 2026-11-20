@@ -12,6 +12,7 @@ type Bot = {
   context: string;
   domain: string;
   enabled: boolean;
+  theme: string;
   color: string;
   title: string;
   avatar: string;
@@ -50,6 +51,7 @@ const emptyForm: Form = {
   context: "",
   domain: "",
   enabled: true,
+  theme: "clean",
   color: "#4338ca",
   title: "",
   avatar: "",
@@ -59,6 +61,11 @@ const emptyForm: Form = {
   instructions: "",
 };
 
+const THEMES = [
+  { id: "clean", name: "Clean", text: "White window, rounded corners, round button.", pro: false, label: "" },
+  { id: "bold", name: "Bold", text: "Solid header, squarer corners, \"Chat with us\" button.", pro: true, label: "Chat with us" },
+  { id: "soft", name: "Soft", text: "Tinted background, extra-round bubbles, \"Ask us\" button.", pro: true, label: "Ask us" },
+];
 const COLORS = ["#4338ca", "#0f766e", "#be123c", "#c2410c", "#1d4ed8", "#14142b"];
 // Free plan: presets only. (Pro unlocks custom color, button position and extra instructions.)
 const TONES = [
@@ -292,7 +299,21 @@ export default function DashboardPage() {
               <h2>Appearance</h2>
               <div className="appearance">
                 <div>
-                  <label>Color</label>
+                  <label>Design</label>
+                  <div className="themes">
+                    {THEMES.map((t) => {
+                      const locked = t.pro && isFree && form.theme !== t.id;
+                      return (
+                        <button key={t.id} type="button" className={form.theme === t.id ? "theme on" : "theme"}
+                          onClick={() => (locked ? setTab("plan") : update("theme", t.id))}>
+                          <b>{t.name}</b>{locked && <span className="pro">Pro</span>}
+                          <span>{t.text}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <label>Color{isFree && <span className="pro">Custom color: Pro</span>}</label>
                   <div className="swatches">
                     {COLORS.map((c) => (
                       <button key={c} type="button" aria-label={`Use color ${c}`}
@@ -309,7 +330,7 @@ export default function DashboardPage() {
                     placeholder={form.name || "Your business name"}
                     onChange={(e) => update("title", e.target.value)} />
 
-                  <label htmlFor="position">Button position</label>
+                  <label htmlFor="position">Button position{isFree && <span className="pro">Pro</span>}</label>
                   <select id="position" value={form.position} disabled={isFree} onChange={(e) => update("position", e.target.value)}>
                     <option value="right">Bottom right</option>
                     <option value="left">Bottom left</option>
@@ -326,7 +347,7 @@ export default function DashboardPage() {
                     {AUDIENCES.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
                   </select>
 
-                  <label htmlFor="instructions">Extra instructions (optional)</label>
+                  <label htmlFor="instructions">Extra instructions (optional){isFree && <span className="pro">Pro</span>}</label>
                   <textarea id="instructions" value={form.instructions} maxLength={500} style={{ minHeight: 90 }} disabled={isFree}
                     placeholder="For example: mention our weekend sale when it fits."
                     onChange={(e) => update("instructions", e.target.value)} />
@@ -345,7 +366,7 @@ export default function DashboardPage() {
                   {error && <p className="error">{error}</p>}
                 </div>
 
-                <div className="preview" aria-label="Preview">
+                <div className={`preview theme-${form.theme}`} aria-label="Preview" style={{ ["--pv" as string]: form.color }}>
                   <div className="pv-window">
                     <div className="pv-head">{form.title || form.name || "Your business"}</div>
                     <div className="pv-body">
@@ -354,7 +375,14 @@ export default function DashboardPage() {
                     </div>
                     <div className="pv-input"><span>Type your question...</span><b style={{ background: form.color }}>Send</b></div>
                   </div>
-                  <div className={form.position === "left" ? "pv-launch left" : "pv-launch"} style={{ background: form.color }}>💬</div>
+                  <div className={form.position === "left" ? "pv-launch left" : "pv-launch"} style={{ background: form.color }}>
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.6 8.6 0 0 1-3.6-.8L3 21l1.9-5.4A8.4 8.4 0 1 1 21 11.5z" />
+                    </svg>
+                    {THEMES.find((t) => t.id === form.theme)?.label && (
+                      <span>{THEMES.find((t) => t.id === form.theme)?.label}</span>
+                    )}
+                  </div>
                 </div>
               </div>
             </form>
