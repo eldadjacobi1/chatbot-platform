@@ -148,6 +148,18 @@ export default function DashboardPage() {
     return () => timers.forEach(clearTimeout);
   }, [loadBilling]);
 
+  // Coming back from Stripe with the Back button restores the page as it was,
+  // including a "busy" button. Reset it whenever the page is shown again.
+  useEffect(() => {
+    const reset = () => setBillingBusy(false);
+    window.addEventListener("pageshow", reset);
+    document.addEventListener("visibilitychange", reset);
+    return () => {
+      window.removeEventListener("pageshow", reset);
+      document.removeEventListener("visibilitychange", reset);
+    };
+  }, []);
+
   async function openBilling(kind: "checkout" | "portal", plan?: string) {
     setBillingBusy(true);
     setError("");
