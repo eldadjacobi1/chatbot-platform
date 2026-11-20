@@ -37,7 +37,22 @@ export async function getReport(botId: string, days = 30) {
     .orderBy(sql`count(*) desc`)
     .limit(200);
 
+  const dayRows: { day: string; n: number }[] = await db
+    .select({
+      day: sql<string>`to_char(${messages.createdAt} at time zone 'UTC', 'YYYY-MM-DD')`,
+      n: sql<number>`count(*)::int`,
+    })
+    .from(messages)
+    .where(and(eq(messages.botId, botId), gte(messages.createdAt, new Date(Date.now() - 14 * 86400000))))
+    .groupBy(sql`1`);
+  const byDay = new Map(dayRows.map((r) => [r.day, r.n]));
+  const daily = Array.from({ length: 14 }, (_, i) => {
+    const d = new Date(Date.now() - (13 - i) * 86400000).toISOString().slice(0, 10);
+    return { day: d, count: byDay.get(d) ?? 0 };
+  });
+
   return {
+    daily,
     days,
     total: totals?.total ?? 0,
     unansweredCount: totals?.unanswered ?? 0,

@@ -50,6 +50,7 @@ type Report = {
   topQuestions: QuestionCount[];
   unanswered: QuestionCount[];
   limited?: boolean;
+  daily?: { day: string; count: number }[];
 };
 
 const emptyForm: Form = {
@@ -356,6 +357,10 @@ export default function DashboardPage() {
                   <h1>{bot.name}</h1>
                   <p className="hint"><span className={bot.enabled ? "dot on" : "dot"} />{bot.enabled ? "Online" : "Off"} on {bot.domain}</p>
                 </div>
+                <div className="row">
+                  <button type="button" className="btn secondary" onClick={copySnippet}>{copied ? "Copied!" : "Copy install code"}</button>
+                  <button type="button" className="btn secondary" onClick={() => setTab("reports")}>View chats</button>
+                </div>
               </header>
 
               {!hideSteps && (
@@ -385,7 +390,7 @@ export default function DashboardPage() {
                 <div>
                   {report && (
                     <div className="stats">
-                      <div className="card stat"><div className="num">{report.total}</div><div className="hint">questions, last {report.days} days</div></div>
+                      <div className="card stat"><div className="num">{report.total}</div><div className="hint nowrap">questions, {report.days} days</div></div>
                       <div className="card stat"><div className="num">{newLeads}</div><div className="hint">new {newLeads === 1 ? "lead" : "leads"}</div></div>
                       <div className="card stat"><div className="num">{report.unansweredCount}</div><div className="hint">couldn&apos;t answer</div></div>
                     </div>
@@ -395,29 +400,45 @@ export default function DashboardPage() {
                       <b>{newLeads} new {newLeads === 1 ? "lead" : "leads"}</b> waiting for you <span aria-hidden="true">&rarr;</span>
                     </button>
                   )}
-                  {report && report.unansweredCount > 0 && (
-                    <button type="button" className="note" onClick={() => setTab("reports")}>
-                      <b>{report.unansweredCount} {report.unansweredCount === 1 ? "question" : "questions"}</b> it couldn&apos;t answer. Add the answers to your info <span aria-hidden="true">&rarr;</span>
-                    </button>
+                  {report?.daily && (
+                    <div className="card">
+                      <h2 style={{ marginBottom: 4 }}>Questions per day</h2>
+                      <p className="hint" style={{ marginTop: 0 }}>Last 14 days</p>
+                      <div className="bars" role="img" aria-label="Questions per day for the last 14 days">
+                        {report.daily.map((d) => {
+                          const max = Math.max(1, ...report.daily!.map((x) => x.count));
+                          return <div key={d.day} className="bar" title={`${d.day}: ${d.count}`}><i style={{ height: `${Math.max(d.count ? 8 : 2, (d.count / max) * 100)}%` }} /></div>;
+                        })}
+                      </div>
+                    </div>
                   )}
-                </div>
-                <div className={`preview theme-${bot.theme}`} aria-label="Your chatbot" style={{ "--pv": bot.color } as React.CSSProperties}>
-                  <div className="pv-window">
-                    <div className="pv-head">{bot.title || bot.name}</div>
-                    <div className="pv-body">
-                      <div className="pv-bot">{bot.greeting}</div>
-                      {bot.suggestions.filter((q) => q.trim()).length > 0 && (
-                        <div className="pv-chips">
-                          {bot.suggestions.filter((q) => q.trim()).map((q, i) => (
-                            <span key={i} style={{ color: bot.color, borderColor: bot.color }}>{q}</span>
-                          ))}
-                        </div>
+                  {report && report.unansweredCount > 0 && (
+                    <div className="card">
+                      <h2>Questions it couldn&apos;t answer</h2>
+                      {report.limited ? (
+                        <p className="hint">Your bot couldn&apos;t answer {report.unansweredCount} {report.unansweredCount === 1 ? "question" : "questions"}. <button type="button" className="link" onClick={() => setTab("plan")}>See which ones with Pro</button></p>
+                      ) : (
+                        <>
+                          <ul className="unans">
+                            {report.unanswered.slice(0, 5).map((q) => (
+                              <li key={q.question}>
+                                <span>{q.question} <em>{q.count}x</em></span>
+                                <button type="button" className="btn secondary small" onClick={() => setTab("settings")}>Add answer</button>
+                              </li>
+                            ))}
+                          </ul>
+                          <p className="hint">Add the answers in Setup, and the bot can answer next time.</p>
+                        </>
                       )}
                     </div>
-                    <div className="pv-input"><span>Type your question...</span><b style={{ background: bot.color }}>Send</b></div>
+                  )}
+                </div>
+                <div>
+                  <div className="test-frame">
+                    <iframe title="Your chatbot" src={`${API}/widget/${bot.id}`} sandbox="allow-scripts allow-same-origin" />
                   </div>
                   <p className="hint" style={{ textAlign: "center", marginTop: 12 }}>
-                    <button type="button" className="link" onClick={() => setTab("appearance")}>Change design</button>
+                    This is your real chatbot. <button type="button" className="link" onClick={() => setTab("appearance")}>Change design</button>
                   </p>
                 </div>
               </div>

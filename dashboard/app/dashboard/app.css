@@ -78,3 +78,14 @@ code { background: var(--accent-soft); padding: 1px 6px; border-radius: 6px; fon
 .savebar { position: sticky; bottom: 0; z-index: 5; display: flex; align-items: center; gap: 14px; margin: 24px -24px -24px; padding: 14px 24px; background: rgba(255,255,255,.92); backdrop-filter: blur(8px); border-top: 1px solid var(--line); border-radius: 0 0 16px 16px; }
 .savebar .ok, .savebar .error { margin: 0; font-weight: 600; }
 @media (max-width: 760px) { .savebar { bottom: 62px; } }
+
+.nowrap { white-space: nowrap; }
+.bars { display: flex; align-items: flex-end; gap: 6px; height: 110px; margin-top: 14px; }
+.bar { flex: 1; height: 100%; display: flex; align-items: flex-end; }
+.bar i { display: block; width: 100%; border-radius: 5px 5px 2px 2px; background: var(--accent); opacity: .85; }
+.unans { list-style: none; margin: 0 0 8px; padding: 0; }
+.card .unans li { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 0; margin: 0; border-bottom: 1px solid var(--line); }
+.unans li:last-child { border-bottom: 0; }
+.unans em { color: var(--muted); font-style: normal; font-size: .85rem; margin-left: 4px; }
+.btn.small { padding: 6px 14px; font-size: .875rem; flex: none; }
+.home-grid .test-frame { max-width: none; }
