@@ -12,11 +12,18 @@ type Bot = {
   context: string;
   domain: string;
   enabled: boolean;
+  color: string;
+  title: string;
+  avatar: string;
+  position: "right" | "left";
+  tone: string;
+  audience: string;
+  instructions: string;
 };
 
 type Form = Omit<Bot, "id">;
 
-type Tab = "overview" | "reports" | "settings" | "install" | "plan";
+type Tab = "overview" | "reports" | "appearance" | "settings" | "install" | "plan";
 
 type Billing = { plan: "free" | "pro" | "business"; status: string; hasCustomer: boolean };
 
@@ -43,7 +50,28 @@ const emptyForm: Form = {
   context: "",
   domain: "",
   enabled: true,
+  color: "#4338ca",
+  title: "",
+  avatar: "",
+  position: "right",
+  tone: "friendly",
+  audience: "general",
+  instructions: "",
 };
+
+const COLORS = ["#4338ca", "#0f766e", "#be123c", "#c2410c", "#1d4ed8", "#14142b"];
+const TONES = [
+  ["friendly", "Friendly"],
+  ["professional", "Professional"],
+  ["playful", "Playful"],
+  ["concise", "Short and to the point"],
+];
+const AUDIENCES = [
+  ["general", "Everyone"],
+  ["kids", "Kids"],
+  ["seniors", "Seniors"],
+  ["professionals", "Professionals"],
+];
 
 export default function DashboardPage() {
   const { getToken, isLoaded } = useAuth();
@@ -85,13 +113,8 @@ export default function DashboardPage() {
         const first: Bot | undefined = data.bots[0];
         if (first) {
           setBot(first);
-          setForm({
-            name: first.name,
-            greeting: first.greeting,
-            context: first.context,
-            domain: first.domain,
-            enabled: first.enabled,
-          });
+          const { id: _id, ...rest } = first;
+          setForm(rest);
         }
       })
       .catch((e: Error) => setError(e.message))
@@ -178,9 +201,9 @@ export default function DashboardPage() {
         <>
           {bot && (
             <nav className="tabs">
-              {(["overview", "reports", "settings", "install", "plan"] as Tab[]).map((t) => (
+              {(["overview", "reports", "appearance", "settings", "install", "plan"] as Tab[]).map((t) => (
                 <button key={t} type="button" className={tab === t ? "tab active" : "tab"} onClick={() => setTab(t)}>
-                  {t === "overview" ? "Overview" : t === "reports" ? "Reports" : t === "settings" ? "Settings" : t === "install" ? "Install" : "Plan"}
+                  {t === "overview" ? "Overview" : t === "reports" ? "Reports" : t === "appearance" ? "Appearance" : t === "settings" ? "Settings" : t === "install" ? "Install" : "Plan"}
                 </button>
               ))}
             </nav>
@@ -260,6 +283,76 @@ export default function DashboardPage() {
                 </>
               )}
             </div>
+          )}
+
+          {bot && tab === "appearance" && (
+            <form className="card" onSubmit={save}>
+              <h2>Appearance</h2>
+              <div className="appearance">
+                <div>
+                  <label>Color</label>
+                  <div className="swatches">
+                    {COLORS.map((c) => (
+                      <button key={c} type="button" aria-label={`Use color ${c}`}
+                        className={form.color === c ? "swatch on" : "swatch"} style={{ background: c }}
+                        onClick={() => update("color", c)} />
+                    ))}
+                    <input type="color" aria-label="Custom color" value={form.color}
+                      onChange={(e) => update("color", e.target.value)} />
+                  </div>
+
+                  <label htmlFor="title">Chat title</label>
+                  <input id="title" type="text" value={form.title} maxLength={40}
+                    placeholder={form.name || "Your business name"}
+                    onChange={(e) => update("title", e.target.value)} />
+
+                  <label htmlFor="avatar">Avatar (an emoji)</label>
+                  <input id="avatar" type="text" value={form.avatar} maxLength={8} placeholder="💬"
+                    onChange={(e) => update("avatar", e.target.value)} />
+
+                  <label htmlFor="position">Button position</label>
+                  <select id="position" value={form.position} onChange={(e) => update("position", e.target.value)}>
+                    <option value="right">Bottom right</option>
+                    <option value="left">Bottom left</option>
+                  </select>
+
+                  <h3>Personality</h3>
+                  <label htmlFor="tone">How it talks</label>
+                  <select id="tone" value={form.tone} onChange={(e) => update("tone", e.target.value)}>
+                    {TONES.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                  </select>
+
+                  <label htmlFor="audience">Who it talks to</label>
+                  <select id="audience" value={form.audience} onChange={(e) => update("audience", e.target.value)}>
+                    {AUDIENCES.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                  </select>
+
+                  <label htmlFor="instructions">Extra instructions (optional)</label>
+                  <textarea id="instructions" value={form.instructions} maxLength={500} style={{ minHeight: 90 }}
+                    placeholder="For example: mention our weekend sale when it fits."
+                    onChange={(e) => update("instructions", e.target.value)} />
+                  <p className="hint">{form.instructions.length}/500. This changes how the bot speaks, not what it knows.</p>
+
+                  <div className="row" style={{ marginTop: 16 }}>
+                    <button className="btn" disabled={saving}>{saving ? "Saving..." : "Save changes"}</button>
+                  </div>
+                  {message && <p className="ok">{message}</p>}
+                  {error && <p className="error">{error}</p>}
+                </div>
+
+                <div className="preview" aria-label="Preview">
+                  <div className="pv-window">
+                    <div className="pv-head"><span>{form.avatar}</span> {form.title || form.name || "Your business"}</div>
+                    <div className="pv-body">
+                      <div className="pv-bot">{form.greeting}</div>
+                      <div className="pv-you" style={{ background: form.color }}>What are your hours?</div>
+                    </div>
+                    <div className="pv-input"><span>Type your question...</span><b style={{ background: form.color }}>Send</b></div>
+                  </div>
+                  <div className={form.position === "left" ? "pv-launch left" : "pv-launch"} style={{ background: form.color }}>💬</div>
+                </div>
+              </div>
+            </form>
           )}
 
           {(!bot || tab === "settings") && (

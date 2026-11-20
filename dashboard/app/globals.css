@@ -98,3 +98,20 @@ pre { background: #14142b; color: #e9e9fb; padding: 16px; border-radius: 12px; o
 .plan.current { border-color: var(--accent); background: #eef0ff; }
 .plan .badge { display: inline-block; margin-bottom: 10px; padding: 3px 10px; border-radius: 999px; background: var(--accent); color: #fff; font-size: 13px; font-weight: 600; }
 @media (max-width: 640px) { .plans { grid-template-columns: 1fr; } }
+
+.appearance { display: grid; grid-template-columns: 1fr 340px; gap: 28px; align-items: start; }
+.swatches { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 4px; }
+.swatch { width: 32px; height: 32px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 0 1.5px var(--line); cursor: pointer; padding: 0; }
+.swatch.on { box-shadow: 0 0 0 3px var(--ink); }
+.swatches input[type="color"] { width: 40px; height: 34px; padding: 2px; border-radius: 10px; }
+.preview { position: sticky; top: 20px; background: var(--bg); border-radius: 20px; padding: 18px; min-height: 420px; }
+.pv-window { background: #fff; border-radius: 16px; box-shadow: 0 8px 30px rgba(20,20,43,.15); overflow: hidden; }
+.pv-head { padding: 14px 16px; border-bottom: 1px solid var(--line); font-weight: 800; letter-spacing: -0.03em; }
+.pv-body { padding: 14px; display: flex; flex-direction: column; gap: 10px; min-height: 190px; }
+.pv-bot { background: #f0f0f7; padding: 10px 14px; border-radius: 16px; border-bottom-left-radius: 6px; max-width: 85%; font-size: 14px; }
+.pv-you { color: #fff; padding: 10px 14px; border-radius: 16px; border-bottom-right-radius: 6px; max-width: 85%; margin-left: auto; font-size: 14px; }
+.pv-input { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px; border-top: 1px solid var(--line); font-size: 13px; color: var(--muted); }
+.pv-input b { color: #fff; border-radius: 999px; padding: 8px 14px; font-weight: 600; }
+.pv-launch { width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 14px 0 0 auto; font-size: 22px; }
+.pv-launch.left { margin: 14px auto 0 0; }
+@media (max-width: 760px) { .appearance { grid-template-columns: 1fr; } .preview { position: static; } }
