@@ -231,3 +231,10 @@ code { background: var(--accent-soft); padding: 1px 6px; border-radius: 6px; fon
 .import-row { display: flex; gap: 10px; }
 .import-row input { flex: 1; }
 .import-row .btn { flex: none; }
+
+/* Floating save button only (no bar) */
+.savebar, .savebar.wide { position: sticky; bottom: 18px; width: fit-content; margin: 20px 0 0; padding: 0; background: none; border: 0; border-radius: 0; backdrop-filter: none; pointer-events: none; }
+.savebar > * { pointer-events: auto; }
+.savebar .btn { box-shadow: 0 8px 22px rgba(67, 56, 202, .35); }
+.savebar .ok, .savebar .error { padding: 6px 12px; border-radius: 999px; background: #fff; box-shadow: 0 4px 14px rgba(20, 20, 43, .12); }
+@media (max-width: 760px) { .savebar, .savebar.wide { bottom: 74px; } }
