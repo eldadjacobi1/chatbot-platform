@@ -100,6 +100,8 @@ export default function DashboardPage() {
   const [billing, setBilling] = useState<Billing | null>(null);
   const [billingBusy, setBillingBusy] = useState(false);
   const [leads, setLeads] = useState<Leads | null>(null);
+  // Leads newer than this are "new". Remembered per bot in this browser.
+  const [seenAt, setSeenAt] = useState<string>("");
   const isFree = (billing?.plan ?? "free") === "free";
 
   // Calls the API with the logged-in user's token.
@@ -190,6 +192,35 @@ export default function DashboardPage() {
   }, [botId, call]);
   useEffect(loadLeads, [loadLeads]);
 
+  // Check for new leads every minute while the dashboard is open.
+  useEffect(() => {
+    if (!botId) return;
+    const timer = setInterval(loadLeads, 60_000);
+    return () => clearInterval(timer);
+  }, [botId, loadLeads]);
+
+  // Remember when the owner last looked at the Leads tab.
+  useEffect(() => {
+    if (!botId) return;
+    try {
+      setSeenAt(localStorage.getItem(`leadsSeen:${botId}`) ?? "");
+    } catch {
+      setSeenAt("");
+    }
+  }, [botId]);
+  // New leads stay highlighted while the Leads tab is open; leaving the tab marks them as seen.
+  useEffect(() => {
+    if (tab !== "leads" || !botId) return;
+    return () => {
+      const now = new Date().toISOString();
+      try { localStorage.setItem(`leadsSeen:${botId}`, now); } catch {}
+      setSeenAt(now);
+    };
+  }, [tab, botId]);
+
+  const isNewLead = (l: Lead) => !seenAt || new Date(l.createdAt).getTime() > new Date(seenAt).getTime();
+  const newLeads = leads ? leads.leads.filter(isNewLead).length : 0;
+
   async function save(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
@@ -236,6 +267,7 @@ export default function DashboardPage() {
             <nav className="tabs">
               {(["overview", "reports", "leads", "appearance", "settings", "install", "plan"] as Tab[]).map((t) => (
                 <button key={t} type="button" className={tab === t ? "tab active" : "tab"} onClick={() => setTab(t)}>
+                  {t === "leads" && newLeads > 0 && tab !== "leads" && <span className="count">{newLeads}</span>}
                   {t === "overview" ? "Overview" : t === "reports" ? "Reports" : t === "leads" ? "Leads" : t === "appearance" ? "Appearance" : t === "settings" ? "Settings" : t === "install" ? "Install" : "Plan"}
                 </button>
               ))}
@@ -257,6 +289,15 @@ export default function DashboardPage() {
                   <div className="card stat"><div className="num">{report.savedByCache}</div><div className="hint">answered from cache</div></div>
                 </div>
               )}
+              {newLeads > 0 && (
+                <div className="card">
+                  <p style={{ margin: 0 }}>
+                    You have <b>{newLeads}</b> new {newLeads === 1 ? "lead" : "leads"}.{" "}
+                    <a href="#" onClick={(e) => { e.preventDefault(); setTab("leads"); }}>See them in Leads</a>
+                  </p>
+                </div>
+              )}
+
               {report && report.unansweredCount > 0 && (
                 <div className="card">
                   <p style={{ margin: 0 }}>
@@ -335,7 +376,7 @@ export default function DashboardPage() {
                   <ul>
                     {leads.leads.map((l) => (
                       <li key={l.id}>
-                        <b>{l.contact}</b>{l.name ? ` (${l.name})` : ""}
+                        <b>{l.contact}</b>{l.name ? ` (${l.name})` : ""}{isNewLead(l) && <span className="pro">New</span>}
                         {l.question && <><br /><span className="hint">Asked: {l.question}</span></>}
                         <br /><span className="hint">{new Date(l.createdAt).toLocaleString()}</span>
                       </li>

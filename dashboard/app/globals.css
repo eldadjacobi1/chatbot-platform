@@ -139,3 +139,5 @@ pre { background: #14142b; color: #e9e9fb; padding: 16px; border-radius: 12px; o
 .preview.theme-soft .pv-you { border-radius: 22px; border-bottom-right-radius: 8px; }
 .preview.theme-soft .pv-input { border-top: 0; }
 .preview.theme-soft .pv-launch { border-radius: 999px; }
+
+.tab .count { display: inline-block; min-width: 20px; margin-right: 8px; padding: 1px 6px; border-radius: 999px; background: var(--accent); color: #fff; font-size: 12px; font-weight: 700; text-align: center; }
