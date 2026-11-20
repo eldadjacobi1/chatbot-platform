@@ -158,6 +158,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
+  const [answerSaved, setAnswerSaved] = useState(false);
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
   const [report, setReport] = useState<Report | null>(null);
@@ -371,6 +372,7 @@ export default function DashboardPage() {
       setForm((f) => ({ ...f, context: data.bot.context }));
       setAnswering(null);
       setAnswerText("");
+      setAnswerSaved(true);
       loadReport();
     } catch (err) {
       setAnswerErr((err as Error).message);
@@ -662,6 +664,12 @@ export default function DashboardPage() {
                 </div>
               ) : (
                 <div className="card qlist">
+                  {answerSaved && (
+                    <div className="note static">
+                      Saved. The answer was added to your business info in <button type="button" className="link" onClick={() => setTab("settings")}>Bot setup</button>, and your bot will use it from the next message.
+                      <button type="button" className="link" onClick={() => setAnswerSaved(false)} aria-label="Dismiss"> Dismiss</button>
+                    </div>
+                  )}
                   {(() => {
                     const need = new Set(report.unanswered.map((q) => q.question));
                     const all = [...report.topQuestions, ...report.unanswered.filter((q) => !report.topQuestions.some((t) => t.question === q.question))];
