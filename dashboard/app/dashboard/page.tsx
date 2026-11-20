@@ -366,7 +366,7 @@ export default function DashboardPage() {
                   {error && <p className="error">{error}</p>}
                 </div>
 
-                <div className={`preview theme-${form.theme}`} aria-label="Preview" style={{ ["--pv" as string]: form.color }}>
+                <div className={`preview theme-${form.theme}`} aria-label="Preview" style={{ "--pv": form.color } as React.CSSProperties}>
                   <div className="pv-window">
                     <div className="pv-head">{form.title || form.name || "Your business"}</div>
                     <div className="pv-body">
