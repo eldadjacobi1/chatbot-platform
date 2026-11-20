@@ -95,6 +95,8 @@ export default function DashboardPage() {
   const [billing, setBilling] = useState<Billing | null>(null);
   const [billingBusy, setBillingBusy] = useState(false);
   const isFree = (billing?.plan ?? "free") === "free";
+  // Free plan: Pro designs can be previewed but not saved.
+  const previewingPro = isFree && !!THEMES.find((t) => t.id === form.theme)?.pro && bot?.theme !== form.theme;
 
   // Calls the API with the logged-in user's token.
   const call = useCallback(
@@ -302,16 +304,22 @@ export default function DashboardPage() {
                   <label>Design</label>
                   <div className="themes">
                     {THEMES.map((t) => {
-                      const locked = t.pro && isFree && form.theme !== t.id;
+                      const locked = t.pro && isFree;
                       return (
                         <button key={t.id} type="button" className={form.theme === t.id ? "theme on" : "theme"}
-                          onClick={() => (locked ? setTab("plan") : update("theme", t.id))}>
+                          onClick={() => update("theme", t.id)}>
                           <b>{t.name}</b>{locked && <span className="pro">Pro</span>}
                           <span>{t.text}</span>
                         </button>
                       );
                     })}
                   </div>
+
+                  {previewingPro && (
+                    <p className="hint">
+                      You&apos;re previewing a Pro design. <a href="#" onClick={(e) => { e.preventDefault(); setTab("plan"); }}>Upgrade to Pro</a> to use it.
+                    </p>
+                  )}
 
                   <label>Color{isFree && <span className="pro">Custom color: Pro</span>}</label>
                   <div className="swatches">
@@ -360,7 +368,7 @@ export default function DashboardPage() {
                   </p>
 
                   <div className="row" style={{ marginTop: 16 }}>
-                    <button className="btn" disabled={saving}>{saving ? "Saving..." : "Save changes"}</button>
+                    <button className="btn" disabled={saving || previewingPro}>{saving ? "Saving..." : "Save changes"}</button>
                   </div>
                   {message && <p className="ok">{message}</p>}
                   {error && <p className="error">{error}</p>}
