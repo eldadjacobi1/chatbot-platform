@@ -16,7 +16,15 @@ type Bot = {
 
 type Form = Omit<Bot, "id">;
 
-type Tab = "overview" | "reports" | "settings" | "install";
+type Tab = "overview" | "reports" | "settings" | "install" | "plan";
+
+type Billing = { plan: "free" | "pro" | "business"; status: string; hasCustomer: boolean };
+
+const PLANS = [
+  { id: "free", name: "Free", price: "$0" },
+  { id: "pro", name: "Pro", price: "$9.99/month" },
+  { id: "business", name: "Business", price: "$49.99/month" },
+] as const;
 
 type QuestionCount = { question: string; count: number };
 type Report = {
@@ -47,6 +55,8 @@ export default function DashboardPage() {
   const [copied, setCopied] = useState(false);
   const [report, setReport] = useState<Report | null>(null);
   const [tab, setTab] = useState<Tab>("overview");
+  const [billing, setBilling] = useState<Billing | null>(null);
+  const [billingBusy, setBillingBusy] = useState(false);
 
   // Calls the API with the logged-in user's token.
   const call = useCallback(
@@ -89,6 +99,34 @@ export default function DashboardPage() {
 
   // Load the report whenever the bot is known.
   const botId = bot?.id;
+  const loadBilling = useCallback(() => {
+    if (!isLoaded) return;
+    call("/api/billing").then(setBilling).catch(() => {});
+  }, [call, isLoaded]);
+  useEffect(loadBilling, [loadBilling]);
+
+  // After paying, Stripe sends us back here. Open the Plan tab and refresh
+  // a few times, because the payment confirmation can take a moment to arrive.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (new URLSearchParams(window.location.search).get("billing") !== "success") return;
+    setTab("plan");
+    const timers = [1500, 4000, 8000].map((ms) => setTimeout(loadBilling, ms));
+    return () => timers.forEach(clearTimeout);
+  }, [loadBilling]);
+
+  async function openBilling(kind: "checkout" | "portal", plan?: string) {
+    setBillingBusy(true);
+    setError("");
+    try {
+      const data = await call(`/api/billing/${kind}`, { method: "POST", body: JSON.stringify({ plan }) });
+      window.location.href = data.url;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong.");
+      setBillingBusy(false);
+    }
+  }
+
   const loadReport = useCallback(() => {
     if (!botId) return;
     call(`/api/bots/${botId}/report`).then(setReport).catch(() => setReport(null));
@@ -139,9 +177,9 @@ export default function DashboardPage() {
         <>
           {bot && (
             <nav className="tabs">
-              {(["overview", "reports", "settings", "install"] as Tab[]).map((t) => (
+              {(["overview", "reports", "settings", "install", "plan"] as Tab[]).map((t) => (
                 <button key={t} type="button" className={tab === t ? "tab active" : "tab"} onClick={() => setTab(t)}>
-                  {t === "overview" ? "Overview" : t === "reports" ? "Reports" : t === "settings" ? "Settings" : "Install"}
+                  {t === "overview" ? "Overview" : t === "reports" ? "Reports" : t === "settings" ? "Settings" : t === "install" ? "Install" : "Plan"}
                 </button>
               ))}
             </nav>
@@ -251,6 +289,32 @@ export default function DashboardPage() {
               {message && <p className="ok">{message}</p>}
               {error && <p className="error">{error}</p>}
             </form>
+          )}
+
+          {bot && tab === "plan" && (
+            <div className="card">
+              <h2>Your plan</h2>
+              {error && <p className="error">{error}</p>}
+              {PLANS.map((p) => {
+                const current = (billing?.plan ?? "free") === p.id;
+                return (
+                  <p key={p.id}>
+                    <strong>{p.name}</strong> &middot; {p.price}
+                    {current ? " (current plan)" : ""}{" "}
+                    {!current && p.id !== "free" && (billing?.plan ?? "free") === "free" && (
+                      <button className="btn" type="button" disabled={billingBusy} onClick={() => openBilling("checkout", p.id)}>
+                        Choose {p.name}
+                      </button>
+                    )}
+                  </p>
+                );
+              })}
+              {billing?.hasCustomer && (
+                <button className="btn secondary" type="button" disabled={billingBusy} onClick={() => openBilling("portal")}>
+                  Manage billing
+                </button>
+              )}
+            </div>
           )}
 
           {bot && tab === "install" && (
