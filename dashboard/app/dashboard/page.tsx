@@ -306,18 +306,6 @@ export default function DashboardPage() {
                     placeholder={form.name || "Your business name"}
                     onChange={(e) => update("title", e.target.value)} />
 
-                  <label>Avatar</label>
-                  <div className="emojis">
-                    {["", "💬", "🤖", "👋", "✨", "⭐", "❤️", "🍕", "☕"].map((e) => (
-                      <button key={e || "none"} type="button"
-                        className={form.avatar === e ? "emoji on" : "emoji"}
-                        aria-label={e ? `Use ${e}` : "No avatar"}
-                        onClick={() => update("avatar", e)}>
-                        {e || "None"}
-                      </button>
-                    ))}
-                  </div>
-
                   <label htmlFor="position">Button position</label>
                   <select id="position" value={form.position} onChange={(e) => update("position", e.target.value)}>
                     <option value="right">Bottom right</option>
@@ -350,7 +338,7 @@ export default function DashboardPage() {
 
                 <div className="preview" aria-label="Preview">
                   <div className="pv-window">
-                    <div className="pv-head"><span>{form.avatar}</span> {form.title || form.name || "Your business"}</div>
+                    <div className="pv-head">{form.title || form.name || "Your business"}</div>
                     <div className="pv-body">
                       <div className="pv-bot">{form.greeting}</div>
                       <div className="pv-you" style={{ background: form.color }}>What are your hours?</div>
