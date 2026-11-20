@@ -145,7 +145,7 @@ body:has(.lp) { background: #fff; }
 .lp-leads em { font-style: normal; font-size: 12px; font-weight: 700; color: var(--accent); background: var(--wash); border-radius: 999px; padding: 2px 8px; }
 .lp-leads span { flex-basis: 100%; color: var(--muted); font-size: 14px; }
 
-.lp-trio { display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px; padding-top: 48px; border-top: 1px solid var(--line); }
+.lp-trio { display: grid; grid-template-columns: repeat(4, 1fr); gap: 40px; padding-top: 48px; border-top: 1px solid var(--line); }
 .lp-trio h3 { font-size: 1.2rem; letter-spacing: -0.03em; margin-bottom: 8px; }
 .lp-trio p { color: var(--muted); }
 
@@ -178,10 +178,12 @@ body:has(.lp) { background: #fff; }
 .lp .lp-final .lp-btn:hover { background: var(--wash); border-color: var(--wash); }
 
 .lp-footer { display: flex; gap: 28px; padding: 32px 0 48px; color: var(--muted); font-weight: 600; }
+.lp-foot-brand { display: inline-flex; align-items: center; gap: 10px; }
 .lp-footer span { margin-right: auto; color: var(--ink); font-weight: 800; letter-spacing: -0.03em; }
 
 /* Tablet and phone */
 @media (max-width: 960px) {
+  .lp-trio { grid-template-columns: repeat(2, 1fr); }
   .lp-hero { grid-template-columns: 1fr; gap: 48px; padding: 40px 0 72px; }
   .lp-hero h1 { max-width: 14ch; }
   .ex-wrap { grid-template-columns: 1fr; }

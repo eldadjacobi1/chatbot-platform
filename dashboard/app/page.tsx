@@ -1,6 +1,7 @@
 import Link from "next/link";
 import NavActions from "./NavActions";
 import Examples from "./Examples";
+import Logo from "./Logo";
 import "./landing.css";
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000";
@@ -81,7 +82,7 @@ export default function Home() {
       <div className="lp-bar">
       <header className="lp-nav">
         <Link href="/" className="lp-brand">
-          <span className="lp-mark" aria-hidden="true" />
+          <Logo size={32} />
           Chattr
         </Link>
         <nav className="lp-links" aria-label="Sections">
@@ -100,13 +101,13 @@ export default function Home() {
           <h1>Customers ask. Your website answers.</h1>
           <p>
             Chattr puts a chatbot on your site that answers from your own business information,
-            collects the leads it can&apos;t help with, and shows you what people really want to know.
+            day or night, collects the leads it can&apos;t help with, and shows you what people really want to know.
           </p>
           <div className="lp-cta">
             <Link className="lp-btn big" href="/sign-up">Start free</Link>
             <a className="lp-btn ghost big" href="#live">Try the live chat</a>
           </div>
-          <p className="lp-fine">Free plan. No credit card. Set up in minutes.</p>
+          <p className="lp-fine">Always on, even when you&apos;re closed. Free plan, no credit card.</p>
         </div>
 
         <div className="lp-live" id="live">
@@ -202,6 +203,10 @@ export default function Home() {
 
         <div className="lp-trio">
           <div>
+            <h3>Always on</h3>
+            <p>It answers at 2 AM and on holidays, so nobody waits until you&apos;re back.</p>
+          </div>
+          <div>
             <h3>Says only what you told it</h3>
             <p>No invented prices or hours. If it&apos;s not in your information, it says so.</p>
           </div>
@@ -252,7 +257,7 @@ export default function Home() {
       </section>
 
       <footer className="lp-footer">
-        <span>Chattr</span>
+        <span className="lp-foot-brand"><Logo size={24} />Chattr</span>
         <Link href="/sign-in">Sign in</Link>
         <Link href="/sign-up">Get started</Link>
       </footer>
