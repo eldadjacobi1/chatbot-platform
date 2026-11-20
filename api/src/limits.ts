@@ -4,7 +4,7 @@
 const IP_PER_MINUTE = Number(process.env.LIMIT_IP_PER_MINUTE ?? 8);
 const SESSION_MAX_MESSAGES = Number(process.env.LIMIT_SESSION_MESSAGES ?? 12);
 const BOT_PER_DAY = Number(process.env.LIMIT_BOT_PER_DAY ?? 300);
-const MAX_STRIKES = Number(process.env.LIMIT_STRIKES ?? 3); // unhelpful exchanges in a row before we close
+const MAX_STRIKES = Number(process.env.LIMIT_STRIKES ?? 10); // unhelpful exchanges in a row before we close
 const BLOCK_MS = 10 * 60 * 1000; // block abusive IPs for 10 minutes
 
 const sessionStrikes = new Map<string, number>();
