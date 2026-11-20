@@ -39,6 +39,10 @@ if (usingTemporarySecret) {
 const dashboardOrigins = (process.env.DASHBOARD_ORIGIN ?? "http://localhost:3001")
   .split(",")
   .map((o) => o.trim());
+// Our own dashboard may show any bot in a "test your chat" frame.
+const dashboardHosts = dashboardOrigins.flatMap((o) => {
+  try { return [new URL(o).hostname]; } catch { return []; }
+});
 await app.register(cors, {
   origin: dashboardOrigins,
   methods: ["GET", "POST", "PUT", "OPTIONS"],
@@ -91,7 +95,7 @@ app.get("/widget/:botId", async (req, reply) => {
   if (!bot || !bot.enabled) return reply.code(404).send("Bot not found.");
 
   const host = hostFromReferer(req.headers.referer);
-  if (!host || !isAllowedHost(host, bot.allowedDomains)) {
+  if (!host || !(isAllowedHost(host, bot.allowedDomains) || dashboardHosts.includes(host))) {
     req.log.warn({ botId, host }, "widget blocked: website not allowed");
     return reply.code(403).send("This chat is not enabled for this website.");
   }
@@ -111,7 +115,7 @@ app.get("/widget/:botId", async (req, reply) => {
 
   return reply
     .type("text/html")
-    .header("Content-Security-Policy", frameAncestorsPolicy(bot.allowedDomains))
+    .header("Content-Security-Policy", `${frameAncestorsPolicy(bot.allowedDomains)} ${dashboardOrigins.join(" ")}`)
     .header("Cache-Control", "no-store")
     .send(template.replace("__CONFIG__", () => config));
 });

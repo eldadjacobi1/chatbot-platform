@@ -99,6 +99,15 @@ const NAV: [Tab, string, string][] = [
   ["install", "Install", "code"],
 ];
 
+const HEADS: Record<string, [string, string]> = {
+  reports: ["Chats", "The questions your visitors asked, and the ones your bot couldn't answer."],
+  leads: ["Leads", "People who left their email or phone when the bot couldn't help."],
+  appearance: ["Design", "Choose how your chat looks and sounds. The preview updates as you change things."],
+  settings: ["Setup", "What your bot knows about your business. It answers only from this."],
+  install: ["Install", "Test your bot, then add it to your website."],
+  plan: ["Plan", "Your current plan and what each one includes."],
+};
+
 const ICONS: Record<string, string> = {
   home: "M3 11l9-8 9 8M5 10v10h14V10",
   chat: "M21 11.5a8.4 8.4 0 0 1-9 8.4 8.6 8.6 0 0 1-3.6-.8L3 21l1.9-5.4A8.4 8.4 0 1 1 21 11.5z",
@@ -134,10 +143,24 @@ export default function DashboardPage() {
   // Leads newer than this are "new". Remembered per bot in this browser.
   const [seenAt, setSeenAt] = useState<string>("");
   const isFree = (billing?.plan ?? "free") === "free";
+  const customized = !!bot && (bot.theme !== "clean" || bot.color !== "#4338ca" || !!bot.title || bot.tone !== "friendly" || bot.audience !== "general" || bot.suggestions.length > 0);
   const [hideSteps, setHideSteps] = useState(false);
+  const [wizStep, setWizStep] = useState(1);
+  const [flags, setFlags] = useState<{ tested: boolean; installed: boolean }>({ tested: false, installed: false });
   useEffect(() => {
-    try { setHideSteps(localStorage.getItem("chattr-steps-done") === "1"); } catch {}
+    try {
+      setHideSteps(localStorage.getItem("chattr-steps-done") === "1");
+      setFlags({ tested: localStorage.getItem("chattr-tested") === "1", installed: localStorage.getItem("chattr-installed") === "1" });
+    } catch {}
   }, []);
+  function setFlag(k: "tested" | "installed") {
+    setFlags((f) => ({ ...f, [k]: true }));
+    try { localStorage.setItem(k === "tested" ? "chattr-tested" : "chattr-installed", "1"); } catch {}
+  }
+  // Opening Install shows the test chat, which counts as testing the bot.
+  useEffect(() => {
+    if (tab === "install" && bot) setFlag("tested");
+  }, [tab, bot]);
   function dismissSteps() {
     setHideSteps(true);
     try { localStorage.setItem("chattr-steps-done", "1"); } catch {}
@@ -345,8 +368,15 @@ export default function DashboardPage() {
                     <li className={bot.context.trim().length > 20 ? "done" : ""}>
                       <span className="tick" /><button type="button" className="link" onClick={() => setTab("settings")}>Tell it about your business</button>
                     </li>
-                    <li><span className="tick" /><button type="button" className="link" onClick={() => setTab("appearance")}>Make it look like your brand</button></li>
-                    <li><span className="tick" /><button type="button" className="link" onClick={() => setTab("install")}>Add it to your website</button></li>
+                    <li className={customized ? "done" : ""}>
+                      <span className="tick" /><button type="button" className="link" onClick={() => setTab("appearance")}>Make it look like your brand</button>
+                    </li>
+                    <li className={flags.tested ? "done" : ""}>
+                      <span className="tick" /><button type="button" className="link" onClick={() => setTab("install")}>Test your chatbot</button>
+                    </li>
+                    <li className={flags.installed ? "done" : ""}>
+                      <span className="tick" /><button type="button" className="link" onClick={() => setTab("install")}>Add it to your website</button>
+                    </li>
                   </ol>
                 </div>
               )}
@@ -394,7 +424,24 @@ export default function DashboardPage() {
             </>
           )}
 
-          {bot && tab === "reports" && report && (
+          {bot && tab !== "overview" && HEADS[tab] && (
+            <header className="app-head">
+              <div>
+                <h1>{HEADS[tab][0]}</h1>
+                <p className="hint">{HEADS[tab][1]}</p>
+              </div>
+            </header>
+          )}
+
+          {bot && tab === "reports" && report && report.total === 0 && (
+            <div className="card empty">
+              <h2>No chats yet</h2>
+              <p>When visitors start asking your bot questions, you&apos;ll see them here, including the ones it couldn&apos;t answer.</p>
+              <button type="button" className="btn" onClick={() => setTab("install")}>Add it to your website</button>
+            </div>
+          )}
+
+          {bot && tab === "reports" && report && report.total > 0 && (
             <div className="card">
               <div className="row" style={{ justifyContent: "space-between" }}>
                 <h2 style={{ margin: 0 }}>Report (last {report.days} days)</h2>
@@ -454,7 +501,11 @@ export default function DashboardPage() {
                 <p className="hint">Collecting contact details is off. Turn it on in Settings.</p>
               )}
               {!leads || leads.total === 0 ? (
-                <p className="hint">No leads yet. When the bot can&apos;t answer, visitors can leave their email or phone and it shows up here.</p>
+                <div className="empty">
+                  <h2>No leads yet</h2>
+                  <p>When the bot can&apos;t answer a question, visitors can leave their email or phone. It will show up here.</p>
+                  <button type="button" className="btn secondary" onClick={() => setTab("install")}>Add it to your website</button>
+                </div>
               ) : (
                 <>
                   <p><b>{leads.total}</b> {leads.total === 1 ? "lead" : "leads"}</p>
@@ -576,9 +627,51 @@ export default function DashboardPage() {
             </form>
           )}
 
-          {(!bot || tab === "settings") && (
+          {!bot && (
+            <form className="wizard" onSubmit={(e) => { if (wizStep === 1) { e.preventDefault(); setWizStep(2); } else save(e); }}>
+              <div className="wiz-dots" aria-label={`Step ${wizStep} of 3`}>
+                {[1, 2, 3].map((n) => <i key={n} className={n <= wizStep ? "on" : ""} />)}
+              </div>
+              {wizStep === 1 ? (
+                <>
+                  <h1>Let&apos;s set up your chatbot</h1>
+                  <p className="lead">Two quick questions. It takes about two minutes.</p>
+                  <label htmlFor="name">What&apos;s your business called?</label>
+                  <input id="name" type="text" value={form.name} maxLength={80} required autoFocus placeholder="Joe's Pizza"
+                    onChange={(e) => update("name", e.target.value)} />
+                  <label htmlFor="domain">What&apos;s your website?</label>
+                  <input id="domain" type="text" value={form.domain} required placeholder="joespizza.com"
+                    onChange={(e) => update("domain", e.target.value)} />
+                  <p className="hint">The chat will only work on this website.</p>
+                  <div className="row" style={{ marginTop: 24 }}>
+                    <button className="btn">Continue</button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <h1>What should your chatbot know?</h1>
+                  <p className="lead">It answers visitors only from what you write here. Include opening hours, services, prices, your area and how to reach you.</p>
+                  <textarea id="context" value={form.context} maxLength={8000} required autoFocus
+                    placeholder="Hours, services, prices, service area, how to book, phone number..."
+                    onChange={(e) => update("context", e.target.value)} />
+                  <p className="hint">
+                    Not sure what to write?{" "}
+                    <button type="button" className="link" onClick={() => update("context", `${form.name || "We"} is open Monday to Friday, 9am to 6pm, and Saturday 10am to 4pm. Closed on Sunday.\n\nServices and prices:\n- Service one: $00\n- Service two: $00\n\nWe serve: your city and nearby areas.\nTo book or ask a question: call 000-000-0000 or email hello@${form.domain || "yourwebsite.com"}.\n\nCommon questions:\n- Do you offer refunds? Yes, within 30 days.`)}>Use an example</button>{" "}
+                    and replace it with your details. You can change it any time.
+                  </p>
+                  <div className="row" style={{ marginTop: 24 }}>
+                    <button type="button" className="btn secondary" onClick={() => setWizStep(1)}>Back</button>
+                    <button className="btn" disabled={saving}>{saving ? "Creating..." : "Create my chatbot"}</button>
+                  </div>
+                  {error && <p className="error">{error}</p>}
+                </>
+              )}
+            </form>
+          )}
+
+          {bot && tab === "settings" && (
             <form className="card" onSubmit={save}>
-              <h2>{bot ? "Settings" : "Create your chatbot"}</h2>
+              <h2>Business details</h2>
 
               <label htmlFor="name">Business name</label>
               <input id="name" type="text" value={form.name} maxLength={80} required
@@ -661,14 +754,29 @@ export default function DashboardPage() {
           )}
 
           {bot && tab === "install" && (
-            <div className="card">
-              <h2>Add it to your website</h2>
-              <p>Paste this line just before the closing &lt;/body&gt; tag of your site.</p>
-              <pre>{snippet}</pre>
-              <button className="btn secondary" onClick={copySnippet}>
-                {copied ? "Copied!" : "Copy code"}
-              </button>
-            </div>
+            <>
+              <div className="card">
+                <h2>1. Try it first</h2>
+                <p>This is your chatbot, exactly as visitors will see it. Ask it something about your business.</p>
+                <div className="test-frame">
+                  <iframe title="Test your chatbot" src={`${API}/widget/${bot.id}`} sandbox="allow-scripts allow-same-origin" />
+                </div>
+              </div>
+              <div className="card">
+                <h2>2. Add it to your website</h2>
+                <p>Copy this line and paste it just before the closing <code>&lt;/body&gt;</code> tag on every page where you want the chat. If someone else manages your site, send it to them.</p>
+                <pre>{snippet}</pre>
+                <div className="row">
+                  <button className="btn secondary" onClick={copySnippet}>
+                    {copied ? "Copied!" : "Copy code"}
+                  </button>
+                  <button type="button" className="btn" onClick={() => { setFlag("installed"); setTab("overview"); }}>
+                    {flags.installed ? "Marked as added" : "I've added it"}
+                  </button>
+                </div>
+                <p className="hint">Using Wordpress, Wix, Shopify or Squarespace? Look for &quot;custom code&quot; or &quot;header and footer scripts&quot; in your site settings.</p>
+              </div>
+            </>
           )}
         </>
       )}
