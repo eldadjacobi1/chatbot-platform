@@ -60,6 +60,7 @@ const emptyForm: Form = {
 };
 
 const COLORS = ["#4338ca", "#0f766e", "#be123c", "#c2410c", "#1d4ed8", "#14142b"];
+// Free plan: presets only. (Pro unlocks custom color, button position and extra instructions.)
 const TONES = [
   ["friendly", "Friendly"],
   ["professional", "Professional"],
@@ -86,6 +87,7 @@ export default function DashboardPage() {
   const [tab, setTab] = useState<Tab>("overview");
   const [billing, setBilling] = useState<Billing | null>(null);
   const [billingBusy, setBillingBusy] = useState(false);
+  const isFree = (billing?.plan ?? "free") === "free";
 
   // Calls the API with the logged-in user's token.
   const call = useCallback(
@@ -298,8 +300,9 @@ export default function DashboardPage() {
                         onClick={() => update("color", c)} />
                     ))}
                     <input type="color" aria-label="Custom color" value={form.color}
-                      onChange={(e) => update("color", e.target.value)} />
+                      disabled={isFree} onChange={(e) => update("color", e.target.value)} />
                   </div>
+                  {isFree && <p className="hint">Custom colors are part of <a href="#" onClick={(e) => { e.preventDefault(); setTab("plan"); }}>Pro</a>.</p>}
 
                   <label htmlFor="title">Chat title</label>
                   <input id="title" type="text" value={form.title} maxLength={40}
@@ -307,7 +310,7 @@ export default function DashboardPage() {
                     onChange={(e) => update("title", e.target.value)} />
 
                   <label htmlFor="position">Button position</label>
-                  <select id="position" value={form.position} onChange={(e) => update("position", e.target.value)}>
+                  <select id="position" value={form.position} disabled={isFree} onChange={(e) => update("position", e.target.value)}>
                     <option value="right">Bottom right</option>
                     <option value="left">Bottom left</option>
                   </select>
@@ -324,10 +327,16 @@ export default function DashboardPage() {
                   </select>
 
                   <label htmlFor="instructions">Extra instructions (optional)</label>
-                  <textarea id="instructions" value={form.instructions} maxLength={500} style={{ minHeight: 90 }}
+                  <textarea id="instructions" value={form.instructions} maxLength={500} style={{ minHeight: 90 }} disabled={isFree}
                     placeholder="For example: mention our weekend sale when it fits."
                     onChange={(e) => update("instructions", e.target.value)} />
-                  <p className="hint">{form.instructions.length}/500. This changes how the bot speaks, not what it knows.</p>
+                  <p className="hint">
+                    {isFree ? (
+                      <>Button position and extra instructions are part of <a href="#" onClick={(e) => { e.preventDefault(); setTab("plan"); }}>Pro</a>.</>
+                    ) : (
+                      <>{form.instructions.length}/500. This changes how the bot speaks, not what it knows.</>
+                    )}
+                  </p>
 
                   <div className="row" style={{ marginTop: 16 }}>
                     <button className="btn" disabled={saving}>{saving ? "Saving..." : "Save changes"}</button>

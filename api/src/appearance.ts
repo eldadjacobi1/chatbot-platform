@@ -95,3 +95,20 @@ export function styleLines(a: StyleInput): string[] {
 export function styleKey(a: StyleInput): string {
   return `${a.tone}|${a.audience}|${a.instructions.trim()}`;
 }
+
+// The colors everyone can pick. Any other color needs a paid plan.
+export const PRESET_COLORS = ["#4338ca", "#0f766e", "#be123c", "#c2410c", "#1d4ed8", "#14142b"];
+
+// Free plan: only preset colors and the default button position and no extra instructions.
+// A value the bot already has is always allowed, so saving other settings after a
+// downgrade doesn't fail.
+export function paidOnlyError(
+  next: Partial<Appearance>,
+  current: { color: string; position: string; instructions: string },
+): string | null {
+  const msg = "Custom colors, button position and extra instructions are part of Pro.";
+  if (next.color !== undefined && next.color !== current.color && !PRESET_COLORS.includes(next.color)) return msg;
+  if (next.position !== undefined && next.position !== current.position) return msg;
+  if (next.instructions !== undefined && next.instructions !== current.instructions) return msg;
+  return null;
+}

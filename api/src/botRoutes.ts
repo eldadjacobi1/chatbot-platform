@@ -5,7 +5,7 @@ import { db } from "./db/index.js";
 import { bots, type Bot } from "./db/schema.js";
 import { requireUser } from "./auth.js";
 import { getReport } from "./reports.js";
-import { parseAppearance, type Appearance } from "./appearance.js";
+import { parseAppearance, paidOnlyError, DEFAULT_COLOR, type Appearance } from "./appearance.js";
 import { getPlanCached, PLAN_LIMITS } from "./billing.js";
 
 // What the dashboard sees. One domain per bot for now.
@@ -99,6 +99,10 @@ export async function botRoutes(app: FastifyInstance) {
     }
 
     const { name, greeting, context, domain, enabled, appearance } = parsed.value;
+    if ((await getPlanCached(userId)) === "free") {
+      const err = paidOnlyError(appearance, { color: DEFAULT_COLOR, position: "right", instructions: "" });
+      if (err) return reply.code(403).send({ error: err });
+    }
     const [row] = await db
       .insert(bots)
       .values({
@@ -121,6 +125,16 @@ export async function botRoutes(app: FastifyInstance) {
     if ("error" in parsed) return reply.code(400).send({ error: parsed.error });
 
     const { name, greeting, context, domain, enabled, appearance } = parsed.value;
+    if ((await getPlanCached(req.userId!)) === "free") {
+      const [existing] = await db
+        .select()
+        .from(bots)
+        .where(and(eq(bots.id, id), eq(bots.ownerId, req.userId!)));
+      if (existing) {
+        const err = paidOnlyError(appearance, existing);
+        if (err) return reply.code(403).send({ error: err });
+      }
+    }
     const [row] = await db
       .update(bots)
       .set({
