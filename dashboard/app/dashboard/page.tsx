@@ -12,6 +12,7 @@ type Bot = {
   context: string;
   domain: string;
   enabled: boolean;
+  collectLeads: boolean;
   theme: string;
   color: string;
   title: string;
@@ -24,7 +25,10 @@ type Bot = {
 
 type Form = Omit<Bot, "id">;
 
-type Tab = "overview" | "reports" | "appearance" | "settings" | "install" | "plan";
+type Tab = "overview" | "reports" | "leads" | "appearance" | "settings" | "install" | "plan";
+
+type Lead = { id: number; contact: string; name: string; question: string; createdAt: string };
+type Leads = { total: number; limited: boolean; leads: Lead[] };
 
 type Billing = { plan: "free" | "pro" | "business"; status: string; hasCustomer: boolean };
 
@@ -51,6 +55,7 @@ const emptyForm: Form = {
   context: "",
   domain: "",
   enabled: true,
+  collectLeads: true,
   theme: "clean",
   color: "#4338ca",
   title: "",
@@ -94,6 +99,7 @@ export default function DashboardPage() {
   const [tab, setTab] = useState<Tab>("overview");
   const [billing, setBilling] = useState<Billing | null>(null);
   const [billingBusy, setBillingBusy] = useState(false);
+  const [leads, setLeads] = useState<Leads | null>(null);
   const isFree = (billing?.plan ?? "free") === "free";
 
   // Calls the API with the logged-in user's token.
@@ -178,6 +184,12 @@ export default function DashboardPage() {
   }, [botId, call]);
   useEffect(loadReport, [loadReport]);
 
+  const loadLeads = useCallback(() => {
+    if (!botId) return;
+    call(`/api/bots/${botId}/leads`).then(setLeads).catch(() => setLeads(null));
+  }, [botId, call]);
+  useEffect(loadLeads, [loadLeads]);
+
   async function save(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
@@ -222,9 +234,9 @@ export default function DashboardPage() {
         <>
           {bot && (
             <nav className="tabs">
-              {(["overview", "reports", "appearance", "settings", "install", "plan"] as Tab[]).map((t) => (
+              {(["overview", "reports", "leads", "appearance", "settings", "install", "plan"] as Tab[]).map((t) => (
                 <button key={t} type="button" className={tab === t ? "tab active" : "tab"} onClick={() => setTab(t)}>
-                  {t === "overview" ? "Overview" : t === "reports" ? "Reports" : t === "appearance" ? "Appearance" : t === "settings" ? "Settings" : t === "install" ? "Install" : "Plan"}
+                  {t === "overview" ? "Overview" : t === "reports" ? "Reports" : t === "leads" ? "Leads" : t === "appearance" ? "Appearance" : t === "settings" ? "Settings" : t === "install" ? "Install" : "Plan"}
                 </button>
               ))}
             </nav>
@@ -301,6 +313,39 @@ export default function DashboardPage() {
                   ))}
                 </ul>
               )}
+                </>
+              )}
+            </div>
+          )}
+
+          {bot && tab === "leads" && (
+            <div className="card">
+              <div className="row" style={{ justifyContent: "space-between" }}>
+                <h2 style={{ margin: 0 }}>Leads</h2>
+                <button className="btn secondary" type="button" onClick={loadLeads}>Refresh</button>
+              </div>
+              {!form.collectLeads && (
+                <p className="hint">Collecting contact details is off. Turn it on in Settings.</p>
+              )}
+              {!leads || leads.total === 0 ? (
+                <p className="hint">No leads yet. When the bot can&apos;t answer, visitors can leave their email or phone and it shows up here.</p>
+              ) : (
+                <>
+                  <p><b>{leads.total}</b> {leads.total === 1 ? "lead" : "leads"}</p>
+                  <ul>
+                    {leads.leads.map((l) => (
+                      <li key={l.id}>
+                        <b>{l.contact}</b>{l.name ? ` (${l.name})` : ""}
+                        {l.question && <><br /><span className="hint">Asked: {l.question}</span></>}
+                        <br /><span className="hint">{new Date(l.createdAt).toLocaleString()}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  {leads.limited && (
+                    <p className="hint">
+                      You have more leads than shown. <a href="#" onClick={(e) => { e.preventDefault(); setTab("plan"); }}>Upgrade to Pro</a> to see all of them.
+                    </p>
+                  )}
                 </>
               )}
             </div>
@@ -425,6 +470,12 @@ export default function DashboardPage() {
                 <input type="checkbox" checked={form.enabled}
                   onChange={(e) => update("enabled", e.target.checked)} />
                 Chatbot is on
+              </label>
+
+              <label className="check">
+                <input type="checkbox" checked={form.collectLeads}
+                  onChange={(e) => update("collectLeads", e.target.checked)} />
+                Ask visitors for their email or phone when the bot can&apos;t help
               </label>
 
               <div className="row" style={{ marginTop: 16 }}>
