@@ -338,3 +338,8 @@ code { background: var(--accent-soft); padding: 1px 6px; border-radius: 6px; fon
 .side-link { padding: 6px 12px; font-size: .875rem; font-weight: 600; color: var(--muted); text-decoration: none; }
 .side-link:hover { color: var(--accent); }
 @media (max-width: 860px) { .side-link { display: none; } }
+
+.side-legal { display: flex; gap: 12px; padding: 0 12px; font-size: .8rem; }
+.side-legal a { color: var(--muted); text-decoration: none; }
+.side-legal a:hover { color: var(--accent); }
+@media (max-width: 860px) { .side-legal { display: none; } }

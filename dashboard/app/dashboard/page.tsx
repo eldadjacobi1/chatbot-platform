@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { CONTACT_EMAIL } from "../legal";
 import { useAuth, useUser, UserButton } from "@clerk/nextjs";
 import { useCallback, useEffect, useState } from "react";
@@ -501,6 +502,7 @@ export default function DashboardPage() {
             </button>
           )}
           <a className="side-link" href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent("Feedback")}`}>Send feedback</a>
+          <span className="side-legal"><Link href="/terms">Terms</Link><Link href="/privacy">Privacy</Link></span>
           <div className="app-user"><UserButton /></div>
         </div>
       </aside>
