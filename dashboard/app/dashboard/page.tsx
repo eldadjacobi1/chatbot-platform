@@ -579,100 +579,120 @@ export default function DashboardPage() {
           )}
 
           {bot && tab === "appearance" && (
-            <form className="card" onSubmit={save}>
-              <h2>Appearance</h2>
-              <div className="appearance">
-                <div>
-                  <label>Design</label>
-                  <div className="themes">
-                    {THEMES.map((t) => {
-                      return (
-                        <button key={t.id} type="button" className={form.theme === t.id ? "theme on" : "theme"}
-                          onClick={() => update("theme", t.id)}>
+            <form className="design" onSubmit={save}>
+              <div className="design-grid">
+                <div className="design-forms">
+                  <section className="card">
+                    <h2>Look</h2>
+                    <label>Design</label>
+                    <div className="theme-cards" style={{ "--pv": form.color } as React.CSSProperties}>
+                      {THEMES.map((t) => (
+                        <button key={t.id} type="button" className={form.theme === t.id ? "theme-card on" : "theme-card"} onClick={() => update("theme", t.id)}>
+                          <span className={`mini mini-${t.id}`}>
+                            <i className="mini-head" />
+                            <i className="mini-bot" />
+                            <i className="mini-you" />
+                          </span>
                           <b>{t.name}</b>
-                          <span>{t.text}</span>
+                          <span className="theme-text">{t.text}</span>
                         </button>
-                      );
-                    })}
-                  </div>
-
-                  <label>Color</label>
-                  <div className="swatches">
-                    {COLORS.map((c) => (
-                      <button key={c} type="button" aria-label={`Use color ${c}`}
-                        className={form.color === c ? "swatch on" : "swatch"} style={{ background: c }}
-                        onClick={() => update("color", c)} />
-                    ))}
-                    <input type="color" aria-label="Custom color" value={form.color}
-                      onChange={(e) => update("color", e.target.value)} />
-                  </div>
-
-                  <label htmlFor="title">Chat title</label>
-                  <input id="title" type="text" value={form.title} maxLength={40}
-                    placeholder={form.name || "Your business name"}
-                    onChange={(e) => update("title", e.target.value)} />
-
-                  <label htmlFor="position">Button position</label>
-                  <select id="position" value={form.position} onChange={(e) => update("position", e.target.value)}>
-                    <option value="right">Bottom right</option>
-                    <option value="left">Bottom left</option>
-                  </select>
-
-                  <h3>Personality</h3>
-                  <label htmlFor="tone">How it talks</label>
-                  <select id="tone" value={form.tone} onChange={(e) => update("tone", e.target.value)}>
-                    {TONES.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
-                  </select>
-
-                  <label htmlFor="audience">Who it talks to</label>
-                  <select id="audience" value={form.audience} onChange={(e) => update("audience", e.target.value)}>
-                    {AUDIENCES.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
-                  </select>
-
-                  <label htmlFor="instructions">Extra instructions (optional){isFree && <span className="pro">Pro</span>}</label>
-                  <textarea id="instructions" value={form.instructions} maxLength={500} style={{ minHeight: 90 }} disabled={isFree}
-                    placeholder="For example: mention our weekend sale when it fits."
-                    onChange={(e) => update("instructions", e.target.value)} />
-                  <p className="hint">
-                    {isFree ? (
-                      <>Extra instructions are part of <a href="#" onClick={(e) => { e.preventDefault(); setTab("plan"); }}>Pro</a>.</>
-                    ) : (
-                      <>{form.instructions.length}/500. This changes how the bot speaks, not what it knows.</>
-                    )}
-                  </p>
-
-                  <div className="savebar">
-                    <button className="btn" disabled={saving}>{saving ? "Saving..." : "Save changes"}</button>
-                    {message && <span className="ok">{message}</span>}
-                    {error && <span className="error">{error}</span>}
-                  </div>
-                </div>
-
-                <div className={`preview theme-${form.theme}`} aria-label="Preview" style={{ "--pv": form.color } as React.CSSProperties}>
-                  <div className="pv-window">
-                    <div className="pv-head">{form.title || form.name || "Your business"}</div>
-                    <div className="pv-body">
-                      <div className="pv-bot">{form.greeting}</div>
-                      {form.suggestions.filter((q) => q.trim()).length > 0 && (
-                        <div className="pv-chips">
-                          {form.suggestions.filter((q) => q.trim()).map((q, i) => (
-                            <span key={i} style={{ color: form.color, borderColor: form.color }}>{q}</span>
-                          ))}
-                        </div>
-                      )}
-                      <div className="pv-you" style={{ background: form.color }}>What are your hours?</div>
+                      ))}
                     </div>
-                    <div className="pv-input"><span>Type your question...</span><b style={{ background: form.color }}>Send</b></div>
-                  </div>
-                  <div className={form.position === "left" ? "pv-launch left" : "pv-launch"} style={{ background: form.color }}>
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                      <path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.6 8.6 0 0 1-3.6-.8L3 21l1.9-5.4A8.4 8.4 0 1 1 21 11.5z" />
-                    </svg>
-                    {THEMES.find((t) => t.id === form.theme)?.label && (
-                      <span>{THEMES.find((t) => t.id === form.theme)?.label}</span>
-                    )}
-                  </div>
+
+                    <label>Color</label>
+                    <div className="swatches">
+                      {COLORS.map((c) => (
+                        <button key={c} type="button" aria-label={`Use color ${c}`}
+                          className={form.color === c ? "swatch on" : "swatch"} style={{ background: c }}
+                          onClick={() => update("color", c)} />
+                      ))}
+                      <input type="color" aria-label="Custom color" value={form.color}
+                        onChange={(e) => update("color", e.target.value)} />
+                    </div>
+
+                    <div className="two">
+                      <div>
+                        <label htmlFor="title">Chat title</label>
+                        <input id="title" type="text" value={form.title} maxLength={40}
+                          placeholder={form.name || "Your business name"}
+                          onChange={(e) => update("title", e.target.value)} />
+                      </div>
+                      <div>
+                        <label htmlFor="position">Button position</label>
+                        <select id="position" value={form.position} onChange={(e) => update("position", e.target.value)}>
+                          <option value="right">Bottom right</option>
+                          <option value="left">Bottom left</option>
+                        </select>
+                      </div>
+                    </div>
+                  </section>
+
+                  <section className="card">
+                    <h2>Voice</h2>
+                    <div className="two">
+                      <div>
+                        <label htmlFor="tone">How it talks</label>
+                        <select id="tone" value={form.tone} onChange={(e) => update("tone", e.target.value)}>
+                          {TONES.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                        </select>
+                      </div>
+                      <div>
+                        <label htmlFor="audience">Who it talks to</label>
+                        <select id="audience" value={form.audience} onChange={(e) => update("audience", e.target.value)}>
+                          {AUDIENCES.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                        </select>
+                      </div>
+                    </div>
+
+                    <label htmlFor="instructions">Extra instructions (optional){isFree && <span className="pro">Pro</span>}</label>
+                    <textarea id="instructions" value={form.instructions} maxLength={500} style={{ minHeight: 90 }} disabled={isFree}
+                      placeholder="For example: mention our weekend sale when it fits."
+                      onChange={(e) => update("instructions", e.target.value)} />
+                    <p className="hint">
+                      {isFree ? (
+                        <>Extra instructions are part of <a href="#" onClick={(e) => { e.preventDefault(); setTab("plan"); }}>Pro</a>.</>
+                      ) : (
+                        <>{form.instructions.length}/500. This changes how the bot speaks, not what it knows.</>
+                      )}
+                    </p>
+                  </section>
                 </div>
+
+                <aside className="design-preview">
+                  <p className="preview-label">Live preview</p>
+                  <div className={`preview theme-${form.theme}`} aria-label="Preview" style={{ "--pv": form.color } as React.CSSProperties}>
+                    <div className="pv-window">
+                      <div className="pv-head">{form.title || form.name || "Your business"}</div>
+                      <div className="pv-body">
+                        <div className="pv-bot">{form.greeting}</div>
+                        {form.suggestions.filter((q) => q.trim()).length > 0 && (
+                          <div className="pv-chips">
+                            {form.suggestions.filter((q) => q.trim()).map((q, i) => (
+                              <span key={i} style={{ color: form.color, borderColor: form.color }}>{q}</span>
+                            ))}
+                          </div>
+                        )}
+                        <div className="pv-you" style={{ background: form.color }}>What are your hours?</div>
+                        <div className="pv-bot">We&apos;re open every day from 9 to 6.</div>
+                      </div>
+                      <div className="pv-input"><span>Type your question...</span><b style={{ background: form.color }}>Send</b></div>
+                    </div>
+                    <div className={form.position === "left" ? "pv-launch left" : "pv-launch"} style={{ background: form.color }}>
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.6 8.6 0 0 1-3.6-.8L3 21l1.9-5.4A8.4 8.4 0 1 1 21 11.5z" />
+                      </svg>
+                      {THEMES.find((t) => t.id === form.theme)?.label && (
+                        <span>{THEMES.find((t) => t.id === form.theme)?.label}</span>
+                      )}
+                    </div>
+                  </div>
+                </aside>
+              </div>
+
+              <div className="savebar wide">
+                <button className="btn" disabled={saving}>{saving ? "Saving..." : "Save changes"}</button>
+                {message && <span className="ok">{message}</span>}
+                {error && <span className="error">{error}</span>}
               </div>
             </form>
           )}
