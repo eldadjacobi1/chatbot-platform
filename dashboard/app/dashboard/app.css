@@ -241,3 +241,19 @@ code { background: var(--accent-soft); padding: 1px 6px; border-radius: 6px; fon
 
 /* Save button sits to the right, out of the way of the fields */
 .savebar, .savebar.wide { margin-left: auto; flex-direction: row-reverse; }
+
+/* Save button lives in the page header */
+.app-head:has(.head-save) { position: sticky; top: 0; z-index: 10; margin: 0 -8px 20px; padding: 14px 8px; background: color-mix(in srgb, var(--bg) 92%, transparent); backdrop-filter: blur(8px); }
+.head-save { display: flex; align-items: center; gap: 12px; }
+.head-save .ok, .head-save .error { margin: 0; font-weight: 600; }
+.savebar, .savebar.wide { display: none; }
+
+/* Leads */
+.lead-contact { display: flex; gap: 10px; align-items: center; }
+.lead-contact a { color: var(--accent); font-weight: 600; text-decoration: none; }
+.lead-contact a:hover { text-decoration: underline; }
+.link.tiny { font-size: .8rem; color: var(--muted); font-weight: 600; }
+.link.tiny.danger:hover { color: var(--danger); }
+.lead-side { flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+.lead-status { width: auto; padding: 5px 28px 5px 12px; border-radius: 999px; font-size: .85rem; font-weight: 650; }
+.lead-done .lead-main, .lead-done .avatar { opacity: .5; }

@@ -46,7 +46,7 @@ const dashboardHosts = dashboardOrigins.flatMap((o) => {
 });
 await app.register(cors, {
   origin: dashboardOrigins,
-  methods: ["GET", "POST", "PUT", "OPTIONS"],
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   allowedHeaders: ["Authorization", "Content-Type"],
 });
 await app.register(botRoutes);

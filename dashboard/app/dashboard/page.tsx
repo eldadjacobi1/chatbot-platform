@@ -30,7 +30,7 @@ type Form = Omit<Bot, "id">;
 
 type Tab = "overview" | "reports" | "leads" | "appearance" | "settings" | "install" | "plan";
 
-type Lead = { id: number; contact: string; name: string; question: string; createdAt: string };
+type Lead = { id: number; contact: string; name: string; question: string; status?: string; createdAt: string };
 type Leads = { total: number; limited: boolean; leads: Lead[] };
 
 type Billing = { plan: "free" | "pro" | "business"; status: string; hasCustomer: boolean };
@@ -112,6 +112,16 @@ const PLAN_DETAILS = [
 const NAV_COLORS: Record<string, string> = {
   overview: "#4338ca", reports: "#0ea5e9", leads: "#16a34a", appearance: "#db2777", settings: "#d97706", install: "#7c3aed", plan: "#0f766e",
 };
+
+function timeAgo(iso: string): string {
+  const t = new Date(iso);
+  const mins = Math.round((Date.now() - t.getTime()) / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins} min ago`;
+  const hrs = Math.round(mins / 60);
+  if (hrs < 24) return `${hrs} ${hrs === 1 ? "hour" : "hours"} ago`;
+  return t.toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+}
 
 const HEADS: Record<string, [string, string]> = {
   reports: ["Reports", "The questions your visitors asked, and the ones your bot couldn't answer."],
@@ -386,6 +396,32 @@ export default function DashboardPage() {
     }
   }
 
+  async function setLeadStatus(l: Lead, status: string) {
+    if (!bot) return;
+    setLeads((cur) => cur && { ...cur, leads: cur.leads.map((x) => (x.id === l.id ? { ...x, status } : x)) });
+    try {
+      await call(`/api/bots/${bot.id}/leads/${l.id}`, { method: "PATCH", body: JSON.stringify({ status }) });
+    } catch (err) {
+      setError((err as Error).message);
+      loadLeads();
+    }
+  }
+
+  async function deleteLead(l: Lead) {
+    if (!bot || !window.confirm(`Delete the lead from ${l.name || l.contact}?`)) return;
+    try {
+      await call(`/api/bots/${bot.id}/leads/${l.id}`, { method: "DELETE" });
+      setLeads((cur) => cur && { ...cur, total: cur.total - 1, leads: cur.leads.filter((x) => x.id !== l.id) });
+    } catch (err) {
+      setError((err as Error).message);
+    }
+  }
+
+  const [copiedLead, setCopiedLead] = useState<number | null>(null);
+  async function copyContact(l: Lead) {
+    try { await navigator.clipboard.writeText(l.contact); setCopiedLead(l.id); setTimeout(() => setCopiedLead(null), 1500); } catch {}
+  }
+
   const renderUnanswered = (q: QuestionCount) => (
     <li key={q.question}>
       <div className="un-row">
@@ -562,6 +598,15 @@ export default function DashboardPage() {
                 <h1>{HEADS[tab][0]}</h1>
                 <p className="hint">{HEADS[tab][1]}</p>
               </div>
+              {(tab === "appearance" || tab === "settings") && (
+                <div className="head-save">
+                  {message && <span className="ok">{message}</span>}
+                  {error && <span className="error">{error}</span>}
+                  <button className="btn" type="submit" form={tab === "appearance" ? "design-form" : "setup-form"} disabled={saving}>
+                    {saving ? "Saving..." : "Save changes"}
+                  </button>
+                </div>
+              )}
             </header>
           )}
 
@@ -650,14 +695,25 @@ export default function DashboardPage() {
                   </div>
                   <ul>
                     {leads.leads.map((l) => (
-                      <li key={l.id}>
+                      <li key={l.id} className={l.status === "done" ? "lead-done" : ""}>
                         <span className="avatar">{(l.name || l.contact).trim().charAt(0).toUpperCase()}</span>
                         <div className="lead-main">
-                          <b>{l.name || l.contact}{isNewLead(l) && <span className="pill-new">New</span>}</b>
-                          {l.name && <span className="lead-contact">{l.contact}</span>}
+                          <b>{l.name || l.contact}{(l.status ?? "new") === "new" && <span className="pill-new">New</span>}</b>
+                          <span className="lead-contact">
+                            <a href={/@/.test(l.contact) ? `mailto:${l.contact}` : `tel:${l.contact.replace(/[^\d+]/g, "")}`}>{l.contact}</a>
+                            <button type="button" className="link tiny" onClick={() => copyContact(l)}>{copiedLead === l.id ? "Copied" : "Copy"}</button>
+                          </span>
                           {l.question && <span className="lead-q">Asked: {l.question}</span>}
                         </div>
-                        <time className="lead-time">{new Date(l.createdAt).toLocaleDateString(undefined, { month: "short", day: "numeric" })}</time>
+                        <div className="lead-side">
+                          <time className="lead-time" title={new Date(l.createdAt).toLocaleString()}>{timeAgo(l.createdAt)}</time>
+                          <select className="lead-status" aria-label="Status" value={l.status ?? "new"} onChange={(e) => setLeadStatus(l, e.target.value)}>
+                            <option value="new">New</option>
+                            <option value="contacted">Contacted</option>
+                            <option value="done">Done</option>
+                          </select>
+                          <button type="button" className="link tiny danger" onClick={() => deleteLead(l)}>Delete</button>
+                        </div>
                       </li>
                     ))}
                   </ul>
@@ -670,7 +726,7 @@ export default function DashboardPage() {
           )}
 
           {bot && tab === "appearance" && (
-            <form className="design" onSubmit={save}>
+            <form id="design-form" className="design" onSubmit={save}>
               <div className="design-grid">
                 <div className="design-forms">
                   <section className="card">
@@ -779,12 +835,6 @@ export default function DashboardPage() {
                   </div>
                 </aside>
               </div>
-
-              <div className="savebar wide">
-                <button className="btn" disabled={saving}>{saving ? "Saving..." : "Save changes"}</button>
-                {message && <span className="ok">{message}</span>}
-                {error && <span className="error">{error}</span>}
-              </div>
             </form>
           )}
 
@@ -831,7 +881,7 @@ export default function DashboardPage() {
           )}
 
           {bot && tab === "settings" && (
-            <form className="setup" onSubmit={save}>
+            <form id="setup-form" className="setup" onSubmit={save}>
               <section className="card">
                 <h2>Your business</h2>
                 <div className="two">
@@ -898,12 +948,6 @@ export default function DashboardPage() {
                   <span><b>Collect contact details</b><small>When the bot can&apos;t help, it asks visitors for their email or phone.</small></span>
                 </label>
               </section>
-
-              <div className="savebar wide">
-                <button className="btn" disabled={saving}>{saving ? "Saving..." : "Save changes"}</button>
-                {message && <span className="ok">{message}</span>}
-                {error && <span className="error">{error}</span>}
-              </div>
             </form>
           )}
 

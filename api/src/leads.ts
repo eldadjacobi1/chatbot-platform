@@ -72,7 +72,7 @@ export async function leadRoutes(app: FastifyInstance) {
 
     const free = (await getPlanCached(req.userId!)) === "free";
     const { rows } = await pool.query(
-      "SELECT id, contact, name, question, created_at FROM leads WHERE bot_id = $1 ORDER BY created_at DESC LIMIT 500",
+      "SELECT id, contact, name, question, status, created_at FROM leads WHERE bot_id = $1 ORDER BY created_at DESC LIMIT 500",
       [id],
     );
     const total = rows.length;
@@ -85,8 +85,34 @@ export async function leadRoutes(app: FastifyInstance) {
         contact: r.contact,
         name: r.name,
         question: r.question,
+        status: r.status,
         createdAt: r.created_at,
       })),
     };
+  });
+
+  async function ownsBot(userId: string, botId: string) {
+    const [owned] = await db.select({ id: bots.id }).from(bots).where(and(eq(bots.id, botId), eq(bots.ownerId, userId)));
+    return !!owned;
+  }
+
+  // Owner: mark a lead New / Contacted / Done.
+  app.patch("/api/bots/:id/leads/:leadId", { preHandler: requireUser }, async (req, reply) => {
+    const { id, leadId } = req.params as { id: string; leadId: string };
+    if (!(await ownsBot(req.userId!, id))) return reply.code(404).send({ error: "Chatbot not found." });
+    const status = ((req.body ?? {}) as { status?: unknown }).status;
+    if (status !== "new" && status !== "contacted" && status !== "done") {
+      return reply.code(400).send({ error: "Unknown status." });
+    }
+    await pool.query("UPDATE leads SET status = $1 WHERE id = $2 AND bot_id = $3", [status, Number(leadId), id]);
+    return { ok: true };
+  });
+
+  // Owner: delete a lead (junk or test entries).
+  app.delete("/api/bots/:id/leads/:leadId", { preHandler: requireUser }, async (req, reply) => {
+    const { id, leadId } = req.params as { id: string; leadId: string };
+    if (!(await ownsBot(req.userId!, id))) return reply.code(404).send({ error: "Chatbot not found." });
+    await pool.query("DELETE FROM leads WHERE id = $1 AND bot_id = $2", [Number(leadId), id]);
+    return { ok: true };
   });
 }
