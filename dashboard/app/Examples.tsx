@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { SITES } from "./sites";
 
 type Theme = "clean" | "bold" | "soft";
 type Example = {
@@ -89,13 +90,7 @@ function MockSite({ ex }: { ex: Example }) {
         <span /><span /><span />
       </div>
       <div className="ex-page">
-        <div className="ex-nav"><b>{ex.business}</b><i /><i /><i /></div>
-        <div className="ex-hero">
-          <h4>{ex.tagline}</h4>
-          <span className="ex-bar w70" /><span className="ex-bar w50" />
-          <span className="ex-cta">Visit us</span>
-        </div>
-        <div className="ex-rows"><span /><span /><span /></div>
+        <div className="site" dangerouslySetInnerHTML={{ __html: SITES[ex.id] ?? "" }} />
 
         <div className={`ex-chat ex-${ex.theme}`}>
           <div className="ex-head">{ex.business}</div>
