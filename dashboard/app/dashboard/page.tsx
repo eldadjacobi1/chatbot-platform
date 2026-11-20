@@ -154,6 +154,8 @@ export default function DashboardPage() {
     if (typeof window === "undefined") return;
     if (new URLSearchParams(window.location.search).get("billing") !== "success") return;
     setTab("plan");
+    // Clean the URL so a refresh doesn't jump back to the Plan tab.
+    window.history.replaceState(null, "", "/dashboard");
     const timers = [1500, 4000, 8000].map((ms) => setTimeout(loadBilling, ms));
     return () => timers.forEach(clearTimeout);
   }, [loadBilling]);
