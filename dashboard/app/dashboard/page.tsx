@@ -305,24 +305,31 @@ export default function DashboardPage() {
             <div className="card">
               <h2>Your plan</h2>
               {error && <p className="error">{error}</p>}
-              {PLANS.map((p) => {
-                const current = (billing?.plan ?? "free") === p.id;
-                return (
-                  <p key={p.id}>
-                    <strong>{p.name}</strong> &middot; {p.price}
-                    {current ? " (current plan)" : ""}{" "}
-                    {!current && p.id !== "free" && (billing?.plan ?? "free") === "free" && (
-                      <button className="btn" type="button" disabled={billingBusy} onClick={() => openBilling("checkout", p.id)}>
-                        Choose {p.name}
-                      </button>
-                    )}
-                  </p>
-                );
-              })}
+              <div className="plans">
+                {PLANS.map((p) => {
+                  const current = (billing?.plan ?? "free") === p.id;
+                  const onFree = (billing?.plan ?? "free") === "free";
+                  return (
+                    <div key={p.id} className={current ? "plan current" : "plan"}>
+                      {current && <span className="badge">Current plan</span>}
+                      <h3>{p.name}</h3>
+                      <p className="price">{p.price}</p>
+                      {!current && p.id !== "free" && onFree && (
+                        <button className="btn" type="button" disabled={billingBusy} onClick={() => openBilling("checkout", p.id)}>
+                          Choose {p.name}
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
               {billing?.hasCustomer && (
-                <button className="btn secondary" type="button" disabled={billingBusy} onClick={() => openBilling("portal")}>
-                  Manage billing
-                </button>
+                <>
+                  <p className="hint">To switch plan, update your card or cancel, use Manage billing.</p>
+                  <button className="btn secondary" type="button" disabled={billingBusy} onClick={() => openBilling("portal")}>
+                    Manage billing
+                  </button>
+                </>
               )}
             </div>
           )}

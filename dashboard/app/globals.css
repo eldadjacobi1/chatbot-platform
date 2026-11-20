@@ -90,3 +90,11 @@ pre { background: #14142b; color: #e9e9fb; padding: 16px; border-radius: 12px; o
   .points { grid-template-columns: 1fr; gap: 24px; }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+.plans { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin: 18px 0; }
+.plan { position: relative; border: 1.5px solid var(--line, #e4e4ee); border-radius: 16px; padding: 22px 18px; }
+.plan h3 { margin: 0 0 4px; }
+.plan .price { margin: 0 0 14px; color: var(--muted, #5b5b78); }
+.plan.current { border-color: var(--accent); background: #eef0ff; }
+.plan .badge { display: inline-block; margin-bottom: 10px; padding: 3px 10px; border-radius: 999px; background: var(--accent); color: #fff; font-size: 13px; font-weight: 600; }
+@media (max-width: 640px) { .plans { grid-template-columns: 1fr; } }
