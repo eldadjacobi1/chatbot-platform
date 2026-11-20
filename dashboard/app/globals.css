@@ -37,11 +37,11 @@ a { color: var(--accent); }
 
 label { display: block; font-weight: 650; margin: 18px 0 6px; letter-spacing: -0.005em; }
 .hint { color: var(--muted); font-size: 0.875rem; margin: 4px 0 0; }
-input[type="text"], textarea {
+input[type="text"], select, textarea {
   width: 100%; padding: 12px 14px; border: 1px solid #d4d4e4; border-radius: 12px;
   font: inherit; color: var(--ink); background: var(--paper);
 }
-input[type="text"]:focus, textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px #dcdafb; }
+input[type="text"]:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px #dcdafb; }
 textarea { min-height: 240px; resize: vertical; }
 .check { display: flex; gap: 10px; align-items: center; font-weight: 650; margin-top: 20px; }
 .check input { width: 18px; height: 18px; accent-color: var(--accent); }
