@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { CONTACT_EMAIL } from "../legal";
 import { useAuth, useUser, UserButton } from "@clerk/nextjs";
 import { useCallback, useEffect, useState } from "react";
 import Logo from "../Logo";
@@ -161,6 +160,10 @@ export default function DashboardPage() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [answerSaved, setAnswerSaved] = useState(false);
+  const [fbOpen, setFbOpen] = useState(false);
+  const [fbText, setFbText] = useState("");
+  const [fbBusy, setFbBusy] = useState(false);
+  const [fbMsg, setFbMsg] = useState("");
   const [ignoredQ, setIgnoredQ] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
@@ -384,6 +387,23 @@ export default function DashboardPage() {
     }
   }
 
+  async function sendFeedback() {
+    setFbBusy(true);
+    setFbMsg("");
+    try {
+      await call("/api/feedback", {
+        method: "POST",
+        body: JSON.stringify({ message: fbText, page: tab, email: user?.primaryEmailAddress?.emailAddress ?? "" }),
+      });
+      setFbText("");
+      setFbMsg("Thank you! We read every message.");
+    } catch (err) {
+      setFbMsg((err as Error).message);
+    } finally {
+      setFbBusy(false);
+    }
+  }
+
   async function ignoreQuestion(question: string, undo = false) {
     if (!bot) return;
     try {
@@ -501,12 +521,26 @@ export default function DashboardPage() {
               <em className="nav-plan">{PLANS.find((p) => p.id === (billing?.plan ?? "free"))?.name}</em>
             </button>
           )}
-          <a className="side-link" href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent("Feedback")}`}>Send feedback</a>
+          <button type="button" className="side-link" onClick={() => { setFbOpen(true); setFbMsg(""); }}>Send feedback</button>
           <span className="side-legal"><Link href="/terms">Terms</Link><Link href="/privacy">Privacy</Link></span>
           <div className="app-user"><UserButton /></div>
         </div>
       </aside>
 
+      {fbOpen && (
+        <div className="fb-back" onClick={() => setFbOpen(false)}>
+          <div className="fb-box" role="dialog" aria-label="Send feedback" onClick={(e) => e.stopPropagation()}>
+            <h2>Send feedback</h2>
+            <p className="hint">Tell us what is confusing, what is missing, or what you like. We read every message.</p>
+            <textarea autoFocus maxLength={2000} value={fbText} placeholder="Type your message..." onChange={(e) => setFbText(e.target.value)} />
+            <div className="row">
+              <button type="button" className="btn small" disabled={fbBusy || !fbText.trim()} onClick={sendFeedback}>{fbBusy ? "Sending..." : "Send"}</button>
+              <button type="button" className="btn ghost small" onClick={() => setFbOpen(false)}>Close</button>
+              {fbMsg && <span className="hint" style={{ margin: 0 }}>{fbMsg}</span>}
+            </div>
+          </div>
+        </div>
+      )}
       <main className="app-main">
         <div className="app-inner">
       {loading ? (

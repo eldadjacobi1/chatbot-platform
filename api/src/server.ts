@@ -15,6 +15,7 @@ import { leadRoutes } from "./leads.js";
 import { importRoutes } from "./importSite.js";
 import { turnstileRoutes, turnstileEnabled, turnstileSiteKey, isVerified } from "./turnstile.js";
 import { recordUsage, usageRoutes } from "./usage.js";
+import { feedbackRoutes } from "./feedback.js";
 import { billingRoutes, getPlanCached, PLAN_LIMITS } from "./billing.js";
 import {
   createToken,
@@ -57,6 +58,7 @@ await app.register(leadRoutes);
 await app.register(importRoutes);
 await app.register(turnstileRoutes);
 await app.register(usageRoutes);
+await app.register(feedbackRoutes);
 if (!process.env.CLERK_SECRET_KEY) {
   app.log.warn("CLERK_SECRET_KEY not set: dashboard API requests will be rejected.");
 }

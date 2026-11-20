@@ -343,3 +343,11 @@ code { background: var(--accent-soft); padding: 1px 6px; border-radius: 6px; fon
 .side-legal a { color: var(--muted); text-decoration: none; }
 .side-legal a:hover { color: var(--accent); }
 @media (max-width: 860px) { .side-legal { display: none; } }
+
+/* Feedback box */
+button.side-link { border: 0; background: none; font: inherit; font-size: .875rem; font-weight: 600; text-align: left; cursor: pointer; }
+.fb-back { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; padding: 16px; background: rgba(20,20,43,.4); }
+.fb-box { width: 100%; max-width: 460px; padding: 24px; border-radius: 18px; background: #fff; box-shadow: 0 20px 50px rgba(20,20,43,.25); }
+.fb-box h2 { margin: 0 0 4px; }
+.fb-box textarea { width: 100%; min-height: 120px; margin: 12px 0; }
+.fb-box .row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
