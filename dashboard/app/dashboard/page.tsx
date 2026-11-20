@@ -160,7 +160,6 @@ export default function DashboardPage() {
   const [message, setMessage] = useState("");
   const [answerSaved, setAnswerSaved] = useState(false);
   const [ignoredQ, setIgnoredQ] = useState<string | null>(null);
-  useEffect(() => { window.scrollTo({ top: 0 }); }, [tab]);
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
   const [report, setReport] = useState<Report | null>(null);
@@ -471,6 +470,8 @@ export default function DashboardPage() {
       )}
     </li>
   );
+
+  useEffect(() => { window.scrollTo({ top: 0 }); }, [tab]);
 
   const update = (field: keyof Form, value: string | boolean) =>
     setForm((f) => ({ ...f, [field]: value }));
