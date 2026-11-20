@@ -492,90 +492,102 @@ export default function DashboardPage() {
           )}
 
           {bot && tab === "reports" && report && report.total > 0 && (
-            <div className="card">
-              <div className="row" style={{ justifyContent: "space-between" }}>
-                <h2 style={{ margin: 0 }}>Report (last {report.days} days)</h2>
-                <button className="btn secondary" type="button" onClick={loadReport}>Refresh</button>
+            <>
+              <div className="rep-top">
+                <div className="card rate">
+                  <div className="rate-head">
+                    <h2>Answer rate</h2>
+                    <button className="btn secondary small" type="button" onClick={loadReport}>Refresh</button>
+                  </div>
+                  <div className="rate-num">{Math.round(((report.total - report.unansweredCount) / report.total) * 100)}%</div>
+                  <div className="rate-bar"><i style={{ width: `${Math.round(((report.total - report.unansweredCount) / report.total) * 100)}%` }} /></div>
+                  <p className="hint">{report.total - report.unansweredCount} of {report.total} questions answered in the last {report.days} days.</p>
+                </div>
               </div>
-              <p>
-                <b>{report.total}</b> questions &middot; <b>{report.unansweredCount}</b> the bot couldn&apos;t answer
-              </p>
 
               {report.limited ? (
-                <p className="hint">
-                  See which questions your bot couldn&apos;t answer, and the most asked ones, with{" "}
-                  <a href="#" onClick={(e) => { e.preventDefault(); setTab("plan"); }}>Pro</a>.
-                </p>
+                <div className="card upsell">
+                  <h2>See what visitors are asking</h2>
+                  <p>Your bot couldn&apos;t answer {report.unansweredCount} {report.unansweredCount === 1 ? "question" : "questions"}. Upgrade to Pro to see which ones, and the questions asked most often.</p>
+                  <button type="button" className="btn" onClick={() => setTab("plan")}>See Pro</button>
+                </div>
               ) : (
-                <>
-              <h3>Unanswered questions</h3>
-              {report.unanswered.length === 0 ? (
-                <p className="hint">None yet. Nice!</p>
-              ) : (
-                <>
-                  <ul>
-                    {report.unanswered.map((q) => (
-                      <li key={q.question}>{q.question} <span className="hint">({q.count}x)</span></li>
-                    ))}
-                  </ul>
-                  <p className="hint">
-                    Tip: add the answers to these in{" "}
-                    <a href="#" onClick={(e) => { e.preventDefault(); setTab("settings"); }}>Bot setup</a>
-                    , so the bot can answer next time.
-                  </p>
-                </>
+                <div className="rep-cols">
+                  <div className="card">
+                    <h2 className="amber-title">Needs an answer</h2>
+                    {report.unanswered.length === 0 ? (
+                      <p className="hint">Nothing here. Your bot answered everything.</p>
+                    ) : (
+                      <>
+                        <ul className="unans">
+                          {report.unanswered.map((q) => (
+                            <li key={q.question}>
+                              <button type="button" className="link q" onClick={() => setTab("settings")}>{q.question} <em>{q.count}x</em></button>
+                              <button type="button" className="btn secondary small" onClick={() => setTab("settings")}>Add answer</button>
+                            </li>
+                          ))}
+                        </ul>
+                        <p className="hint">Add the answers in Bot setup, and the bot can answer next time.</p>
+                      </>
+                    )}
+                  </div>
+                  <div className="card">
+                    <h2>Most asked</h2>
+                    {report.topQuestions.length === 0 ? (
+                      <p className="hint">No questions yet.</p>
+                    ) : (
+                      <ol className="ranked">
+                        {report.topQuestions.map((q) => (
+                          <li key={q.question}>
+                            <span className="rk-text">{q.question}</span>
+                            <span className="rk-bar"><i style={{ width: `${(q.count / report.topQuestions[0].count) * 100}%` }} /></span>
+                            <b>{q.count}</b>
+                          </li>
+                        ))}
+                      </ol>
+                    )}
+                  </div>
+                </div>
               )}
-
-              <h3>Most asked questions</h3>
-              {report.topQuestions.length === 0 ? (
-                <p className="hint">No questions yet.</p>
-              ) : (
-                <ul>
-                  {report.topQuestions.map((q) => (
-                    <li key={q.question}>{q.question} <span className="hint">({q.count}x)</span></li>
-                  ))}
-                </ul>
-              )}
-                </>
-              )}
-            </div>
+            </>
           )}
 
           {bot && tab === "leads" && (
-            <div className="card">
-              <div className="row" style={{ justifyContent: "space-between" }}>
-                <h2 style={{ margin: 0 }}>Leads</h2>
-                <button className="btn secondary" type="button" onClick={loadLeads}>Refresh</button>
-              </div>
+            <>
               {!form.collectLeads && (
-                <p className="hint">Collecting contact details is off. Turn it on in Bot setup.</p>
+                <div className="note static">Collecting contact details is off. Turn it on in <button type="button" className="link" onClick={() => setTab("settings")}>Bot setup</button>.</div>
               )}
               {!leads || leads.total === 0 ? (
-                <div className="empty">
+                <div className="card empty">
                   <h2>No leads yet</h2>
                   <p>When the bot can&apos;t answer a question, visitors can leave their email or phone. It will show up here.</p>
                   <button type="button" className="btn secondary" onClick={() => setTab("install")}>Add it to your website</button>
                 </div>
               ) : (
-                <>
-                  <p><b>{leads.total}</b> {leads.total === 1 ? "lead" : "leads"}</p>
+                <div className="card leadlist">
+                  <div className="rate-head">
+                    <h2>{leads.total} {leads.total === 1 ? "lead" : "leads"}</h2>
+                    <button className="btn secondary small" type="button" onClick={loadLeads}>Refresh</button>
+                  </div>
                   <ul>
                     {leads.leads.map((l) => (
                       <li key={l.id}>
-                        <b>{l.contact}</b>{l.name ? ` (${l.name})` : ""}{isNewLead(l) && <span className="pro">New</span>}
-                        {l.question && <><br /><span className="hint">Asked: {l.question}</span></>}
-                        <br /><span className="hint">{new Date(l.createdAt).toLocaleString()}</span>
+                        <span className="avatar">{(l.name || l.contact).trim().charAt(0).toUpperCase()}</span>
+                        <div className="lead-main">
+                          <b>{l.name || l.contact}{isNewLead(l) && <span className="pill-new">New</span>}</b>
+                          {l.name && <span className="lead-contact">{l.contact}</span>}
+                          {l.question && <span className="lead-q">Asked: {l.question}</span>}
+                        </div>
+                        <time className="lead-time">{new Date(l.createdAt).toLocaleDateString(undefined, { month: "short", day: "numeric" })}</time>
                       </li>
                     ))}
                   </ul>
                   {leads.limited && (
-                    <p className="hint">
-                      You have more leads than shown. <a href="#" onClick={(e) => { e.preventDefault(); setTab("plan"); }}>Upgrade to Pro</a> to see all of them.
-                    </p>
+                    <p className="hint">You have more leads than shown. <button type="button" className="link" onClick={() => setTab("plan")}>Upgrade to Pro</button> to see all of them.</p>
                   )}
-                </>
+                </div>
               )}
-            </div>
+            </>
           )}
 
           {bot && tab === "appearance" && (
