@@ -2,7 +2,8 @@ import type { FastifyInstance } from "fastify";
 import { randomBytes } from "node:crypto";
 import { and, eq } from "drizzle-orm";
 import { db } from "./db/index.js";
-import { bots, type Bot } from "./db/schema.js";
+import { bots, messages, type Bot } from "./db/schema.js";
+import { normalize } from "./savings.js";
 import { requireUser } from "./auth.js";
 import { getReport } from "./reports.js";
 import { parseAppearance, paidOnlyError, type Appearance } from "./appearance.js";
@@ -186,5 +187,33 @@ export async function botRoutes(app: FastifyInstance) {
     if (PLAN_LIMITS[await getPlanCached(req.userId!)].fullReport) return { ...report, limited: false };
     // Free plan: totals only. The question lists are part of Pro.
     return { ...report, topQuestions: [], unanswered: [], limited: true };
+  });
+
+  // Pro: turn an unanswered question into knowledge. Appends "Q/A" to the bot's info.
+  app.post("/api/bots/:id/answers", { preHandler: requireUser }, async (req, reply) => {
+    const { id } = req.params as { id: string };
+    if (!PLAN_LIMITS[await getPlanCached(req.userId!)].aiTools) {
+      return reply.code(403).send({ error: "Adding answers from your report is part of Pro." });
+    }
+    const body = (req.body ?? {}) as Record<string, unknown>;
+    const question = typeof body.question === "string" ? body.question.trim() : "";
+    const answer = typeof body.answer === "string" ? body.answer.trim() : "";
+    if (!question || question.length > 300) return reply.code(400).send({ error: "Question is missing or too long." });
+    if (!answer || answer.length > 1000) return reply.code(400).send({ error: "Write an answer of up to 1000 characters." });
+
+    const [bot] = await db.select().from(bots).where(and(eq(bots.id, id), eq(bots.ownerId, req.userId!)));
+    if (!bot) return reply.code(404).send({ error: "Chatbot not found." });
+
+    const context = `${bot.context.trimEnd()}\n\nQ: ${question}\nA: ${answer}`;
+    if (context.length > 8000) {
+      return reply.code(400).send({ error: "Your business info is full (8000 characters). Shorten it in Bot setup first." });
+    }
+    const [row] = await db.update(bots).set({ context }).where(eq(bots.id, id)).returning();
+    // The question is handled now, so it leaves the "needs an answer" list.
+    await db
+      .update(messages)
+      .set({ unanswered: false })
+      .where(and(eq(messages.botId, id), eq(messages.questionKey, normalize(question))));
+    return { bot: toDto(row) };
   });
 }

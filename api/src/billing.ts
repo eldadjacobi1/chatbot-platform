@@ -18,10 +18,10 @@ const APP_URL = (process.env.APP_URL ?? process.env.DASHBOARD_ORIGIN ?? "http://
   .trim();
 
 // What each plan includes.
-export const PLAN_LIMITS: Record<Plan, { bots: number; messagesPerDay: number; fullReport: boolean }> = {
-  free: { bots: 1, messagesPerDay: 50, fullReport: false },
-  pro: { bots: 1, messagesPerDay: 300, fullReport: true },
-  business: { bots: 3, messagesPerDay: 1500, fullReport: true },
+export const PLAN_LIMITS: Record<Plan, { bots: number; messagesPerDay: number; fullReport: boolean; aiTools: boolean }> = {
+  free: { bots: 1, messagesPerDay: 50, fullReport: false, aiTools: false },
+  pro: { bots: 1, messagesPerDay: 300, fullReport: true, aiTools: true },
+  business: { bots: 3, messagesPerDay: 1500, fullReport: true, aiTools: true },
 };
 
 // Plan lookup with a short cache, so chat messages don't hit the database every time.

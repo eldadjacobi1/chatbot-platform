@@ -218,3 +218,10 @@ code { background: var(--accent-soft); padding: 1px 6px; border-radius: 6px; fon
 .plan-card li { display: flex; gap: 10px; align-items: flex-start; }
 .plan-card li::before { content: ""; flex: none; width: 18px; height: 18px; margin-top: 2px; border-radius: 50%; background: #dcfce7 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M5.5 10.5l3 3 6-6.5' fill='none' stroke='%2315803d' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/100% no-repeat; }
 @media (max-width: 860px) { .plan-grid { grid-template-columns: 1fr; } }
+
+/* Inline answers */
+.card .unans li { display: block; padding: 10px 0; margin: 0; }
+.un-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.un-q { font-weight: 600; }
+.un-form { margin-top: 10px; display: grid; gap: 10px; }
+.un-form textarea { min-height: 80px; }

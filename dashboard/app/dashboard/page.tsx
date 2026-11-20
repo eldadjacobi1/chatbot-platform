@@ -334,6 +334,56 @@ export default function DashboardPage() {
     setTimeout(() => setCopied(false), 2000);
   }
 
+  const [answering, setAnswering] = useState<string | null>(null);
+  const [answerText, setAnswerText] = useState("");
+  const [answerBusy, setAnswerBusy] = useState(false);
+  const [answerErr, setAnswerErr] = useState("");
+
+  async function submitAnswer(question: string) {
+    if (!bot) return;
+    setAnswerBusy(true);
+    setAnswerErr("");
+    try {
+      const data = await call(`/api/bots/${bot.id}/answers`, {
+        method: "POST",
+        body: JSON.stringify({ question, answer: answerText }),
+      });
+      setBot(data.bot);
+      setForm((f) => ({ ...f, context: data.bot.context }));
+      setAnswering(null);
+      setAnswerText("");
+      loadReport();
+    } catch (err) {
+      setAnswerErr((err as Error).message);
+    } finally {
+      setAnswerBusy(false);
+    }
+  }
+
+  const renderUnanswered = (q: QuestionCount) => (
+    <li key={q.question}>
+      <div className="un-row">
+        <span className="un-q">{q.question} <em>{q.count}x</em></span>
+        <button type="button" className="btn secondary small"
+          onClick={() => { setAnswering(answering === q.question ? null : q.question); setAnswerText(""); setAnswerErr(""); }}>
+          {answering === q.question ? "Cancel" : "Add answer"}
+        </button>
+      </div>
+      {answering === q.question && (
+        <div className="un-form">
+          <textarea autoFocus maxLength={1000} value={answerText} placeholder="Type the answer your bot should give..."
+            onChange={(e) => setAnswerText(e.target.value)} />
+          <div className="row">
+            <button type="button" className="btn small" disabled={answerBusy || !answerText.trim()} onClick={() => submitAnswer(q.question)}>
+              {answerBusy ? "Saving..." : "Save answer"}
+            </button>
+            {answerErr && <span className="error" style={{ margin: 0 }}>{answerErr}</span>}
+          </div>
+        </div>
+      )}
+    </li>
+  );
+
   const update = (field: keyof Form, value: string | boolean) =>
     setForm((f) => ({ ...f, [field]: value }));
 
@@ -458,13 +508,10 @@ export default function DashboardPage() {
                         <>
                           <ul className="unans">
                             {report.unanswered.slice(0, 5).map((q) => (
-                              <li key={q.question}>
-                                <button type="button" className="link q" onClick={() => setTab("settings")}>{q.question} <em>{q.count}x</em></button>
-                                <button type="button" className="btn secondary small" onClick={() => setTab("settings")}>Add answer</button>
-                              </li>
+                              {renderUnanswered(q)}
                             ))}
                           </ul>
-                          <p className="hint">Add the answers in Bot setup, and the bot can answer next time.</p>
+                          <p className="hint">Type the answer and your bot will use it from the next message.</p>
                         </>
                       )}
                     </div>
@@ -530,13 +577,10 @@ export default function DashboardPage() {
                       <>
                         <ul className="unans">
                           {report.unanswered.map((q) => (
-                            <li key={q.question}>
-                              <button type="button" className="link q" onClick={() => setTab("settings")}>{q.question} <em>{q.count}x</em></button>
-                              <button type="button" className="btn secondary small" onClick={() => setTab("settings")}>Add answer</button>
-                            </li>
+                            {renderUnanswered(q)}
                           ))}
                         </ul>
-                        <p className="hint">Add the answers in Bot setup, and the bot can answer next time.</p>
+                        <p className="hint">Type the answer and your bot will use it from the next message.</p>
                       </>
                     )}
                   </div>
