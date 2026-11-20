@@ -89,3 +89,33 @@ code { background: var(--accent-soft); padding: 1px 6px; border-radius: 6px; fon
 .unans em { color: var(--muted); font-style: normal; font-size: .85rem; margin-left: 4px; }
 .btn.small { padding: 6px 14px; font-size: .875rem; flex: none; }
 .home-grid .test-frame { max-width: none; }
+
+/* Colour + banner */
+.nav-item svg { color: var(--ic, currentColor); }
+.nav-item.on svg { color: var(--ic, var(--accent)); }
+.banner { display: flex; justify-content: space-between; align-items: center; gap: 20px; flex-wrap: wrap; margin-bottom: 24px; padding: 28px 30px; border-radius: 20px; color: #fff; background: radial-gradient(120% 140% at 100% 0%, #7c6cf0 0%, transparent 55%), linear-gradient(135deg, #4338ca, #312e81); }
+.banner h1 { font-size: 2rem; color: #fff; }
+.banner-kicker { margin: 0 0 6px; font-weight: 700; font-size: .9rem; opacity: .75; }
+.banner-sub { margin: 8px 0 0; display: flex; align-items: center; gap: 8px; opacity: .9; }
+.banner .dot { background: #4ade80; box-shadow: 0 0 0 3px rgba(74,222,128,.3); }
+.btn.light { background: #fff; color: #312e81; }
+.btn.light:hover { background: #eef0ff; }
+.btn.ghost-light { background: rgba(255,255,255,.14); color: #fff; }
+.btn.ghost-light:hover { background: rgba(255,255,255,.24); }
+
+.stat-card { --c: #4338ca; --cs: #eef0ff; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; padding: 18px; border: 1px solid var(--line); border-radius: 16px; background: var(--paper); font: inherit; color: var(--ink); text-align: left; cursor: pointer; transition: transform .15s, box-shadow .15s, border-color .15s; }
+.stat-card:hover { transform: translateY(-2px); border-color: var(--c); box-shadow: 0 8px 20px rgba(20,20,43,.08); }
+.stat-card.c-green { --c: #16a34a; --cs: #dcfce7; }
+.stat-card.c-amber { --c: #d97706; --cs: #fef3c7; }
+.stat-ico { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 10px; background: var(--cs); color: var(--c); margin-bottom: 8px; }
+.stat-card .num { font-size: 2.25rem; font-weight: 800; letter-spacing: -0.04em; line-height: 1; }
+.stat-label { color: var(--muted); font-size: .9rem; }
+.stat-trend { margin-top: 6px; font-size: .8rem; font-weight: 700; color: var(--c); }
+.home-grid .stats { gap: 12px; }
+
+.bar i { transition: opacity .15s, transform .15s; }
+.bar:hover i { opacity: 1; background: #312e81; }
+.bar-axis { display: flex; justify-content: space-between; margin-top: 6px; font-size: .75rem; color: var(--muted); }
+.link.q { color: var(--ink); font-weight: 600; }
+.link.q:hover { color: var(--accent); }
+.side-title { font-size: 1rem; margin: 0 0 10px; }

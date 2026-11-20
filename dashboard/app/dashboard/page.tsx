@@ -1,6 +1,6 @@
 "use client";
 
-import { useAuth, UserButton } from "@clerk/nextjs";
+import { useAuth, useUser, UserButton } from "@clerk/nextjs";
 import { useCallback, useEffect, useState } from "react";
 import Logo from "../Logo";
 import "./app.css";
@@ -100,6 +100,10 @@ const NAV: [Tab, string, string][] = [
   ["install", "Install", "code"],
 ];
 
+const NAV_COLORS: Record<string, string> = {
+  overview: "#4338ca", reports: "#0ea5e9", leads: "#16a34a", appearance: "#db2777", settings: "#d97706", install: "#7c3aed", plan: "#0f766e",
+};
+
 const HEADS: Record<string, [string, string]> = {
   reports: ["Chats", "The questions your visitors asked, and the ones your bot couldn't answer."],
   leads: ["Leads", "People who left their email or phone when the bot couldn't help."],
@@ -129,6 +133,7 @@ function Icon({ name }: { name: string }) {
 
 export default function DashboardPage() {
   const { getToken, isLoaded } = useAuth();
+  const { user } = useUser();
   const [bot, setBot] = useState<Bot | null>(null);
   const [form, setForm] = useState<Form>(emptyForm);
   const [loading, setLoading] = useState(true);
@@ -144,6 +149,12 @@ export default function DashboardPage() {
   // Leads newer than this are "new". Remembered per bot in this browser.
   const [seenAt, setSeenAt] = useState<string>("");
   const isFree = (billing?.plan ?? "free") === "free";
+  const weekDelta = (() => {
+    const d = report?.daily;
+    if (!d || d.length < 14) return null;
+    const sum = (xs: { count: number }[]) => xs.reduce((n, x) => n + x.count, 0);
+    return sum(d.slice(7)) - sum(d.slice(0, 7));
+  })();
   const customized = !!bot && (bot.theme !== "clean" || bot.color !== "#4338ca" || !!bot.title || bot.tone !== "friendly" || bot.audience !== "general" || bot.suggestions.length > 0);
   const [hideSteps, setHideSteps] = useState(false);
   const [wizStep, setWizStep] = useState(1);
@@ -324,7 +335,7 @@ export default function DashboardPage() {
         {bot && (
           <nav className="app-nav" aria-label="Main">
             {NAV.map(([id, label, icon]) => (
-              <button key={id} type="button" className={tab === id ? "nav-item on" : "nav-item"} onClick={() => setTab(id)}>
+              <button key={id} type="button" className={tab === id ? "nav-item on" : "nav-item"} style={{ "--ic": NAV_COLORS[id] } as React.CSSProperties} onClick={() => setTab(id)}>
                 <Icon name={icon} />
                 <span>{label}</span>
                 {id === "leads" && newLeads > 0 && tab !== "leads" && <em className="nav-count">{newLeads}</em>}
@@ -352,14 +363,15 @@ export default function DashboardPage() {
         <>
           {bot && tab === "overview" && (
             <>
-              <header className="app-head">
+              <header className="banner">
                 <div>
-                  <h1>{bot.name}</h1>
-                  <p className="hint"><span className={bot.enabled ? "dot on" : "dot"} />{bot.enabled ? "Online" : "Off"} on {bot.domain}</p>
+                  <p className="banner-kicker">Dashboard</p>
+                  <h1>{user?.firstName ? `Welcome back, ${user.firstName}` : "Welcome back"}</h1>
+                  <p className="banner-sub"><span className={bot.enabled ? "dot on" : "dot"} />{bot.name} is {bot.enabled ? "online" : "off"} and answering visitors 24/7</p>
                 </div>
                 <div className="row">
-                  <button type="button" className="btn secondary" onClick={copySnippet}>{copied ? "Copied!" : "Copy install code"}</button>
-                  <button type="button" className="btn secondary" onClick={() => setTab("reports")}>View chats</button>
+                  <button type="button" className="btn light" onClick={copySnippet}>{copied ? "Copied!" : "Copy install code"}</button>
+                  <button type="button" className="btn ghost-light" onClick={() => setTab("reports")}>View chats</button>
                 </div>
               </header>
 
@@ -390,9 +402,24 @@ export default function DashboardPage() {
                 <div>
                   {report && (
                     <div className="stats">
-                      <div className="card stat"><div className="num">{report.total}</div><div className="hint nowrap">questions, {report.days} days</div></div>
-                      <div className="card stat"><div className="num">{newLeads}</div><div className="hint">new {newLeads === 1 ? "lead" : "leads"}</div></div>
-                      <div className="card stat"><div className="num">{report.unansweredCount}</div><div className="hint">couldn&apos;t answer</div></div>
+                      <button type="button" className="stat-card c-indigo" onClick={() => setTab("reports")}>
+                        <span className="stat-ico"><Icon name="chat" /></span>
+                        <span className="num">{report.total}</span>
+                        <span className="stat-label">Questions, {report.days} days</span>
+                        {weekDelta !== null && <span className="stat-trend">{weekDelta >= 0 ? "+" : ""}{weekDelta} vs last week</span>}
+                      </button>
+                      <button type="button" className="stat-card c-green" onClick={() => setTab("leads")}>
+                        <span className="stat-ico"><Icon name="leads" /></span>
+                        <span className="num">{newLeads}</span>
+                        <span className="stat-label">New {newLeads === 1 ? "lead" : "leads"}</span>
+                        <span className="stat-trend">View leads &rarr;</span>
+                      </button>
+                      <button type="button" className="stat-card c-amber" onClick={() => setTab("reports")}>
+                        <span className="stat-ico"><Icon name="setup" /></span>
+                        <span className="num">{report.unansweredCount}</span>
+                        <span className="stat-label">Couldn&apos;t answer</span>
+                        <span className="stat-trend">Fix them &rarr;</span>
+                      </button>
                     </div>
                   )}
                   {newLeads > 0 && (
@@ -410,6 +437,7 @@ export default function DashboardPage() {
                           return <div key={d.day} className="bar" title={`${d.day}: ${d.count}`}><i style={{ height: `${Math.max(d.count ? 8 : 2, (d.count / max) * 100)}%` }} /></div>;
                         })}
                       </div>
+                      <div className="bar-axis"><span>{report.daily[0].day.slice(5)}</span><span>Today</span></div>
                     </div>
                   )}
                   {report && report.unansweredCount > 0 && (
@@ -422,7 +450,7 @@ export default function DashboardPage() {
                           <ul className="unans">
                             {report.unanswered.slice(0, 5).map((q) => (
                               <li key={q.question}>
-                                <span>{q.question} <em>{q.count}x</em></span>
+                                <button type="button" className="link q" onClick={() => setTab("settings")}>{q.question} <em>{q.count}x</em></button>
                                 <button type="button" className="btn secondary small" onClick={() => setTab("settings")}>Add answer</button>
                               </li>
                             ))}
@@ -434,6 +462,7 @@ export default function DashboardPage() {
                   )}
                 </div>
                 <div>
+                  <h2 className="side-title">Your chatbot</h2>
                   <div className="test-frame">
                     <iframe title="Your chatbot" src={`${API}/widget/${bot.id}`} sandbox="allow-scripts allow-same-origin" />
                   </div>
