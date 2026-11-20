@@ -322,11 +322,15 @@ code { background: var(--accent-soft); padding: 1px 6px; border-radius: 6px; fon
 .chip.st-new { color: #15803d; }
 .chip.st-contacted { color: #b45309; }
 .chip.st-done { color: #8a8aa3; }
-.lead-side .btn.ghost, .qrows .btn.ghost { background: var(--accent-soft); color: var(--accent); border: 0; border-radius: 9px; padding: 8px 14px; font-weight: 600; font-size: .875rem; }
-.lead-side .btn.ghost:hover, .qrows .btn.ghost:hover { background: #e0e4ff; color: #3730a3; }
+.lead-side .btn.ghost, .qrows .btn.ghost, .un-row .btn.ghost { background: var(--accent-soft); color: var(--accent); border: 0; border-radius: 9px; padding: 8px 14px; font-weight: 600; font-size: .875rem; }
+.lead-side .btn.ghost:hover, .qrows .btn.ghost:hover, .un-row .btn.ghost:hover { background: #e0e4ff; color: #3730a3; }
 .more summary { border: 0; background: none; border-radius: 9px; }
 .more summary:hover { background: var(--bg); }
 
 /* Ignore button: quiet outlined */
 .qrows .btn.ghost.ignore { background: #fff; color: var(--muted); border: 1.5px solid var(--line); }
 .qrows .btn.ghost.ignore:hover { background: var(--bg); color: var(--ink); border-color: #cfcfe0; }
+.un-row { gap: 8px; }
+.un-row .btn.ghost.ignore { background: #fff; color: var(--muted); border: 1.5px solid var(--line); }
+.un-row .btn.ghost.ignore:hover { background: var(--bg); color: var(--ink); border-color: #cfcfe0; }
+.un-q { flex: 1; }

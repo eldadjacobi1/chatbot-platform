@@ -160,6 +160,7 @@ export default function DashboardPage() {
   const [message, setMessage] = useState("");
   const [answerSaved, setAnswerSaved] = useState(false);
   const [ignoredQ, setIgnoredQ] = useState<string | null>(null);
+  useEffect(() => { window.scrollTo({ top: 0 }); }, [tab]);
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
   const [report, setReport] = useState<Report | null>(null);
@@ -454,6 +455,7 @@ export default function DashboardPage() {
           onClick={() => { setAnswering(answering === q.question ? null : q.question); setAnswerText(""); setAnswerErr(""); }}>
           {answering === q.question ? "Cancel" : "Add answer"}
         </button>
+        <button type="button" className="btn ghost small ignore" onClick={() => ignoreQuestion(q.question)}>Ignore</button>
       </div>
       {answering === q.question && (
         <div className="un-form">
