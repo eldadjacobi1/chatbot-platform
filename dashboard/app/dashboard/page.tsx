@@ -752,50 +752,57 @@ export default function DashboardPage() {
           )}
 
           {bot && tab === "settings" && (
-            <form className="card" onSubmit={save}>
-              <h2>Business details</h2>
+            <form className="setup" onSubmit={save}>
+              <section className="card">
+                <h2>Your business</h2>
+                <div className="two">
+                  <div>
+                    <label htmlFor="name">Business name</label>
+                    <input id="name" type="text" value={form.name} maxLength={80} required
+                      onChange={(e) => update("name", e.target.value)} />
+                  </div>
+                  <div>
+                    <label htmlFor="domain">Your website</label>
+                    <input id="domain" type="text" value={form.domain} placeholder="mybusiness.com" required
+                      onChange={(e) => update("domain", e.target.value)} />
+                  </div>
+                </div>
+                <p className="hint">The chat only works on this website (and its subdomains).</p>
+              </section>
 
-              <label htmlFor="name">Business name</label>
-              <input id="name" type="text" value={form.name} maxLength={80} required
-                onChange={(e) => update("name", e.target.value)} />
+              <section className="card">
+                <h2>What your bot knows</h2>
+                <p className="hint" style={{ marginTop: 0 }}>The chatbot answers only from this. Include hours, services, prices, your area, how to book and how to reach you. The more specific, the better.</p>
+                <textarea id="context" aria-label="Business information" value={form.context} maxLength={8000} required
+                  placeholder="Hours, services, prices, service area, how to book, phone number..."
+                  onChange={(e) => update("context", e.target.value)} />
+                <p className="hint counter">{form.context.length} / 8000</p>
+              </section>
 
-              <label htmlFor="domain">Your website</label>
-              <input id="domain" type="text" value={form.domain} placeholder="mybusiness.com" required
-                onChange={(e) => update("domain", e.target.value)} />
-              <p className="hint">The chat only works on this website (and its subdomains).</p>
+              <section className="card">
+                <h2>In the chat</h2>
+                <label htmlFor="greeting">First message</label>
+                <input id="greeting" type="text" value={form.greeting} maxLength={200} required
+                  onChange={(e) => update("greeting", e.target.value)} />
 
-              <label htmlFor="greeting">First message</label>
-              <input id="greeting" type="text" value={form.greeting} maxLength={200} required
-                onChange={(e) => update("greeting", e.target.value)} />
+                <label htmlFor="suggestions">Suggested questions (optional)</label>
+                <textarea id="suggestions" style={{ minHeight: 110 }} value={form.suggestions.join("\n")}
+                  placeholder={"What are your opening hours?\nHow much does it cost?"}
+                  onChange={(e) => setForm((f) => ({ ...f, suggestions: e.target.value.split("\n").slice(0, 4) }))} />
+                <p className="hint">One per line, up to 4. Visitors see them as buttons in the chat.</p>
 
-              <label htmlFor="suggestions">Suggested questions (optional)</label>
-              <textarea id="suggestions" style={{ minHeight: 110 }} value={form.suggestions.join("\n")}
-                placeholder={"What are your opening hours?\nHow much does it cost?"}
-                onChange={(e) => setForm((f) => ({ ...f, suggestions: e.target.value.split("\n").slice(0, 4) }))} />
-              <p className="hint">One per line, up to 4. Visitors see them as buttons in the chat.</p>
+                <label className="toggle">
+                  <input type="checkbox" checked={form.enabled} onChange={(e) => update("enabled", e.target.checked)} />
+                  <span><b>Chatbot is on</b><small>Turn off to hide the chat from your website.</small></span>
+                </label>
+                <label className="toggle">
+                  <input type="checkbox" checked={form.collectLeads} onChange={(e) => update("collectLeads", e.target.checked)} />
+                  <span><b>Collect contact details</b><small>When the bot can&apos;t help, it asks visitors for their email or phone.</small></span>
+                </label>
+              </section>
 
-              <label htmlFor="context">Business information</label>
-              <textarea id="context" value={form.context} maxLength={8000} required
-                placeholder="Hours, services, prices, service area, how to book, phone number..."
-                onChange={(e) => update("context", e.target.value)} />
-              <p className="hint">The chatbot answers only from this. The more specific, the better.</p>
-
-              <label className="check">
-                <input type="checkbox" checked={form.enabled}
-                  onChange={(e) => update("enabled", e.target.checked)} />
-                Chatbot is on
-              </label>
-
-              <label className="check">
-                <input type="checkbox" checked={form.collectLeads}
-                  onChange={(e) => update("collectLeads", e.target.checked)} />
-                Ask visitors for their email or phone when the bot can&apos;t help
-              </label>
-
-              <div className="savebar">
-                <button className="btn" disabled={saving}>
-                  {saving ? "Saving..." : "Save changes"}
-                </button>
+              <div className="savebar wide">
+                <button className="btn" disabled={saving}>{saving ? "Saving..." : "Save changes"}</button>
                 {message && <span className="ok">{message}</span>}
                 {error && <span className="error">{error}</span>}
               </div>
@@ -836,29 +843,44 @@ export default function DashboardPage() {
           )}
 
           {bot && tab === "install" && (
-            <>
-              <div className="card">
-                <h2>1. Try it first</h2>
-                <p>This is your chatbot, exactly as visitors will see it. Ask it something about your business.</p>
-                <div className="test-frame">
-                  <iframe title="Test your chatbot" src={`${API}/widget/${bot.id}`} sandbox="allow-scripts allow-same-origin" />
+            <div className="steps-col">
+              <section className="card step">
+                <span className="step-n">1</span>
+                <div className="step-body">
+                  <h2>Try it first</h2>
+                  <p className="hint" style={{ marginTop: 0 }}>This is your chatbot, exactly as visitors will see it. Ask it something about your business.</p>
+                  <div className="test-frame">
+                    <iframe title="Test your chatbot" src={`${API}/widget/${bot.id}`} sandbox="allow-scripts allow-same-origin" />
+                  </div>
                 </div>
-              </div>
-              <div className="card">
-                <h2>2. Add it to your website</h2>
-                <p>Copy this line and paste it just before the closing <code>&lt;/body&gt;</code> tag on every page where you want the chat. If someone else manages your site, send it to them.</p>
-                <pre>{snippet}</pre>
-                <div className="row">
-                  <button className="btn secondary" onClick={copySnippet}>
-                    {copied ? "Copied!" : "Copy code"}
-                  </button>
-                  <button type="button" className="btn" onClick={() => { setFlag("installed"); setTab("overview"); }}>
-                    {flags.installed ? "Marked as added" : "I've added it"}
-                  </button>
+              </section>
+              <section className="card step">
+                <span className="step-n">2</span>
+                <div className="step-body">
+                  <h2>Copy your code</h2>
+                  <p className="hint" style={{ marginTop: 0 }}>This one line adds the chat to your website.</p>
+                  <pre>{snippet}</pre>
+                  <button className="btn secondary" type="button" onClick={copySnippet}>{copied ? "Copied!" : "Copy code"}</button>
                 </div>
-                <p className="hint">Using Wordpress, Wix, Shopify or Squarespace? Look for &quot;custom code&quot; or &quot;header and footer scripts&quot; in your site settings.</p>
-              </div>
-            </>
+              </section>
+              <section className="card step">
+                <span className="step-n">3</span>
+                <div className="step-body">
+                  <h2>Paste it into your site</h2>
+                  <p className="hint" style={{ marginTop: 0 }}>Paste it just before the closing <code>&lt;/body&gt;</code> tag, on every page where you want the chat. If someone else manages your site, send it to them. Pick your website builder for help:</p>
+                  <details><summary>WordPress</summary><p>Install the free plugin &quot;WPCode&quot;, add a new snippet, choose &quot;Site Wide Footer&quot;, paste the code and activate it.</p></details>
+                  <details><summary>Wix</summary><p>Go to Settings, then Custom Code. Add new code, paste it, set it to load on all pages in the Body (end).</p></details>
+                  <details><summary>Shopify</summary><p>Go to Online Store, then Themes, then Edit code. Open <code>theme.liquid</code> and paste the code just above <code>&lt;/body&gt;</code>.</p></details>
+                  <details><summary>Squarespace</summary><p>Go to Settings, then Advanced, then Code Injection. Paste the code into the Footer box.</p></details>
+                  <details><summary>My own website</summary><p>Open your HTML files and paste the code above the closing <code>&lt;/body&gt;</code> tag.</p></details>
+                  <div className="row" style={{ marginTop: 18 }}>
+                    <button type="button" className="btn" onClick={() => { setFlag("installed"); setTab("overview"); }}>
+                      {flags.installed ? "Marked as added" : "I've added it"}
+                    </button>
+                  </div>
+                </div>
+              </section>
+            </div>
           )}
         </>
       )}
