@@ -78,6 +78,7 @@ const FAQ = [
 export default function Home() {
   return (
     <main className="lp">
+      <div className="lp-bar">
       <header className="lp-nav">
         <Link href="/" className="lp-brand">
           <span className="lp-mark" aria-hidden="true" />
@@ -92,6 +93,7 @@ export default function Home() {
           <NavActions />
         </div>
       </header>
+      </div>
 
       <section className="lp-hero">
         <div className="lp-hero-text">
