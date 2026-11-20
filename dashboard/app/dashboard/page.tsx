@@ -159,6 +159,7 @@ export default function DashboardPage() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [answerSaved, setAnswerSaved] = useState(false);
+  const [ignoredQ, setIgnoredQ] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
   const [report, setReport] = useState<Report | null>(null);
@@ -378,6 +379,17 @@ export default function DashboardPage() {
       setAnswerErr((err as Error).message);
     } finally {
       setAnswerBusy(false);
+    }
+  }
+
+  async function ignoreQuestion(question: string, undo = false) {
+    if (!bot) return;
+    try {
+      await call(`/api/bots/${bot.id}/questions/ignore`, { method: "POST", body: JSON.stringify({ question, undo }) });
+      setIgnoredQ(undo ? null : question);
+      loadReport();
+    } catch (err) {
+      setError((err as Error).message);
     }
   }
 
@@ -664,6 +676,12 @@ export default function DashboardPage() {
                 </div>
               ) : (
                 <div className="card qlist">
+                  {ignoredQ && (
+                    <div className="note static">
+                      Ignored &ldquo;{ignoredQ}&rdquo;. It no longer counts in your answer rate.
+                      <button type="button" className="link" onClick={() => ignoreQuestion(ignoredQ, true)}> Undo</button>
+                    </div>
+                  )}
                   {answerSaved && (
                     <div className="note static">
                       Saved. The answer was added to your business info in <button type="button" className="link" onClick={() => setTab("settings")}>Bot setup</button>, and your bot will use it from the next message.
@@ -703,6 +721,9 @@ export default function DashboardPage() {
                                           onClick={() => { setAnswering(answering === q.question ? null : q.question); setAnswerText(""); setAnswerErr(""); }}>
                                           {answering === q.question ? "Cancel" : "Add answer"}
                                         </button>
+                                      )}
+                                      {needs && (
+                                        <button type="button" className="btn ghost small ignore" onClick={() => ignoreQuestion(q.question)}>Ignore</button>
                                       )}
                                     </span>
                                   </div>

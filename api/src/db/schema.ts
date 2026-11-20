@@ -37,5 +37,6 @@ export const messages = pgTable("messages", {
   questionKey: text("question_key").notNull(),
   source: text("source").notNull(),
   unanswered: boolean("unanswered").notNull().default(false),
+  ignored: boolean("ignored").notNull().default(false),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });

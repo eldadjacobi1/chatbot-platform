@@ -326,3 +326,7 @@ code { background: var(--accent-soft); padding: 1px 6px; border-radius: 6px; fon
 .lead-side .btn.ghost:hover, .qrows .btn.ghost:hover { background: #e0e4ff; color: #3730a3; }
 .more summary { border: 0; background: none; border-radius: 9px; }
 .more summary:hover { background: var(--bg); }
+
+/* Ignore button: quiet outlined */
+.qrows .btn.ghost.ignore { background: #fff; color: var(--muted); border: 1.5px solid var(--line); }
+.qrows .btn.ghost.ignore:hover { background: var(--bg); color: var(--ink); border-color: #cfcfe0; }

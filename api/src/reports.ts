@@ -4,7 +4,17 @@ import { messages } from "./db/schema.js";
 import { normalize } from "./savings.js";
 
 // Saves one question for the owner's report. Never blocks or breaks the chat.
+const DANGLING = new Set(["you", "your", "the", "a", "an", "do", "does", "is", "are", "i", "to", "of", "for", "and", "or", "can", "what", "how", "with", "my", "we", "it"]);
+
+// Fragments like "what do you" or "hi" aren't real questions: keep them out of the report.
+function looksLikeRealQuestion(text: string) {
+  const words = normalize(text).split(" ").filter(Boolean);
+  if (words.length < 3 || text.trim().length < 8) return false;
+  return !DANGLING.has(words[words.length - 1]);
+}
+
 export function logQuestion(botId: string, question: string, source: "ai" | "cache", unanswered: boolean) {
+  if (!looksLikeRealQuestion(question)) return;
   db.insert(messages)
     .values({ botId, question, questionKey: normalize(question), source, unanswered })
     .catch((err) => console.error("could not log question", err));
@@ -14,7 +24,7 @@ type Row = { question: string; count: number; unanswered: boolean };
 
 export async function getReport(botId: string, days = 30) {
   const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
-  const where = and(eq(messages.botId, botId), gte(messages.createdAt, since));
+  const where = and(eq(messages.botId, botId), gte(messages.createdAt, since), eq(messages.ignored, false));
 
   const [totals] = await db
     .select({

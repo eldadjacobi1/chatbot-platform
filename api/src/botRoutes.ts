@@ -226,4 +226,19 @@ export async function botRoutes(app: FastifyInstance) {
       .where(and(eq(messages.botId, id), eq(messages.questionKey, normalize(question))));
     return { bot: toDto(row) };
   });
+
+  // Owner: hide a question from the report (junk or not worth answering), or bring it back.
+  app.post("/api/bots/:id/questions/ignore", { preHandler: requireUser }, async (req, reply) => {
+    const { id } = req.params as { id: string };
+    const body = (req.body ?? {}) as Record<string, unknown>;
+    const question = typeof body.question === "string" ? body.question.trim() : "";
+    if (!question || question.length > 300) return reply.code(400).send({ error: "Question is missing or too long." });
+    const [owned] = await db.select({ id: bots.id }).from(bots).where(and(eq(bots.id, id), eq(bots.ownerId, req.userId!)));
+    if (!owned) return reply.code(404).send({ error: "Chatbot not found." });
+    await db
+      .update(messages)
+      .set({ ignored: body.undo !== true })
+      .where(and(eq(messages.botId, id), eq(messages.questionKey, normalize(question))));
+    return { ok: true };
+  });
 }
