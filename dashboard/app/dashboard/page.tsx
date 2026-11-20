@@ -161,6 +161,9 @@ export default function DashboardPage() {
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
   const [report, setReport] = useState<Report | null>(null);
+  const [repFilter, setRepFilter] = useState<"all" | "needs" | "answered">("all");
+  const [repAll, setRepAll] = useState(false);
+  const [repDays, setRepDays] = useState<7 | 30>(30);
   const [tab, setTab] = useState<Tab>("overview");
   const [billing, setBilling] = useState<Billing | null>(null);
   const [billingBusy, setBillingBusy] = useState(false);
@@ -423,9 +426,6 @@ export default function DashboardPage() {
     : "You're all caught up. New leads appear here when visitors leave their details.";
   const NEXT: Record<string, [string, string]> = { new: ["Mark contacted", "contacted"], contacted: ["Mark done", "done"], done: ["Reopen", "new"] };
   const STATUS_LABEL: Record<string, string> = { new: "New", contacted: "Contacted", done: "Done" };
-  const [repFilter, setRepFilter] = useState<"all" | "needs" | "answered">("all");
-  const [repAll, setRepAll] = useState(false);
-  const [repDays, setRepDays] = useState<7 | 30>(30);
   const [leadFilter, setLeadFilter] = useState<"all" | "new" | "contacted" | "done">("all");
   const [copiedLead, setCopiedLead] = useState<number | null>(null);
   async function copyContact(l: Lead) {
