@@ -62,6 +62,7 @@
 <body>
   <header><span id="title"></span><span class="online"><i></i>Online</span></header>
   <div id="log"></div>
+  <div id="ts"></div>
   <!-- Not a <form>: the embed iframe is sandboxed and browsers block form submits there. -->
   <div id="form">
     <input id="input" placeholder="Type your question..." maxlength="500" autocomplete="off" />
@@ -80,6 +81,47 @@
     document.getElementById("title").textContent = CONFIG.title || CONFIG.botName;
     if (/^#[0-9a-fA-F]{6}$/.test(CONFIG.color || "")) {
       document.documentElement.style.setProperty("--accent", CONFIG.color);
+    }
+
+    // Cloudflare Turnstile: a quiet check that this is a real browser (only if the server turned it on).
+    var verifyPromise = Promise.resolve();
+    var verifyDone = !CONFIG.turnstileSiteKey;
+    var turnstileId = null;
+    var verifyResolve = null;
+    function startVerify() {
+      verifyDone = false;
+      verifyPromise = new Promise(function (resolve) { verifyResolve = resolve; });
+      if (turnstileId !== null && window.turnstile) { window.turnstile.reset(turnstileId); }
+    }
+    if (CONFIG.turnstileSiteKey) {
+      startVerify();
+      window.onTurnstileLoad = function () {
+        turnstileId = window.turnstile.render("#ts", {
+          sitekey: CONFIG.turnstileSiteKey,
+          appearance: "interaction-only",
+          callback: async function (cf) {
+            try {
+              var r = await fetch("/verify", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ token: CONFIG.token, cf: cf }),
+              });
+              if (r.ok) { verifyDone = true; verifyResolve(true); return; }
+            } catch (e) {}
+            verifyResolve(false);
+          },
+          "error-callback": function () { verifyResolve(false); },
+        });
+      };
+      var s = document.createElement("script");
+      s.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=onTurnstileLoad";
+      s.async = true;
+      document.head.appendChild(s);
+    }
+    // Waits for the check; resolves false if it failed.
+    function whenVerified() {
+      if (verifyDone) return Promise.resolve(true);
+      return Promise.race([verifyPromise, new Promise(function (r) { setTimeout(function () { r(false); }, 15000); })]);
     }
 
     function addMessage(text, cls) {
@@ -138,6 +180,11 @@
         err.textContent = "";
         btn.disabled = true;
         try {
+          if (!(await whenVerified())) {
+            err.textContent = "Could not confirm you are a real visitor. Please reload the chat.";
+            btn.disabled = false;
+            return;
+          }
           var res = await fetch("/lead", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -175,6 +222,11 @@
       var bot = addMessage("", "bot");
 
       try {
+        if (!(await whenVerified())) {
+          bot.textContent = "We could not confirm you are a real visitor. Please reload the chat and try again.";
+          startVerify();
+          return;
+        }
         var res = await fetch("/chat", {
           method: "POST",
           headers: { "Content-Type": "application/json" },

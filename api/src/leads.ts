@@ -1,3 +1,4 @@
+import { isVerified } from "./turnstile.js";
 import type { FastifyInstance } from "fastify";
 import { and, eq } from "drizzle-orm";
 import { db, pool } from "./db/index.js";
@@ -26,6 +27,7 @@ export async function leadRoutes(app: FastifyInstance) {
     const token = typeof b.token === "string" ? b.token : "";
     const botId = verifyToken(token);
     if (!botId) return reply.code(401).send({ error: "invalid or expired session" });
+    if (!isVerified(token)) return reply.code(403).send({ error: "verify" });
 
     const bot = await getBot(botId);
     if (!bot || !bot.enabled || !bot.collectLeads) return reply.code(403).send({ error: "not available" });

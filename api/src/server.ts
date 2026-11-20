@@ -13,6 +13,7 @@ import { botRoutes } from "./botRoutes.js";
 import { styleKey } from "./appearance.js";
 import { leadRoutes } from "./leads.js";
 import { importRoutes } from "./importSite.js";
+import { turnstileRoutes, turnstileEnabled, turnstileSiteKey, isVerified } from "./turnstile.js";
 import { recordUsage, usageRoutes } from "./usage.js";
 import { billingRoutes, getPlanCached, PLAN_LIMITS } from "./billing.js";
 import {
@@ -54,6 +55,7 @@ await app.register(botRoutes);
 await app.register(billingRoutes);
 await app.register(leadRoutes);
 await app.register(importRoutes);
+await app.register(turnstileRoutes);
 await app.register(usageRoutes);
 if (!process.env.CLERK_SECRET_KEY) {
   app.log.warn("CLERK_SECRET_KEY not set: dashboard API requests will be rejected.");
@@ -115,6 +117,7 @@ app.get("/widget/:botId", async (req, reply) => {
     suggestions: bot.suggestions,
     greeting: bot.greeting,
     token: createToken(bot.id),
+    turnstileSiteKey: turnstileEnabled ? turnstileSiteKey : "",
   }).replace(/</g, "\\u003c");
 
   return reply
@@ -133,6 +136,8 @@ app.post("/chat", async (req, reply) => {
 
   const botId = verifyToken(token);
   if (!botId) return reply.code(401).send({ error: "invalid or expired session" });
+
+  if (!isVerified(token)) return reply.code(403).send({ error: "verify" });
 
   const bot = await getBot(botId);
   if (!bot || !bot.enabled) return reply.code(403).send({ error: "bot is not available" });
