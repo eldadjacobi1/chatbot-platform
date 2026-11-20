@@ -10,6 +10,7 @@ import { getBot } from "./bots.js";
 import { checkLimits, afterAnswer } from "./limits.js";
 import { cannedReply, getCached, setCached, GIBBERISH_REPLY } from "./savings.js";
 import { botRoutes } from "./botRoutes.js";
+import { billingRoutes } from "./billing.js";
 import {
   createToken,
   verifyToken,
@@ -42,6 +43,7 @@ await app.register(cors, {
   allowedHeaders: ["Authorization", "Content-Type"],
 });
 await app.register(botRoutes);
+await app.register(billingRoutes);
 if (!process.env.CLERK_SECRET_KEY) {
   app.log.warn("CLERK_SECRET_KEY not set: dashboard API requests will be rejected.");
 }
