@@ -160,6 +160,7 @@ export default function DashboardPage() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [answerSaved, setAnswerSaved] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [fbOpen, setFbOpen] = useState(false);
   const [fbText, setFbText] = useState("");
   const [fbBusy, setFbBusy] = useState(false);
@@ -290,6 +291,11 @@ export default function DashboardPage() {
       setBillingBusy(false);
     }
   }
+
+  useEffect(() => {
+    if (!isLoaded) return;
+    call("/api/admin/me").then((d) => setIsAdmin(!!d.admin)).catch(() => setIsAdmin(false));
+  }, [isLoaded, call]);
 
   const loadReport = useCallback(() => {
     if (!botId) return;
@@ -522,6 +528,7 @@ export default function DashboardPage() {
             </button>
           )}
           <button type="button" className="side-link" onClick={() => { setFbOpen(true); setFbMsg(""); }}>Send feedback</button>
+          {isAdmin && <Link className="side-link" href="/dashboard/admin">Admin</Link>}
           <span className="side-legal"><Link href="/terms">Terms</Link><Link href="/privacy">Privacy</Link></span>
           <div className="app-user"><UserButton /></div>
         </div>

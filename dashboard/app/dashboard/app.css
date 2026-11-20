@@ -351,3 +351,18 @@ button.side-link { border: 0; background: none; font: inherit; font-size: .875re
 .fb-box h2 { margin: 0 0 4px; }
 .fb-box textarea { width: 100%; min-height: 120px; margin: 12px 0; }
 .fb-box .row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+/* Admin page */
+.admin { max-width: 900px; margin: 0 auto; padding: 32px 20px 80px; }
+.admin h1 { margin: 12px 0 20px; }
+.admin .card { margin-bottom: 20px; }
+.admin-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-bottom: 20px; }
+.admin-stats .card { margin: 0; display: grid; gap: 4px; }
+.admin-stats .num { font-size: 2rem; font-weight: 800; letter-spacing: -0.03em; }
+.admin-table { width: 100%; border-collapse: collapse; font-size: .95rem; }
+.admin-table th, .admin-table td { padding: 10px 8px; text-align: left; border-bottom: 1px solid var(--line); }
+.admin-table th { color: var(--muted); font-weight: 600; }
+.admin-fb { list-style: none; margin: 0; padding: 0; }
+.admin-fb li { padding: 14px 0; border-bottom: 1px solid var(--line); }
+.admin-fb li:last-child { border: 0; }
+.admin-fb p { margin: 0 0 4px; white-space: pre-wrap; }
