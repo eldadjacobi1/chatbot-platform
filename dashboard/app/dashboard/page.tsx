@@ -370,9 +370,9 @@ export default function DashboardPage() {
     setImportErr("");
     setImportMsg("");
     try {
-      const data = await call("/api/import-website", { method: "POST", body: JSON.stringify({ url: importUrl || form.domain }) });
-      setForm((f) => ({ ...f, context: f.context.trim() ? `${f.context.trim()}\n\n${data.text}` : data.text }));
-      setImportMsg(`Imported from ${data.pages} page${data.pages === 1 ? "" : "s"}. Review it below, then save.`);
+      const data = await call("/api/import-website", { method: "POST", body: JSON.stringify({ url: importUrl || form.domain, existing: form.context }) });
+      setForm((f) => ({ ...f, context: data.text }));
+      setImportMsg(`Done. We read ${data.pages} page${data.pages === 1 ? "" : "s"} and combined them with what you wrote. Review it below, then save.`);
     } catch (err) {
       setImportErr((err as Error).message);
     } finally {
@@ -860,7 +860,7 @@ export default function DashboardPage() {
                     )}
                   </div>
                   <p className="hint" style={{ margin: "6px 0 0" }}>
-                    {isFree ? "Pro reads your website and fills this in for you." : "We read your main pages and write the info for you. You can edit it before saving."}
+                    {isFree ? "Pro reads your website and fills this in for you." : "We read your main pages and combine them with what you already wrote. You can edit the result before saving."}
                   </p>
                   {importMsg && <p className="ok" style={{ margin: "8px 0 0" }}>{importMsg}</p>}
                   {importErr && <p className="error" style={{ margin: "8px 0 0" }}>{importErr}</p>}

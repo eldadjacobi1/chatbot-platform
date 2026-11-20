@@ -4,6 +4,7 @@ import { and, eq } from "drizzle-orm";
 import { db } from "./db/index.js";
 import { bots, messages, type Bot } from "./db/schema.js";
 import { normalize } from "./savings.js";
+import { mergeKnowledge } from "./knowledge.js";
 import { requireUser } from "./auth.js";
 import { getReport } from "./reports.js";
 import { parseAppearance, paidOnlyError, type Appearance } from "./appearance.js";
@@ -204,7 +205,15 @@ export async function botRoutes(app: FastifyInstance) {
     const [bot] = await db.select().from(bots).where(and(eq(bots.id, id), eq(bots.ownerId, req.userId!)));
     if (!bot) return reply.code(404).send({ error: "Chatbot not found." });
 
-    const context = `${bot.context.trimEnd()}\n\nQ: ${question}\nA: ${answer}`;
+    const qa = `Q: ${question}\nA: ${answer}`;
+    let context = `${bot.context.trimEnd()}\n\n${qa}`;
+    try {
+      // Fold the answer into the right place instead of just adding it at the end.
+      const merged = await mergeKnowledge({ current: bot.context, incoming: qa, source: "owner-answer" });
+      if (merged) context = merged;
+    } catch (err) {
+      req.log.warn({ err }, "merge failed, appended instead");
+    }
     if (context.length > 8000) {
       return reply.code(400).send({ error: "Your business info is full (8000 characters). Shorten it in Bot setup first." });
     }
