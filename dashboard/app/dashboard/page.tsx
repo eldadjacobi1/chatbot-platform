@@ -125,7 +125,7 @@ function timeAgo(iso: string): string {
 
 const HEADS: Record<string, [string, string]> = {
   reports: ["Reports", "The questions your visitors asked, and the ones your bot couldn't answer."],
-  leads: ["Leads", "People who left their email or phone when the bot couldn't help."],
+  leads: ["Leads", "Visitors who asked to be contacted. Reach out, then mark each lead as Contacted or Done."],
   appearance: ["Design", "Choose how your chat looks and sounds. The preview updates as you change things."],
   settings: ["Bot setup", "What your bot knows about your business. It answers only from this."],
   install: ["Add to website", "Test your bot, then add it to your website."],
@@ -417,6 +417,12 @@ export default function DashboardPage() {
     }
   }
 
+  const newLeadCount = leads ? leads.leads.filter((l) => (l.status ?? "new") === "new").length : 0;
+  const leadsHint = newLeadCount > 0
+    ? `${newLeadCount} new ${newLeadCount === 1 ? "lead is" : "leads are"} waiting. Reach out, then mark each one Contacted or Done.`
+    : "You're all caught up. New leads appear here when visitors leave their details.";
+  const NEXT: Record<string, [string, string]> = { new: ["Mark contacted", "contacted"], contacted: ["Mark done", "done"], done: ["Reopen", "new"] };
+  const STATUS_LABEL: Record<string, string> = { new: "New", contacted: "Contacted", done: "Done" };
   const [leadFilter, setLeadFilter] = useState<"all" | "new" | "contacted" | "done">("all");
   const [copiedLead, setCopiedLead] = useState<number | null>(null);
   async function copyContact(l: Lead) {
@@ -453,7 +459,7 @@ export default function DashboardPage() {
   return (
     <div className="app">
       <aside className="app-side">
-        <div className="app-brand"><Logo size={28} />Chattr</div>
+        <button type="button" className="app-brand" onClick={() => setTab("overview")} aria-label="Chattr home"><Logo size={28} />Chattr</button>
         {bot && (
           <nav className="app-nav" aria-label="Main">
             {NAV.map(([id, label, icon]) => (
@@ -597,7 +603,7 @@ export default function DashboardPage() {
             <header className="app-head">
               <div>
                 <h1>{HEADS[tab][0]}</h1>
-                <p className="hint">{HEADS[tab][1]}</p>
+                <p className="hint">{tab === "leads" && leads && leads.total > 0 ? leadsHint : HEADS[tab][1]}</p>
               </div>
               {(tab === "appearance" || tab === "settings") && (
                 <div className="head-save">
@@ -692,13 +698,16 @@ export default function DashboardPage() {
                 <div className="card leadlist">
                   <div className="rate-head">
                     <h2>{leads.total} {leads.total === 1 ? "lead" : "leads"}</h2>
-                    <button className="btn secondary small" type="button" onClick={loadLeads}>Refresh</button>
+                    <button className="btn ghost small" type="button" onClick={loadLeads}>
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-3-6.7L21 8M21 3v5h-5" /></svg>
+                      Refresh
+                    </button>
                   </div>
-                  <div className="filters" role="tablist" aria-label="Filter leads">
+                  <div className="seg" role="tablist" aria-label="Filter leads">
                     {(["all", "new", "contacted", "done"] as const).map((f) => {
                       const n = f === "all" ? leads.leads.length : leads.leads.filter((l) => (l.status ?? "new") === f).length;
                       return (
-                        <button key={f} type="button" role="tab" aria-selected={leadFilter === f} className={leadFilter === f ? `filter on f-${f}` : `filter f-${f}`} onClick={() => setLeadFilter(f)}>
+                        <button key={f} type="button" role="tab" aria-selected={leadFilter === f} className={leadFilter === f ? "seg-btn on" : "seg-btn"} onClick={() => setLeadFilter(f)}>
                           {f === "all" ? "All" : f === "new" ? "New" : f === "contacted" ? "Contacted" : "Done"} <em>{n}</em>
                         </button>
                       );
@@ -715,17 +724,20 @@ export default function DashboardPage() {
                           <b>{l.name || l.contact}</b>
                           <span className="lead-contact">
                             <a href={/@/.test(l.contact) ? `mailto:${l.contact}` : `tel:${l.contact.replace(/[^\d+]/g, "")}`}>{l.contact}</a>
-                            <button type="button" className="link tiny" onClick={() => copyContact(l)}>{copiedLead === l.id ? "Copied" : "Copy"}</button>
+                            <button type="button" className="icon-btn" onClick={() => copyContact(l)} aria-label="Copy contact" title="Copy">
+                              {copiedLead === l.id ? (
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#15803d" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7" /></svg>
+                              ) : (
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2" /><path d="M5 15V6a2 2 0 0 1 2-2h9" /></svg>
+                              )}
+                            </button>
                           </span>
                           {l.question && <span className="lead-q">Asked: {l.question}</span>}
                         </div>
                         <div className="lead-side">
                           <time className="lead-time" title={new Date(l.createdAt).toLocaleString()}>{timeAgo(l.createdAt)}</time>
-                          <select className={`lead-status st-${l.status ?? "new"}`} aria-label="Status" value={l.status ?? "new"} onChange={(e) => setLeadStatus(l, e.target.value)}>
-                            <option value="new">New</option>
-                            <option value="contacted">Contacted</option>
-                            <option value="done">Done</option>
-                          </select>
+                          <span className={`chip st-${l.status ?? "new"}`}><i />{STATUS_LABEL[l.status ?? "new"]}</span>
+                          <button type="button" className="btn ghost small" onClick={() => setLeadStatus(l, NEXT[l.status ?? "new"][1])}>{NEXT[l.status ?? "new"][0]}</button>
                           <details className="more">
                             <summary aria-label="More actions">&middot;&middot;&middot;</summary>
                             <div className="more-menu"><button type="button" onClick={() => deleteLead(l)}>Delete lead</button></div>

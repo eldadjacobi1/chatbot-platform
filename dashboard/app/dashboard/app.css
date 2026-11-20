@@ -279,3 +279,24 @@ code { background: var(--accent-soft); padding: 1px 6px; border-radius: 6px; fon
 .more-menu button { width: 100%; padding: 8px 10px; border: 0; border-radius: 8px; background: none; font: inherit; font-weight: 600; color: var(--danger); text-align: left; cursor: pointer; }
 .more-menu button:hover { background: #fdecea; }
 @media (max-width: 700px) { .card.leadlist li { align-items: flex-start; } .lead-side { flex-wrap: wrap; justify-content: flex-end; } }
+
+/* Buttons v3 */
+.app-brand { border: 0; background: none; font: inherit; font-weight: 800; font-size: 1.15rem; letter-spacing: -0.03em; color: var(--ink); cursor: pointer; text-align: left; }
+.app-brand:hover { opacity: .8; }
+.btn.ghost { background: #fff; color: var(--ink); border: 1.5px solid var(--line); display: inline-flex; align-items: center; gap: 6px; }
+.btn.ghost:hover { border-color: var(--accent); color: var(--accent); background: #fff; }
+.btn.ghost.small { padding: 6px 14px; }
+.icon-btn { display: inline-grid; place-items: center; width: 26px; height: 26px; border: 0; border-radius: 8px; background: none; color: var(--muted); cursor: pointer; }
+.icon-btn:hover { background: var(--bg); color: var(--ink); }
+.seg { display: inline-flex; gap: 2px; padding: 4px; margin: 14px 0 6px; border-radius: 12px; background: var(--bg); flex-wrap: wrap; }
+.seg-btn { padding: 7px 16px; border: 0; border-radius: 9px; background: none; font: inherit; font-weight: 650; font-size: .9rem; color: var(--muted); cursor: pointer; }
+.seg-btn em { font-style: normal; margin-left: 5px; opacity: .65; }
+.seg-btn:hover { color: var(--ink); }
+.seg-btn.on { background: #fff; color: var(--ink); box-shadow: 0 1px 3px rgba(20,20,43,.14); }
+.chip { display: inline-flex; align-items: center; gap: 7px; padding: 4px 12px; border-radius: 999px; font-size: .85rem; font-weight: 700; }
+.chip i { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+.chip.st-new { background: #dcfce7; color: #15803d; }
+.chip.st-contacted { background: #fef3c7; color: #b45309; }
+.chip.st-done { background: #eceef3; color: #5b5b7a; }
+.more summary { border: 1.5px solid var(--line); border-radius: 10px; padding: 3px 10px; }
+.lead-side { gap: 10px; }
