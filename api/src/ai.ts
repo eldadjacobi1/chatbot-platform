@@ -8,6 +8,7 @@ export interface ChatProvider {
   streamAnswer(args: {
     systemPrompt: string;
     userMessage: string;
+    onUsage?: (u: { promptTokens: number; completionTokens: number }) => void;
   }): AsyncIterable<string>;
 }
 
@@ -23,13 +24,16 @@ export class OpenAIProvider implements ChatProvider {
   async *streamAnswer({
     systemPrompt,
     userMessage,
+    onUsage,
   }: {
     systemPrompt: string;
     userMessage: string;
+    onUsage?: (u: { promptTokens: number; completionTokens: number }) => void;
   }): AsyncIterable<string> {
     const stream = await this.client.chat.completions.create({
       model: this.model,
       stream: true,
+      stream_options: { include_usage: true },
       max_tokens: 300, // hard cap on answer length to control cost
       temperature: 0.3,
       messages: [
@@ -39,6 +43,7 @@ export class OpenAIProvider implements ChatProvider {
     });
 
     for await (const chunk of stream) {
+      if (chunk.usage) onUsage?.({ promptTokens: chunk.usage.prompt_tokens, completionTokens: chunk.usage.completion_tokens });
       const text = chunk.choices[0]?.delta?.content;
       if (text) yield text;
     }

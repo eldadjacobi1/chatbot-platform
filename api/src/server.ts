@@ -13,6 +13,7 @@ import { botRoutes } from "./botRoutes.js";
 import { styleKey } from "./appearance.js";
 import { leadRoutes } from "./leads.js";
 import { importRoutes } from "./importSite.js";
+import { recordUsage, usageRoutes } from "./usage.js";
 import { billingRoutes, getPlanCached, PLAN_LIMITS } from "./billing.js";
 import {
   createToken,
@@ -53,6 +54,7 @@ await app.register(botRoutes);
 await app.register(billingRoutes);
 await app.register(leadRoutes);
 await app.register(importRoutes);
+await app.register(usageRoutes);
 if (!process.env.CLERK_SECRET_KEY) {
   app.log.warn("CLERK_SECRET_KEY not set: dashboard API requests will be rejected.");
 }
@@ -173,7 +175,7 @@ app.post("/chat", async (req, reply) => {
 
     const systemPrompt = buildSystemPrompt(bot.name, bot.context, bot);
     let answer = "";
-    for await (const text of provider.streamAnswer({ systemPrompt, userMessage: message })) {
+    for await (const text of provider.streamAnswer({ systemPrompt, userMessage: message, onUsage: (u) => recordUsage(bot.id, u) })) {
       answer += text;
       reply.raw.write(`data: ${JSON.stringify({ text })}\n\n`);
     }
