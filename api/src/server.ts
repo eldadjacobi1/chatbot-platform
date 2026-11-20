@@ -10,6 +10,7 @@ import { getBot } from "./bots.js";
 import { checkLimits, afterAnswer } from "./limits.js";
 import { cannedReply, getCached, setCached, GIBBERISH_REPLY } from "./savings.js";
 import { botRoutes } from "./botRoutes.js";
+import { styleKey } from "./appearance.js";
 import { billingRoutes, getPlanCached, PLAN_LIMITS } from "./billing.js";
 import {
   createToken,
@@ -77,7 +78,7 @@ app.get("/bot-status/:botId", async (req, reply) => {
   return reply
     .header("Access-Control-Allow-Origin", "*")
     .header("Cache-Control", "no-store")
-    .send({ show });
+    .send({ show, color: bot?.color, position: bot?.position });
 });
 
 // --- The chat window shown inside the iframe.
@@ -97,6 +98,9 @@ app.get("/widget/:botId", async (req, reply) => {
   // "<" is escaped so the config can never break out of the script tag.
   const config = JSON.stringify({
     botName: bot.name,
+    title: bot.title || bot.name,
+    avatar: bot.avatar,
+    color: bot.color,
     greeting: bot.greeting,
     token: createToken(bot.id),
   }).replace(/</g, "\\u003c");
@@ -138,10 +142,13 @@ app.post("/chat", async (req, reply) => {
     Connection: "keep-alive",
   });
 
+  // Tone and instructions are part of the cache key, so changing them clears old answers.
+  const cacheContext = bot.context + "\n#style:" + styleKey(bot);
+
   try {
     // Free answers first: canned replies, then the cache. No AI call.
     const canned = cannedReply(message);
-    const cached = canned ? null : getCached(bot.id, bot.name, bot.context, message);
+    const cached = canned ? null : getCached(bot.id, bot.name, cacheContext, message);
     const free = canned ?? cached;
     if (free) {
       if (cached) logQuestion(bot.id, message, "cache", isUnsure(cached));
@@ -153,13 +160,13 @@ app.post("/chat", async (req, reply) => {
       return;
     }
 
-    const systemPrompt = buildSystemPrompt(bot.name, bot.context);
+    const systemPrompt = buildSystemPrompt(bot.name, bot.context, bot);
     let answer = "";
     for await (const text of provider.streamAnswer({ systemPrompt, userMessage: message })) {
       answer += text;
       reply.raw.write(`data: ${JSON.stringify({ text })}\n\n`);
     }
-    setCached(bot.id, bot.name, bot.context, message, answer);
+    setCached(bot.id, bot.name, cacheContext, message, answer);
     logQuestion(bot.id, message, "ai", isUnsure(answer));
     const closing = afterAnswer(token, isUnsure(answer), bot.name);
     if (closing) reply.raw.write(`data: ${JSON.stringify({ text: "\n\n" + closing })}\n\n`);

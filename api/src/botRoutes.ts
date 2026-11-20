@@ -5,6 +5,7 @@ import { db } from "./db/index.js";
 import { bots, type Bot } from "./db/schema.js";
 import { requireUser } from "./auth.js";
 import { getReport } from "./reports.js";
+import { parseAppearance, type Appearance } from "./appearance.js";
 import { getPlanCached, PLAN_LIMITS } from "./billing.js";
 
 // What the dashboard sees. One domain per bot for now.
@@ -16,6 +17,13 @@ function toDto(bot: Bot) {
     context: bot.context,
     domain: bot.allowedDomains[0] ?? "",
     enabled: bot.enabled,
+    color: bot.color,
+    title: bot.title,
+    avatar: bot.avatar,
+    position: bot.position,
+    tone: bot.tone,
+    audience: bot.audience,
+    instructions: bot.instructions,
   };
 }
 
@@ -39,6 +47,7 @@ type BotInput = {
   context: string;
   domain: string;
   enabled?: boolean;
+  appearance: Partial<Appearance>;
 };
 
 function parseInput(body: unknown): { value: BotInput } | { error: string } {
@@ -57,8 +66,15 @@ function parseInput(body: unknown): { value: BotInput } | { error: string } {
   const domain = typeof b.domain === "string" ? normalizeDomain(b.domain) : null;
   if (!domain) return { error: "Enter a valid website domain, like mybusiness.com." };
 
+  const appearance = parseAppearance(b);
+  if ("error" in appearance) return { error: appearance.error };
+
   return {
-    value: { name, greeting, context, domain, enabled: typeof b.enabled === "boolean" ? b.enabled : undefined },
+    value: {
+      name, greeting, context, domain,
+      enabled: typeof b.enabled === "boolean" ? b.enabled : undefined,
+      appearance: appearance.value,
+    },
   };
 }
 
@@ -82,7 +98,7 @@ export async function botRoutes(app: FastifyInstance) {
       });
     }
 
-    const { name, greeting, context, domain, enabled } = parsed.value;
+    const { name, greeting, context, domain, enabled, appearance } = parsed.value;
     const [row] = await db
       .insert(bots)
       .values({
@@ -93,6 +109,7 @@ export async function botRoutes(app: FastifyInstance) {
         context,
         allowedDomains: [domain],
         enabled: enabled ?? true,
+        ...appearance,
       })
       .returning();
     return { bot: toDto(row) };
@@ -103,7 +120,7 @@ export async function botRoutes(app: FastifyInstance) {
     const parsed = parseInput(req.body);
     if ("error" in parsed) return reply.code(400).send({ error: parsed.error });
 
-    const { name, greeting, context, domain, enabled } = parsed.value;
+    const { name, greeting, context, domain, enabled, appearance } = parsed.value;
     const [row] = await db
       .update(bots)
       .set({
@@ -112,6 +129,7 @@ export async function botRoutes(app: FastifyInstance) {
         context,
         allowedDomains: [domain],
         ...(enabled === undefined ? {} : { enabled }),
+        ...appearance,
       })
       .where(and(eq(bots.id, id), eq(bots.ownerId, req.userId!)))
       .returning();

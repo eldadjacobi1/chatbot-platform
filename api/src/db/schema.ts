@@ -13,6 +13,14 @@ export const bots = pgTable("bots", {
   // Websites allowed to embed this bot. A domain also allows its subdomains.
   allowedDomains: text("allowed_domains").array().notNull(),
   enabled: boolean("enabled").notNull().default(true),
+  // Look and personality (see appearance.ts).
+  color: text("color").notNull().default("#4338ca"),
+  title: text("title").notNull().default(""),
+  avatar: text("avatar").notNull().default(""),
+  position: text("position").notNull().default("right"),
+  tone: text("tone").notNull().default("friendly"),
+  audience: text("audience").notNull().default("general"),
+  instructions: text("instructions").notNull().default(""),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

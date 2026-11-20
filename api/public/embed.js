@@ -46,6 +46,14 @@
     .then(function (r) { return r.json(); })
     .then(function (info) {
       if (!info || !info.show) return;
+      var color = /^#[0-9a-fA-F]{6}$/.test(info.color || "") ? info.color : "#4338ca";
+      var side = info.position === "left" ? "left" : "right";
+      button.style.background = color;
+      button.style.boxShadow = "0 6px 20px " + color + "59";
+      button.style.right = button.style.left = "";
+      frame.style.right = frame.style.left = "";
+      button.style[side] = "20px";
+      frame.style[side] = "20px";
       document.body.appendChild(frame);
       document.body.appendChild(button);
     })
