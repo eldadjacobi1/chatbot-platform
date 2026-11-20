@@ -13,6 +13,7 @@ type Bot = {
   domain: string;
   enabled: boolean;
   collectLeads: boolean;
+  suggestions: string[];
   theme: string;
   color: string;
   title: string;
@@ -56,6 +57,7 @@ const emptyForm: Form = {
   domain: "",
   enabled: true,
   collectLeads: true,
+  suggestions: [],
   theme: "clean",
   color: "#4338ca",
   title: "",
@@ -467,6 +469,13 @@ export default function DashboardPage() {
                     <div className="pv-head">{form.title || form.name || "Your business"}</div>
                     <div className="pv-body">
                       <div className="pv-bot">{form.greeting}</div>
+                      {form.suggestions.filter((q) => q.trim()).length > 0 && (
+                        <div className="pv-chips">
+                          {form.suggestions.filter((q) => q.trim()).map((q, i) => (
+                            <span key={i} style={{ color: form.color, borderColor: form.color }}>{q}</span>
+                          ))}
+                        </div>
+                      )}
                       <div className="pv-you" style={{ background: form.color }}>What are your hours?</div>
                     </div>
                     <div className="pv-input"><span>Type your question...</span><b style={{ background: form.color }}>Send</b></div>
@@ -500,6 +509,12 @@ export default function DashboardPage() {
               <label htmlFor="greeting">First message</label>
               <input id="greeting" type="text" value={form.greeting} maxLength={200} required
                 onChange={(e) => update("greeting", e.target.value)} />
+
+              <label htmlFor="suggestions">Suggested questions (optional)</label>
+              <textarea id="suggestions" style={{ minHeight: 110 }} value={form.suggestions.join("\n")}
+                placeholder={"What are your opening hours?\nHow much does it cost?"}
+                onChange={(e) => setForm((f) => ({ ...f, suggestions: e.target.value.split("\n").slice(0, 4) }))} />
+              <p className="hint">One per line, up to 4. Visitors see them as buttons in the chat.</p>
 
               <label htmlFor="context">Business information</label>
               <textarea id="context" value={form.context} maxLength={8000} required

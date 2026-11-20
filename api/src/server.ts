@@ -104,6 +104,7 @@ app.get("/widget/:botId", async (req, reply) => {
     avatar: bot.avatar,
     color: bot.color,
     theme: bot.theme,
+    suggestions: bot.suggestions,
     greeting: bot.greeting,
     token: createToken(bot.id),
   }).replace(/</g, "\\u003c");

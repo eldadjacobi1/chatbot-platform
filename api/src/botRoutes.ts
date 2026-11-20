@@ -18,6 +18,7 @@ function toDto(bot: Bot) {
     domain: bot.allowedDomains[0] ?? "",
     enabled: bot.enabled,
     collectLeads: bot.collectLeads,
+    suggestions: bot.suggestions,
     theme: bot.theme,
     color: bot.color,
     title: bot.title,
@@ -50,6 +51,7 @@ type BotInput = {
   domain: string;
   enabled?: boolean;
   collectLeads?: boolean;
+  suggestions?: string[];
   appearance: Partial<Appearance>;
 };
 
@@ -69,6 +71,17 @@ function parseInput(body: unknown): { value: BotInput } | { error: string } {
   const domain = typeof b.domain === "string" ? normalizeDomain(b.domain) : null;
   if (!domain) return { error: "Enter a valid website domain, like mybusiness.com." };
 
+  let suggestions: string[] | undefined;
+  if (b.suggestions !== undefined) {
+    if (!Array.isArray(b.suggestions)) return { error: "Suggested questions must be a list." };
+    suggestions = b.suggestions
+      .filter((q): q is string => typeof q === "string")
+      .map((q) => q.trim())
+      .filter((q) => q.length > 0);
+    if (suggestions.length > 4) return { error: "You can add up to 4 suggested questions." };
+    if (suggestions.some((q) => q.length > 80)) return { error: "Each suggested question can be up to 80 characters." };
+  }
+
   const appearance = parseAppearance(b);
   if ("error" in appearance) return { error: appearance.error };
 
@@ -77,6 +90,7 @@ function parseInput(body: unknown): { value: BotInput } | { error: string } {
       name, greeting, context, domain,
       enabled: typeof b.enabled === "boolean" ? b.enabled : undefined,
       collectLeads: typeof b.collectLeads === "boolean" ? b.collectLeads : undefined,
+      suggestions,
       appearance: appearance.value,
     },
   };
@@ -102,7 +116,7 @@ export async function botRoutes(app: FastifyInstance) {
       });
     }
 
-    const { name, greeting, context, domain, enabled, collectLeads, appearance } = parsed.value;
+    const { name, greeting, context, domain, enabled, collectLeads, suggestions, appearance } = parsed.value;
     if ((await getPlanCached(userId)) === "free") {
       const err = paidOnlyError(appearance, { instructions: "" });
       if (err) return reply.code(403).send({ error: err });
@@ -118,6 +132,7 @@ export async function botRoutes(app: FastifyInstance) {
         allowedDomains: [domain],
         enabled: enabled ?? true,
         ...(collectLeads === undefined ? {} : { collectLeads }),
+        ...(suggestions === undefined ? {} : { suggestions }),
         ...appearance,
       })
       .returning();
@@ -129,7 +144,7 @@ export async function botRoutes(app: FastifyInstance) {
     const parsed = parseInput(req.body);
     if ("error" in parsed) return reply.code(400).send({ error: parsed.error });
 
-    const { name, greeting, context, domain, enabled, collectLeads, appearance } = parsed.value;
+    const { name, greeting, context, domain, enabled, collectLeads, suggestions, appearance } = parsed.value;
     if ((await getPlanCached(req.userId!)) === "free") {
       const [existing] = await db
         .select()
@@ -149,6 +164,7 @@ export async function botRoutes(app: FastifyInstance) {
         allowedDomains: [domain],
         ...(enabled === undefined ? {} : { enabled }),
         ...(collectLeads === undefined ? {} : { collectLeads }),
+        ...(suggestions === undefined ? {} : { suggestions }),
         ...appearance,
       })
       .where(and(eq(bots.id, id), eq(bots.ownerId, req.userId!)))
