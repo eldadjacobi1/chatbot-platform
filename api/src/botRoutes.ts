@@ -184,7 +184,8 @@ export async function botRoutes(app: FastifyInstance) {
       .from(bots)
       .where(and(eq(bots.id, id), eq(bots.ownerId, req.userId!)));
     if (!owned) return reply.code(404).send({ error: "Chatbot not found." });
-    const report = await getReport(id);
+    const d = Number((req.query as { days?: string }).days);
+    const report = await getReport(id, d === 7 ? 7 : 30);
     if (PLAN_LIMITS[await getPlanCached(req.userId!)].fullReport) return { ...report, limited: false };
     // Free plan: totals only. The question lists are part of Pro.
     return { ...report, topQuestions: [], unanswered: [], limited: true };

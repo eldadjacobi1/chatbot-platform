@@ -283,8 +283,8 @@ export default function DashboardPage() {
 
   const loadReport = useCallback(() => {
     if (!botId) return;
-    call(`/api/bots/${botId}/report`).then(setReport).catch(() => setReport(null));
-  }, [botId, call]);
+    call(`/api/bots/${botId}/report?days=${repDays}`).then(setReport).catch(() => setReport(null));
+  }, [botId, call, repDays]);
   useEffect(loadReport, [loadReport]);
 
   const loadLeads = useCallback(() => {
@@ -423,6 +423,9 @@ export default function DashboardPage() {
     : "You're all caught up. New leads appear here when visitors leave their details.";
   const NEXT: Record<string, [string, string]> = { new: ["Mark contacted", "contacted"], contacted: ["Mark done", "done"], done: ["Reopen", "new"] };
   const STATUS_LABEL: Record<string, string> = { new: "New", contacted: "Contacted", done: "Done" };
+  const [repFilter, setRepFilter] = useState<"all" | "needs" | "answered">("all");
+  const [repAll, setRepAll] = useState(false);
+  const [repDays, setRepDays] = useState<7 | 30>(30);
   const [leadFilter, setLeadFilter] = useState<"all" | "new" | "contacted" | "done">("all");
   const [copiedLead, setCopiedLead] = useState<number | null>(null);
   async function copyContact(l: Lead) {
@@ -433,7 +436,7 @@ export default function DashboardPage() {
     <li key={q.question}>
       <div className="un-row">
         <span className="un-q">{q.question} <em>{q.count}x</em></span>
-        <button type="button" className="btn secondary small"
+        <button type="button" className="btn ghost small"
           onClick={() => { setAnswering(answering === q.question ? null : q.question); setAnswerText(""); setAnswerErr(""); }}>
           {answering === q.question ? "Cancel" : "Add answer"}
         </button>
@@ -631,11 +634,23 @@ export default function DashboardPage() {
                 <div className="card rate">
                   <div className="rate-head">
                     <h2>Answer rate</h2>
-                    <button className="btn secondary small" type="button" onClick={loadReport}>Refresh</button>
+                    <div className="rate-tools">
+                      <div className="seg small" role="tablist" aria-label="Time range">
+                        {([7, 30] as const).map((d) => (
+                          <button key={d} type="button" role="tab" aria-selected={repDays === d} className={repDays === d ? "seg-btn on" : "seg-btn"} onClick={() => setRepDays(d)}>{d} days</button>
+                        ))}
+                      </div>
+                      <button className="btn ghost small" type="button" onClick={loadReport}>
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-3-6.7L21 8M21 3v5h-5" /></svg>
+                        Refresh
+                      </button>
+                    </div>
                   </div>
-                  <div className="rate-num">{Math.round(((report.total - report.unansweredCount) / report.total) * 100)}%</div>
+                  <div className="rate-line">
+                    <span className="rate-num">{Math.round(((report.total - report.unansweredCount) / report.total) * 100)}%</span>
+                    <p className="hint">{report.total - report.unansweredCount} of {report.total} questions answered in the last {report.days} days.{report.unansweredCount > 0 && <> <b>{report.unansweredCount} {report.unansweredCount === 1 ? "needs" : "need"} an answer.</b></>}</p>
+                  </div>
                   <div className="rate-bar"><i style={{ width: `${Math.round(((report.total - report.unansweredCount) / report.total) * 100)}%` }} /></div>
-                  <p className="hint">{report.total - report.unansweredCount} of {report.total} questions answered in the last {report.days} days.</p>
                 </div>
               </div>
 
@@ -646,38 +661,67 @@ export default function DashboardPage() {
                   <button type="button" className="btn" onClick={() => setTab("plan")}>See Pro</button>
                 </div>
               ) : (
-                <div className="rep-cols">
-                  <div className="card">
-                    <h2 className="amber-title">Needs an answer</h2>
-                    {report.unanswered.length === 0 ? (
-                      <p className="hint">Nothing here. Your bot answered everything.</p>
-                    ) : (
+                <div className="card qlist">
+                  {(() => {
+                    const need = new Set(report.unanswered.map((q) => q.question));
+                    const all = [...report.topQuestions, ...report.unanswered.filter((q) => !report.topQuestions.some((t) => t.question === q.question))];
+                    const max = Math.max(1, ...all.map((q) => q.count));
+                    const shown = all.filter((q) => repFilter === "all" || (repFilter === "needs") === need.has(q.question));
+                    const visible = repAll ? shown : shown.slice(0, 8);
+                    return (
                       <>
-                        <ul className="unans">
-                          {report.unanswered.map((q) => (
-                            renderUnanswered(q)
+                        <div className="seg" role="tablist" aria-label="Filter questions">
+                          {([["all", "All", all.length], ["needs", "Needs answer", need.size], ["answered", "Answered", all.length - need.size]] as const).map(([f, label, n]) => (
+                            <button key={f} type="button" role="tab" aria-selected={repFilter === f} className={repFilter === f ? "seg-btn on" : "seg-btn"} onClick={() => { setRepFilter(f); setRepAll(false); }}>
+                              {label} <em>{n}</em>
+                            </button>
                           ))}
-                        </ul>
-                        <p className="hint">Type the answer and your bot will use it from the next message.</p>
+                        </div>
+                        {shown.length === 0 ? (
+                          <p className="hint">{repFilter === "needs" ? "Nothing here. Your bot answered everything." : "No questions yet."}</p>
+                        ) : (
+                          <ul className="qrows">
+                            {visible.map((q) => {
+                              const needs = need.has(q.question);
+                              return (
+                                <li key={q.question}>
+                                  <div className="un-row">
+                                    <span className="un-q">{q.question}</span>
+                                    <span className="q-meta">
+                                      <span className={needs ? "chip st-contacted" : "chip st-new"}><i />{needs ? "Needs answer" : "Answered"}</span>
+                                      <b>{q.count}</b>
+                                      {needs && (
+                                        <button type="button" className="btn ghost small"
+                                          onClick={() => { setAnswering(answering === q.question ? null : q.question); setAnswerText(""); setAnswerErr(""); }}>
+                                          {answering === q.question ? "Cancel" : "Add answer"}
+                                        </button>
+                                      )}
+                                    </span>
+                                  </div>
+                                  <span className="rk-bar"><i style={{ width: `${(q.count / max) * 100}%` }} /></span>
+                                  {needs && answering === q.question && (
+                                    <div className="un-form">
+                                      <textarea autoFocus maxLength={1000} value={answerText} placeholder="Type the answer your bot should give..."
+                                        onChange={(e) => setAnswerText(e.target.value)} />
+                                      <div className="row">
+                                        <button type="button" className="btn small" disabled={answerBusy || !answerText.trim()} onClick={() => submitAnswer(q.question)}>
+                                          {answerBusy ? "Saving..." : "Save answer"}
+                                        </button>
+                                        {answerErr && <span className="error" style={{ margin: 0 }}>{answerErr}</span>}
+                                      </div>
+                                    </div>
+                                  )}
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        )}
+                        {shown.length > 8 && (
+                          <button type="button" className="link" onClick={() => setRepAll(!repAll)}>{repAll ? "Show fewer" : `Show all ${shown.length}`}</button>
+                        )}
                       </>
-                    )}
-                  </div>
-                  <div className="card">
-                    <h2>Most asked</h2>
-                    {report.topQuestions.length === 0 ? (
-                      <p className="hint">No questions yet.</p>
-                    ) : (
-                      <ol className="ranked">
-                        {report.topQuestions.map((q) => (
-                          <li key={q.question}>
-                            <span className="rk-text">{q.question}</span>
-                            <span className="rk-bar"><i style={{ width: `${(q.count / report.topQuestions[0].count) * 100}%` }} /></span>
-                            <b>{q.count}</b>
-                          </li>
-                        ))}
-                      </ol>
-                    )}
-                  </div>
+                    );
+                  })()}
                 </div>
               )}
             </>
