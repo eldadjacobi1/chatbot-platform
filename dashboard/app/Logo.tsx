@@ -1,13 +1,11 @@
-// The Chattr mark: a question bubble and an answer bubble.
+// The Chattr mark: a chat bubble shaped like the letter C.
 export default function Logo({ size = 30 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 64 64" aria-hidden="true">
-      <rect width="64" height="64" rx="16" fill="#4338ca" />
-      <path d="M20 12H38A8 8 0 0 1 46 20V28A8 8 0 0 1 38 36H28L18 46V36H20A8 8 0 0 1 12 28V20A8 8 0 0 1 20 12Z" fill="#fff" />
-      <circle cx="22" cy="24" r="2.4" fill="#4338ca" />
-      <circle cx="29" cy="24" r="2.4" fill="#4338ca" />
-      <circle cx="36" cy="24" r="2.4" fill="#4338ca" />
-      <path d="M41 36H47A7 7 0 0 1 54 43V43A7 7 0 0 1 47 50H49.5L55 57L44 50H41A7 7 0 0 1 34 43V43A7 7 0 0 1 41 36Z" fill="#c7c9ff" stroke="#4338ca" strokeWidth="3" strokeLinejoin="round" />
+<rect width="64" height="64" rx="16" fill="#4338ca"/>
+<path d="M42.1 21.0A15 15 0 1 0 42.1 41.0" fill="none" stroke="#fff" strokeWidth="9" strokeLinecap="round"/>
+<path d="M12.5 53L16.5 36L30 45Z" fill="#fff" stroke="#fff" strokeWidth="2.5" strokeLinejoin="round"/>
+<circle cx="47.5" cy="31" r="3.6" fill="#fff"/>
     </svg>
   );
 }
