@@ -241,3 +241,9 @@ body:has(.lp) { background: #fff; }
   .site-card:nth-child(3) { display: none; }
   .site-about { max-width: 52%; }
 }
+
+.lp-pains { display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px; margin: 40px 0 28px; }
+.lp-pains h3 { font-size: 1.25rem; letter-spacing: -0.03em; margin-bottom: 8px; }
+.lp-pains p { color: var(--muted); }
+.lp-trust { max-width: 56ch; margin: 22px auto 0; font-size: 14px; line-height: 1.5; color: rgba(255, 255, 255, .72); }
+@media (max-width: 800px) { .lp-pains { grid-template-columns: 1fr; gap: 24px; } }

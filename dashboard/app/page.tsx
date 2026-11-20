@@ -121,6 +121,25 @@ export default function Home() {
         </div>
       </section>
 
+      <section className="lp-section" id="problem">
+        <h2>Your website is open at 2 AM. Is anyone answering?</h2>
+        <div className="lp-pains">
+          <div>
+            <h3>The same questions, all day</h3>
+            <p>Hours, prices, &quot;do you deliver?&quot;. You answer them again and again.</p>
+          </div>
+          <div>
+            <h3>Nobody there after hours</h3>
+            <p>Visitors who can&apos;t get an answer right away tend to leave.</p>
+          </div>
+          <div>
+            <h3>People leave quietly</h3>
+            <p>Most never call or email, so you never learn what they wanted.</p>
+          </div>
+        </div>
+        <p className="lp-sub">Chattr answers from your own information at any hour, and shows you what people ask.</p>
+      </section>
+
       <section className="lp-section" id="examples">
         <h2>Looks like your business. Talks like your business.</h2>
         <p className="lp-sub">
@@ -254,6 +273,7 @@ export default function Home() {
       <section className="lp-final">
         <h2>Your next customer is asking something right now.</h2>
         <Link className="lp-btn big" href="/sign-up">Start free</Link>
+        <p className="lp-trust">It answers only from your information and says &quot;I&apos;m not sure&quot; when it doesn&apos;t know. Your business info is used only to answer your visitors. It answers questions and collects leads. It doesn&apos;t book appointments or take payments yet.</p>
       </section>
 
       <footer className="lp-footer">

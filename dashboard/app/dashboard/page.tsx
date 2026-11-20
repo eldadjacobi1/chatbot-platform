@@ -178,6 +178,12 @@ export default function DashboardPage() {
     setFlags((f) => ({ ...f, [k]: true }));
     try { localStorage.setItem(k === "tested" ? "chattr-tested" : "chattr-installed", "1"); } catch {}
   }
+  // A "Saved." or error message belongs to the page it appeared on.
+  useEffect(() => {
+    setMessage("");
+    setError("");
+  }, [tab]);
+
   // Opening Install shows the test chat, which counts as testing the bot.
   useEffect(() => {
     if (tab === "install" && bot) setFlag("tested");
