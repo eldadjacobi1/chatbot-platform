@@ -1,0 +1,8 @@
+.legal { max-width: 720px; margin: 0 auto; padding: 48px 20px 96px; color: var(--ink); line-height: 1.65; }
+.legal .back { display: inline-flex; align-items: center; gap: 8px; margin-bottom: 28px; font-weight: 800; letter-spacing: -0.03em; color: var(--ink); text-decoration: none; }
+.legal h1 { font-size: 2.2rem; letter-spacing: -0.03em; margin: 0 0 6px; }
+.legal .updated { color: var(--muted); margin: 0 0 28px; }
+.legal h2 { font-size: 1.15rem; margin: 30px 0 6px; letter-spacing: -0.02em; }
+.legal p, .legal li { color: #34344f; }
+.legal ul { padding-left: 20px; margin: 6px 0; }
+.legal a { color: var(--accent); }

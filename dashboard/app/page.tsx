@@ -280,6 +280,8 @@ export default function Home() {
         <span className="lp-foot-brand"><Logo size={24} />Chattr</span>
         <Link href="/sign-in">Sign in</Link>
         <Link href="/sign-up">Get started</Link>
+        <Link href="/privacy">Privacy</Link>
+        <Link href="/terms">Terms</Link>
       </footer>
     </main>
   );

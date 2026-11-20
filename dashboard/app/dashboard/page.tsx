@@ -1,5 +1,6 @@
 "use client";
 
+import { CONTACT_EMAIL } from "../legal";
 import { useAuth, useUser, UserButton } from "@clerk/nextjs";
 import { useCallback, useEffect, useState } from "react";
 import Logo from "../Logo";
@@ -499,6 +500,7 @@ export default function DashboardPage() {
               <em className="nav-plan">{PLANS.find((p) => p.id === (billing?.plan ?? "free"))?.name}</em>
             </button>
           )}
+          <a className="side-link" href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent("Feedback")}`}>Send feedback</a>
           <div className="app-user"><UserButton /></div>
         </div>
       </aside>

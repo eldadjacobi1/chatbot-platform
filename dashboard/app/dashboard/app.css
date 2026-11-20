@@ -334,3 +334,7 @@ code { background: var(--accent-soft); padding: 1px 6px; border-radius: 6px; fon
 .un-row .btn.ghost.ignore { background: #fff; color: var(--muted); border: 1.5px solid var(--line); }
 .un-row .btn.ghost.ignore:hover { background: var(--bg); color: var(--ink); border-color: #cfcfe0; }
 .un-q { flex: 1; }
+
+.side-link { padding: 6px 12px; font-size: .875rem; font-weight: 600; color: var(--muted); text-decoration: none; }
+.side-link:hover { color: var(--accent); }
+@media (max-width: 860px) { .side-link { display: none; } }
