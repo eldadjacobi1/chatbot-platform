@@ -591,11 +591,11 @@ export default function DashboardPage() {
                     )}
                   </p>
 
-                  <div className="row" style={{ marginTop: 16 }}>
+                  <div className="savebar">
                     <button className="btn" disabled={saving}>{saving ? "Saving..." : "Save changes"}</button>
+                    {message && <span className="ok">{message}</span>}
+                    {error && <span className="error">{error}</span>}
                   </div>
-                  {message && <p className="ok">{message}</p>}
-                  {error && <p className="error">{error}</p>}
                 </div>
 
                 <div className={`preview theme-${form.theme}`} aria-label="Preview" style={{ "--pv": form.color } as React.CSSProperties}>
@@ -710,13 +710,13 @@ export default function DashboardPage() {
                 Ask visitors for their email or phone when the bot can&apos;t help
               </label>
 
-              <div className="row" style={{ marginTop: 16 }}>
+              <div className="savebar">
                 <button className="btn" disabled={saving}>
-                  {saving ? "Saving..." : bot ? "Save changes" : "Create chatbot"}
+                  {saving ? "Saving..." : "Save changes"}
                 </button>
+                {message && <span className="ok">{message}</span>}
+                {error && <span className="error">{error}</span>}
               </div>
-              {message && <p className="ok">{message}</p>}
-              {error && <p className="error">{error}</p>}
             </form>
           )}
 
