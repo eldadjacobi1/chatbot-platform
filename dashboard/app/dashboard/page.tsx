@@ -417,6 +417,7 @@ export default function DashboardPage() {
     }
   }
 
+  const [leadFilter, setLeadFilter] = useState<"all" | "new" | "contacted" | "done">("all");
   const [copiedLead, setCopiedLead] = useState<number | null>(null);
   async function copyContact(l: Lead) {
     try { await navigator.clipboard.writeText(l.contact); setCopiedLead(l.id); setTimeout(() => setCopiedLead(null), 1500); } catch {}
@@ -693,12 +694,25 @@ export default function DashboardPage() {
                     <h2>{leads.total} {leads.total === 1 ? "lead" : "leads"}</h2>
                     <button className="btn secondary small" type="button" onClick={loadLeads}>Refresh</button>
                   </div>
+                  <div className="filters" role="tablist" aria-label="Filter leads">
+                    {(["all", "new", "contacted", "done"] as const).map((f) => {
+                      const n = f === "all" ? leads.leads.length : leads.leads.filter((l) => (l.status ?? "new") === f).length;
+                      return (
+                        <button key={f} type="button" role="tab" aria-selected={leadFilter === f} className={leadFilter === f ? `filter on f-${f}` : `filter f-${f}`} onClick={() => setLeadFilter(f)}>
+                          {f === "all" ? "All" : f === "new" ? "New" : f === "contacted" ? "Contacted" : "Done"} <em>{n}</em>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {leads.leads.filter((l) => leadFilter === "all" || (l.status ?? "new") === leadFilter).length === 0 && (
+                    <p className="hint" style={{ margin: "16px 0 0" }}>No leads with this status.</p>
+                  )}
                   <ul>
-                    {leads.leads.map((l) => (
+                    {leads.leads.filter((l) => leadFilter === "all" || (l.status ?? "new") === leadFilter).map((l) => (
                       <li key={l.id} className={l.status === "done" ? "lead-done" : ""}>
                         <span className="avatar">{(l.name || l.contact).trim().charAt(0).toUpperCase()}</span>
                         <div className="lead-main">
-                          <b>{l.name || l.contact}{(l.status ?? "new") === "new" && <span className="pill-new">New</span>}</b>
+                          <b>{l.name || l.contact}</b>
                           <span className="lead-contact">
                             <a href={/@/.test(l.contact) ? `mailto:${l.contact}` : `tel:${l.contact.replace(/[^\d+]/g, "")}`}>{l.contact}</a>
                             <button type="button" className="link tiny" onClick={() => copyContact(l)}>{copiedLead === l.id ? "Copied" : "Copy"}</button>
@@ -707,12 +721,15 @@ export default function DashboardPage() {
                         </div>
                         <div className="lead-side">
                           <time className="lead-time" title={new Date(l.createdAt).toLocaleString()}>{timeAgo(l.createdAt)}</time>
-                          <select className="lead-status" aria-label="Status" value={l.status ?? "new"} onChange={(e) => setLeadStatus(l, e.target.value)}>
+                          <select className={`lead-status st-${l.status ?? "new"}`} aria-label="Status" value={l.status ?? "new"} onChange={(e) => setLeadStatus(l, e.target.value)}>
                             <option value="new">New</option>
                             <option value="contacted">Contacted</option>
                             <option value="done">Done</option>
                           </select>
-                          <button type="button" className="link tiny danger" onClick={() => deleteLead(l)}>Delete</button>
+                          <details className="more">
+                            <summary aria-label="More actions">&middot;&middot;&middot;</summary>
+                            <div className="more-menu"><button type="button" onClick={() => deleteLead(l)}>Delete lead</button></div>
+                          </details>
                         </div>
                       </li>
                     ))}

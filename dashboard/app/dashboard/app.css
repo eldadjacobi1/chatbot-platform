@@ -257,3 +257,25 @@ code { background: var(--accent-soft); padding: 1px 6px; border-radius: 6px; fon
 .lead-side { flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
 .lead-status { width: auto; padding: 5px 28px 5px 12px; border-radius: 999px; font-size: .85rem; font-weight: 650; }
 .lead-done .lead-main, .lead-done .avatar { opacity: .5; }
+
+/* Leads v2: compact rows, colored status, filters, menu */
+.card.leadlist li { align-items: center; padding: 12px 0; }
+.lead-side { flex-direction: row; align-items: center; gap: 12px; }
+.lead-time { min-width: 84px; text-align: right; }
+.lead-status { border: 1.5px solid transparent; }
+.lead-status.st-new { background-color: #dcfce7; color: #15803d; border-color: #bbf0cb; }
+.lead-status.st-contacted { background-color: #fef3c7; color: #b45309; border-color: #f6dd9a; }
+.lead-status.st-done { background-color: #eceef3; color: #5b5b7a; border-color: #dadce6; }
+.filters { display: flex; gap: 8px; flex-wrap: wrap; margin: 14px 0 6px; }
+.filter { padding: 6px 14px; border: 1.5px solid var(--line); border-radius: 999px; background: #fff; font: inherit; font-weight: 650; font-size: .9rem; color: var(--muted); cursor: pointer; }
+.filter em { font-style: normal; margin-left: 4px; opacity: .7; }
+.filter:hover { border-color: #b9bcf5; }
+.filter.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+.more { position: relative; }
+.more summary { list-style: none; cursor: pointer; padding: 4px 10px; border-radius: 8px; color: var(--muted); font-weight: 800; letter-spacing: 1px; }
+.more summary::-webkit-details-marker { display: none; }
+.more summary:hover, .more[open] summary { background: var(--bg); color: var(--ink); }
+.more-menu { position: absolute; right: 0; top: 100%; z-index: 5; min-width: 130px; margin-top: 4px; padding: 6px; border: 1px solid var(--line); border-radius: 12px; background: #fff; box-shadow: 0 10px 28px rgba(20,20,43,.14); }
+.more-menu button { width: 100%; padding: 8px 10px; border: 0; border-radius: 8px; background: none; font: inherit; font-weight: 600; color: var(--danger); text-align: left; cursor: pointer; }
+.more-menu button:hover { background: #fdecea; }
+@media (max-width: 700px) { .card.leadlist li { align-items: flex-start; } .lead-side { flex-wrap: wrap; justify-content: flex-end; } }
