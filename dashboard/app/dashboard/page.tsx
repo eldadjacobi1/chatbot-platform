@@ -528,7 +528,7 @@ export default function DashboardPage() {
                         <>
                           <ul className="unans">
                             {report.unanswered.slice(0, 5).map((q) => (
-                              {renderUnanswered(q)}
+                              renderUnanswered(q)
                             ))}
                           </ul>
                           <p className="hint">Type the answer and your bot will use it from the next message.</p>
@@ -597,7 +597,7 @@ export default function DashboardPage() {
                       <>
                         <ul className="unans">
                           {report.unanswered.map((q) => (
-                            {renderUnanswered(q)}
+                            renderUnanswered(q)
                           ))}
                         </ul>
                         <p className="hint">Type the answer and your bot will use it from the next message.</p>
