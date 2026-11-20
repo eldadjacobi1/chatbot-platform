@@ -34,6 +34,7 @@ type Report = {
   savedByCache: number;
   topQuestions: QuestionCount[];
   unanswered: QuestionCount[];
+  limited?: boolean;
 };
 
 const emptyForm: Form = {
@@ -221,6 +222,13 @@ export default function DashboardPage() {
                 <b>{report.total}</b> questions &middot; <b>{report.unansweredCount}</b> the bot couldn&apos;t answer
               </p>
 
+              {report.limited ? (
+                <p className="hint">
+                  See which questions your bot couldn&apos;t answer, and the most asked ones, with{" "}
+                  <a href="#" onClick={(e) => { e.preventDefault(); setTab("plan"); }}>Pro</a>.
+                </p>
+              ) : (
+                <>
               <h3>Unanswered questions</h3>
               {report.unanswered.length === 0 ? (
                 <p className="hint">None yet. Nice!</p>
@@ -248,6 +256,8 @@ export default function DashboardPage() {
                     <li key={q.question}>{q.question} <span className="hint">({q.count}x)</span></li>
                   ))}
                 </ul>
+              )}
+                </>
               )}
             </div>
           )}

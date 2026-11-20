@@ -5,9 +5,7 @@ import { db } from "./db/index.js";
 import { bots, type Bot } from "./db/schema.js";
 import { requireUser } from "./auth.js";
 import { getReport } from "./reports.js";
-
-// Free plan limit. Paid plans will raise this later.
-const MAX_BOTS_PER_USER = 1;
+import { getPlanCached, PLAN_LIMITS } from "./billing.js";
 
 // What the dashboard sees. One domain per bot for now.
 function toDto(bot: Bot) {
@@ -77,8 +75,11 @@ export async function botRoutes(app: FastifyInstance) {
     if ("error" in parsed) return reply.code(400).send({ error: parsed.error });
 
     const existing = await db.select({ id: bots.id }).from(bots).where(eq(bots.ownerId, userId));
-    if (existing.length >= MAX_BOTS_PER_USER) {
-      return reply.code(403).send({ error: "Your plan allows 1 chatbot." });
+    const maxBots = PLAN_LIMITS[await getPlanCached(userId)].bots;
+    if (existing.length >= maxBots) {
+      return reply.code(403).send({
+        error: `Your plan allows ${maxBots} chatbot${maxBots === 1 ? "" : "s"}. Upgrade in the Plan tab to add more.`,
+      });
     }
 
     const { name, greeting, context, domain, enabled } = parsed.value;
@@ -127,6 +128,9 @@ export async function botRoutes(app: FastifyInstance) {
       .from(bots)
       .where(and(eq(bots.id, id), eq(bots.ownerId, req.userId!)));
     if (!owned) return reply.code(404).send({ error: "Chatbot not found." });
-    return getReport(id);
+    const report = await getReport(id);
+    if (PLAN_LIMITS[await getPlanCached(req.userId!)].fullReport) return { ...report, limited: false };
+    // Free plan: totals only. The question lists are part of Pro.
+    return { ...report, topQuestions: [], unanswered: [], limited: true };
   });
 }

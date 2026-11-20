@@ -16,7 +16,7 @@ const botDaily = new Map<string, { day: string; count: number }>();
 
 export type LimitResult = { ok: true } | { ok: false; reason: string };
 
-export function checkLimits(ip: string, token: string, botId: string): LimitResult {
+export function checkLimits(ip: string, token: string, botId: string, botPerDay = BOT_PER_DAY): LimitResult {
   const now = Date.now();
 
   // 1. Blocked IP
@@ -52,7 +52,7 @@ export function checkLimits(ip: string, token: string, botId: string): LimitResu
   const day = new Date().toISOString().slice(0, 10);
   const bot = botDaily.get(botId);
   const count = bot && bot.day === day ? bot.count : 0;
-  if (count >= BOT_PER_DAY) {
+  if (count >= botPerDay) {
     return {
       ok: false,
       reason: "The assistant is unavailable right now. Please contact the business directly.",

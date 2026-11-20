@@ -10,7 +10,7 @@ import { getBot } from "./bots.js";
 import { checkLimits, afterAnswer } from "./limits.js";
 import { cannedReply, getCached, setCached, GIBBERISH_REPLY } from "./savings.js";
 import { botRoutes } from "./botRoutes.js";
-import { billingRoutes } from "./billing.js";
+import { billingRoutes, getPlanCached, PLAN_LIMITS } from "./billing.js";
 import {
   createToken,
   verifyToken,
@@ -126,7 +126,8 @@ app.post("/chat", async (req, reply) => {
     return reply.code(400).send({ error: `message too long (max ${MAX_MESSAGE_LENGTH} characters)` });
   }
 
-  const limit = checkLimits(req.ip, token, botId);
+  const plan = await getPlanCached(bot.ownerId);
+  const limit = checkLimits(req.ip, token, botId, PLAN_LIMITS[plan].messagesPerDay);
   if (!limit.ok) return reply.code(429).send({ error: limit.reason });
 
   // We write the stream ourselves, so take over the response.

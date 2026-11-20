@@ -17,6 +17,25 @@ const APP_URL = (process.env.APP_URL ?? process.env.DASHBOARD_ORIGIN ?? "http://
   .split(",")[0]
   .trim();
 
+// What each plan includes.
+export const PLAN_LIMITS: Record<Plan, { bots: number; messagesPerDay: number; fullReport: boolean }> = {
+  free: { bots: 1, messagesPerDay: 50, fullReport: false },
+  pro: { bots: 1, messagesPerDay: 300, fullReport: true },
+  business: { bots: 3, messagesPerDay: 1500, fullReport: true },
+};
+
+// Plan lookup with a short cache, so chat messages don't hit the database every time.
+const planCache = new Map<string, { plan: Plan; at: number }>();
+export async function getPlanCached(userId: string | null): Promise<Plan> {
+  if (!userId) return "pro"; // built-in demo bot (no owner)
+  const hit = planCache.get(userId);
+  if (hit && Date.now() - hit.at < 60_000) return hit.plan;
+  const { plan, status } = await getPlan(userId);
+  const effective: Plan = status === "active" || status === "trialing" ? plan : "free";
+  planCache.set(userId, { plan: effective, at: Date.now() });
+  return effective;
+}
+
 function planFromPrice(priceId: string | undefined): Plan {
   if (priceId && priceId === PRICES.pro) return "pro";
   if (priceId && priceId === PRICES.business) return "business";
@@ -55,6 +74,7 @@ async function saveSubscription(
   customerId: string | null,
   subscriptionId: string | null,
 ) {
+  planCache.delete(userId);
   await pool.query(
     `INSERT INTO subscriptions (user_id, plan, status, stripe_customer_id, stripe_subscription_id, updated_at)
      VALUES ($1, $2, $3, $4, $5, now())
