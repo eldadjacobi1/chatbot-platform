@@ -93,7 +93,7 @@ const AUDIENCES = [
 
 const NAV: [Tab, string, string][] = [
   ["overview", "Home", "home"],
-  ["settings", "Business info", "setup"],
+  ["settings", "Bot setup", "setup"],
   ["appearance", "Design", "design"],
   ["install", "Add to website", "code"],
   ["reports", "Reports", "chat"],
@@ -108,9 +108,9 @@ const HEADS: Record<string, [string, string]> = {
   reports: ["Reports", "The questions your visitors asked, and the ones your bot couldn't answer."],
   leads: ["Leads", "People who left their email or phone when the bot couldn't help."],
   appearance: ["Design", "Choose how your chat looks and sounds. The preview updates as you change things."],
-  settings: ["Business info", "What your bot knows about your business. It answers only from this."],
+  settings: ["Bot setup", "What your bot knows about your business. It answers only from this."],
   install: ["Add to website", "Test your bot, then add it to your website."],
-  plan: ["Plan & billing", "Your current plan and what each one includes."],
+  plan: ["Plan", "Your current plan and what each one includes."],
 };
 
 const ICONS: Record<string, string> = {
@@ -347,7 +347,7 @@ export default function DashboardPage() {
           {bot && (
             <button type="button" className={tab === "plan" ? "nav-item on" : "nav-item"} onClick={() => setTab("plan")}>
               <Icon name="plan" />
-              <span>Plan &amp; billing</span>
+              <span>Plan</span>
               <em className="nav-plan">{PLANS.find((p) => p.id === (billing?.plan ?? "free"))?.name}</em>
             </button>
           )}
@@ -455,7 +455,7 @@ export default function DashboardPage() {
                               </li>
                             ))}
                           </ul>
-                          <p className="hint">Add the answers in Business info, and the bot can answer next time.</p>
+                          <p className="hint">Add the answers in Bot setup, and the bot can answer next time.</p>
                         </>
                       )}
                     </div>
@@ -520,7 +520,7 @@ export default function DashboardPage() {
                   </ul>
                   <p className="hint">
                     Tip: add the answers to these in{" "}
-                    <a href="#" onClick={(e) => { e.preventDefault(); setTab("settings"); }}>Business info</a>
+                    <a href="#" onClick={(e) => { e.preventDefault(); setTab("settings"); }}>Bot setup</a>
                     , so the bot can answer next time.
                   </p>
                 </>
@@ -548,7 +548,7 @@ export default function DashboardPage() {
                 <button className="btn secondary" type="button" onClick={loadLeads}>Refresh</button>
               </div>
               {!form.collectLeads && (
-                <p className="hint">Collecting contact details is off. Turn it on in Business info.</p>
+                <p className="hint">Collecting contact details is off. Turn it on in Bot setup.</p>
               )}
               {!leads || leads.total === 0 ? (
                 <div className="empty">
