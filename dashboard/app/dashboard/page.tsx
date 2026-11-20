@@ -306,9 +306,17 @@ export default function DashboardPage() {
                     placeholder={form.name || "Your business name"}
                     onChange={(e) => update("title", e.target.value)} />
 
-                  <label htmlFor="avatar">Avatar (an emoji)</label>
-                  <input id="avatar" type="text" value={form.avatar} maxLength={8} placeholder="💬"
-                    onChange={(e) => update("avatar", e.target.value)} />
+                  <label>Avatar</label>
+                  <div className="emojis">
+                    {["", "💬", "🤖", "👋", "✨", "⭐", "❤️", "🍕", "☕"].map((e) => (
+                      <button key={e || "none"} type="button"
+                        className={form.avatar === e ? "emoji on" : "emoji"}
+                        aria-label={e ? `Use ${e}` : "No avatar"}
+                        onClick={() => update("avatar", e)}>
+                        {e || "None"}
+                      </button>
+                    ))}
+                  </div>
 
                   <label htmlFor="position">Button position</label>
                   <select id="position" value={form.position} onChange={(e) => update("position", e.target.value)}>
