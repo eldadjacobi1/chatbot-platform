@@ -100,6 +100,15 @@ const NAV: [Tab, string, string][] = [
   ["leads", "Leads", "leads"],
 ];
 
+const PLAN_DETAILS = [
+  { id: "free", name: "Free", price: "$0", tag: "Try it on your site.", popular: false,
+    features: ["1 chatbot", "50 messages a day", "Latest 3 leads", "Report totals", "All designs and colors"] },
+  { id: "pro", name: "Pro", price: "$9.99", tag: "For a business that gets real visitors.", popular: true,
+    features: ["1 chatbot", "300 messages a day", "All leads", "Full reports", "Extra instructions for your bot"] },
+  { id: "business", name: "Business", price: "$49.99", tag: "For several sites or brands.", popular: false,
+    features: ["3 chatbots", "1,500 messages a day", "Everything in Pro"] },
+] as const;
+
 const NAV_COLORS: Record<string, string> = {
   overview: "#4338ca", reports: "#0ea5e9", leads: "#16a34a", appearance: "#db2777", settings: "#d97706", install: "#7c3aed", plan: "#0f766e",
 };
@@ -810,18 +819,23 @@ export default function DashboardPage() {
           )}
 
           {bot && tab === "plan" && (
-            <div className="card">
-              <h2>Your plan</h2>
+            <>
               {error && <p className="error">{error}</p>}
-              <div className="plans">
-                {PLANS.map((p) => {
-                  const current = (billing?.plan ?? "free") === p.id;
-                  const onFree = (billing?.plan ?? "free") === "free";
+              <div className="plan-grid">
+                {PLAN_DETAILS.map((p) => {
+                  const cur = billing?.plan ?? "free";
+                  const current = cur === p.id;
+                  const onFree = cur === "free";
                   return (
-                    <div key={p.id} className={current ? "plan current" : "plan"}>
-                      {current && <span className="badge">Current plan</span>}
-                      <h3>{p.name}</h3>
-                      <p className="price">{p.price}</p>
+                    <div key={p.id} className={`plan-card${current ? " current" : ""}${p.popular ? " popular" : ""}`}>
+                      {p.popular && !current && <span className="plan-flag">Most popular</span>}
+                      {current && <span className="plan-flag now">Your plan</span>}
+                      <h2>{p.name}</h2>
+                      <p className="plan-price"><b>{p.price}</b>{p.id !== "free" && <span>/month</span>}</p>
+                      <p className="hint">{p.tag}</p>
+                      <ul>
+                        {p.features.map((f) => <li key={f}>{f}</li>)}
+                      </ul>
                       {!current && p.id !== "free" && onFree && (
                         <button className="btn" type="button" disabled={billingBusy} onClick={() => openBilling("checkout", p.id)}>
                           Choose {p.name}
@@ -832,14 +846,17 @@ export default function DashboardPage() {
                 })}
               </div>
               {billing?.hasCustomer && (
-                <>
-                  <p className="hint">To switch plan, update your card or cancel, use Manage billing.</p>
+                <div className="card row" style={{ justifyContent: "space-between" }}>
+                  <div>
+                    <b>Billing</b>
+                    <p className="hint" style={{ margin: 0 }}>Switch plan, update your card or cancel.</p>
+                  </div>
                   <button className="btn secondary" type="button" disabled={billingBusy} onClick={() => openBilling("portal")}>
                     Manage billing
                   </button>
-                </>
+                </div>
               )}
-            </div>
+            </>
           )}
 
           {bot && tab === "install" && (

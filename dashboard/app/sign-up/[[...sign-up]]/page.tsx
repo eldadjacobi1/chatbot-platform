@@ -1,9 +1,10 @@
+import AuthShell from "../../AuthShell";
 import { SignUp } from "@clerk/nextjs";
 
 export default function SignUpPage() {
   return (
-    <main className="center">
+    <AuthShell>
       <SignUp forceRedirectUrl="/dashboard" />
-    </main>
+    </AuthShell>
   );
 }
