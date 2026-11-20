@@ -2,6 +2,8 @@
 
 import { useAuth, UserButton } from "@clerk/nextjs";
 import { useCallback, useEffect, useState } from "react";
+import Logo from "../Logo";
+import "./app.css";
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000";
 
@@ -88,6 +90,33 @@ const AUDIENCES = [
   ["professionals", "Professionals"],
 ];
 
+const NAV: [Tab, string, string][] = [
+  ["overview", "Home", "home"],
+  ["reports", "Chats", "chat"],
+  ["leads", "Leads", "leads"],
+  ["appearance", "Design", "design"],
+  ["settings", "Setup", "setup"],
+  ["install", "Install", "code"],
+];
+
+const ICONS: Record<string, string> = {
+  home: "M3 11l9-8 9 8M5 10v10h14V10",
+  chat: "M21 11.5a8.4 8.4 0 0 1-9 8.4 8.6 8.6 0 0 1-3.6-.8L3 21l1.9-5.4A8.4 8.4 0 1 1 21 11.5z",
+  leads: "M16 11a4 4 0 1 0-8 0 4 4 0 0 0 8 0zM4 21c0-4 4-6 8-6s8 2 8 6",
+  design: "M12 3a9 9 0 1 0 0 18c1.5 0 2-1 1.5-2-.6-1.2.2-2.5 1.6-2.5H17a4 4 0 0 0 4-4c0-5-4-9.5-9-9.5z",
+  setup: "M4 6h16M4 12h16M4 18h10",
+  code: "M8 8l-5 4 5 4M16 8l5 4-5 4M14 5l-4 14",
+  plan: "M3 7h18v12H3zM3 11h18",
+};
+
+function Icon({ name }: { name: string }) {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d={ICONS[name]} />
+    </svg>
+  );
+}
+
 export default function DashboardPage() {
   const { getToken, isLoaded } = useAuth();
   const [bot, setBot] = useState<Bot | null>(null);
@@ -105,6 +134,14 @@ export default function DashboardPage() {
   // Leads newer than this are "new". Remembered per bot in this browser.
   const [seenAt, setSeenAt] = useState<string>("");
   const isFree = (billing?.plan ?? "free") === "free";
+  const [hideSteps, setHideSteps] = useState(false);
+  useEffect(() => {
+    try { setHideSteps(localStorage.getItem("chattr-steps-done") === "1"); } catch {}
+  }, []);
+  function dismissSteps() {
+    setHideSteps(true);
+    try { localStorage.setItem("chattr-steps-done", "1"); } catch {}
+  }
 
   // Calls the API with the logged-in user's token.
   const call = useCallback(
@@ -257,59 +294,103 @@ export default function DashboardPage() {
     setForm((f) => ({ ...f, [field]: value }));
 
   return (
-    <main className="container">
-      <div className="topbar">
-        <h1 style={{ margin: 0 }}>Your chatbot</h1>
-        <UserButton />
-      </div>
+    <div className="app">
+      <aside className="app-side">
+        <div className="app-brand"><Logo size={28} />Chattr</div>
+        {bot && (
+          <nav className="app-nav" aria-label="Main">
+            {NAV.map(([id, label, icon]) => (
+              <button key={id} type="button" className={tab === id ? "nav-item on" : "nav-item"} onClick={() => setTab(id)}>
+                <Icon name={icon} />
+                <span>{label}</span>
+                {id === "leads" && newLeads > 0 && tab !== "leads" && <em className="nav-count">{newLeads}</em>}
+              </button>
+            ))}
+          </nav>
+        )}
+        <div className="app-side-foot">
+          {bot && (
+            <button type="button" className={tab === "plan" ? "nav-item on" : "nav-item"} onClick={() => setTab("plan")}>
+              <Icon name="plan" />
+              <span>Plan</span>
+              <em className="nav-plan">{PLANS.find((p) => p.id === (billing?.plan ?? "free"))?.name}</em>
+            </button>
+          )}
+          <div className="app-user"><UserButton /></div>
+        </div>
+      </aside>
 
+      <main className="app-main">
+        <div className="app-inner">
       {loading ? (
         <p>Loading...</p>
       ) : (
         <>
-          {bot && (
-            <nav className="tabs">
-              {(["overview", "reports", "leads", "appearance", "settings", "install", "plan"] as Tab[]).map((t) => (
-                <button key={t} type="button" className={tab === t ? "tab active" : "tab"} onClick={() => setTab(t)}>
-                  {t === "leads" && newLeads > 0 && tab !== "leads" && <span className="count">{newLeads}</span>}
-                  {t === "overview" ? "Overview" : t === "reports" ? "Reports" : t === "leads" ? "Leads" : t === "appearance" ? "Appearance" : t === "settings" ? "Settings" : t === "install" ? "Install" : "Plan"}
-                </button>
-              ))}
-            </nav>
-          )}
-
           {bot && tab === "overview" && (
             <>
-              <div className="card">
-                <h2>{bot.name}</h2>
-                <p>
-                  Status: <b>{bot.enabled ? "On" : "Off"}</b> &middot; Website: <b>{bot.domain}</b>
-                </p>
-              </div>
-              {report && (
-                <div className="stats">
-                  <div className="card stat"><div className="num">{report.total}</div><div className="hint">questions (last {report.days} days)</div></div>
-                  <div className="card stat"><div className="num">{report.unansweredCount}</div><div className="hint">couldn&apos;t answer</div></div>
-                  <div className="card stat"><div className="num">{report.savedByCache}</div><div className="hint">answered from cache</div></div>
+              <header className="app-head">
+                <div>
+                  <h1>{bot.name}</h1>
+                  <p className="hint"><span className={bot.enabled ? "dot on" : "dot"} />{bot.enabled ? "Online" : "Off"} on {bot.domain}</p>
                 </div>
-              )}
-              {newLeads > 0 && (
-                <div className="card">
-                  <p style={{ margin: 0 }}>
-                    You have <b>{newLeads}</b> new {newLeads === 1 ? "lead" : "leads"}.{" "}
-                    <a href="#" onClick={(e) => { e.preventDefault(); setTab("leads"); }}>See them in Leads</a>
-                  </p>
+              </header>
+
+              {!hideSteps && (
+                <div className="card steps">
+                  <div className="steps-top">
+                    <h2>Get your chatbot live</h2>
+                    <button type="button" className="link" onClick={dismissSteps}>Hide</button>
+                  </div>
+                  <ol>
+                    <li className={bot.context.trim().length > 20 ? "done" : ""}>
+                      <span className="tick" /><button type="button" className="link" onClick={() => setTab("settings")}>Tell it about your business</button>
+                    </li>
+                    <li><span className="tick" /><button type="button" className="link" onClick={() => setTab("appearance")}>Make it look like your brand</button></li>
+                    <li><span className="tick" /><button type="button" className="link" onClick={() => setTab("install")}>Add it to your website</button></li>
+                  </ol>
                 </div>
               )}
 
-              {report && report.unansweredCount > 0 && (
-                <div className="card">
-                  <p style={{ margin: 0 }}>
-                    Your chatbot couldn&apos;t answer {report.unansweredCount} question{report.unansweredCount === 1 ? "" : "s"}.{" "}
-                    <a href="#" onClick={(e) => { e.preventDefault(); setTab("reports"); }}>See them in Reports</a>
+              <div className="home-grid">
+                <div>
+                  {report && (
+                    <div className="stats">
+                      <div className="card stat"><div className="num">{report.total}</div><div className="hint">questions, last {report.days} days</div></div>
+                      <div className="card stat"><div className="num">{newLeads}</div><div className="hint">new {newLeads === 1 ? "lead" : "leads"}</div></div>
+                      <div className="card stat"><div className="num">{report.unansweredCount}</div><div className="hint">couldn&apos;t answer</div></div>
+                    </div>
+                  )}
+                  {newLeads > 0 && (
+                    <button type="button" className="note" onClick={() => setTab("leads")}>
+                      <b>{newLeads} new {newLeads === 1 ? "lead" : "leads"}</b> waiting for you <span aria-hidden="true">&rarr;</span>
+                    </button>
+                  )}
+                  {report && report.unansweredCount > 0 && (
+                    <button type="button" className="note" onClick={() => setTab("reports")}>
+                      <b>{report.unansweredCount} {report.unansweredCount === 1 ? "question" : "questions"}</b> it couldn&apos;t answer. Add the answers to your info <span aria-hidden="true">&rarr;</span>
+                    </button>
+                  )}
+                </div>
+                <div className={`preview theme-${bot.theme}`} aria-label="Your chatbot" style={{ "--pv": bot.color } as React.CSSProperties}>
+                  <div className="pv-window">
+                    <div className="pv-head">{bot.title || bot.name}</div>
+                    <div className="pv-body">
+                      <div className="pv-bot">{bot.greeting}</div>
+                      {bot.suggestions.filter((q) => q.trim()).length > 0 && (
+                        <div className="pv-chips">
+                          {bot.suggestions.filter((q) => q.trim()).map((q, i) => (
+                            <span key={i} style={{ color: bot.color, borderColor: bot.color }}>{q}</span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    <div className="pv-input"><span>Type your question...</span><b style={{ background: bot.color }}>Send</b></div>
+                  </div>
+                  <p className="hint" style={{ textAlign: "center", marginTop: 12 }}>
+                    <button type="button" className="link" onClick={() => setTab("appearance")}>Change design</button>
                   </p>
                 </div>
-              )}
+              </div>
             </>
           )}
 
@@ -591,6 +672,8 @@ export default function DashboardPage() {
           )}
         </>
       )}
-    </main>
+        </div>
+      </main>
+    </div>
   );
 }

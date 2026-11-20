@@ -1,0 +1,53 @@
+/* Dashboard shell: sidebar + content */
+.app { display: grid; grid-template-columns: 240px 1fr; min-height: 100vh; }
+.app-side { position: sticky; top: 0; height: 100vh; display: flex; flex-direction: column; gap: 24px; padding: 22px 14px; background: var(--paper); border-right: 1px solid var(--line); }
+.app-brand { display: flex; align-items: center; gap: 10px; padding: 0 8px; font-weight: 800; font-size: 1.15rem; letter-spacing: -0.03em; }
+.app-nav { display: flex; flex-direction: column; gap: 2px; }
+.nav-item { display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 12px; border: 0; border-radius: 10px; background: none; font: inherit; font-weight: 600; color: var(--muted); cursor: pointer; text-align: left; }
+.nav-item:hover { background: var(--bg); color: var(--ink); }
+.nav-item.on { background: var(--accent-soft); color: var(--accent); }
+.nav-count { margin-left: auto; min-width: 20px; padding: 1px 7px; border-radius: 999px; background: var(--accent); color: #fff; font-size: 12px; font-style: normal; font-weight: 700; text-align: center; }
+.nav-plan { margin-left: auto; font-size: 12px; font-style: normal; font-weight: 700; color: var(--accent); background: var(--accent-soft); padding: 2px 8px; border-radius: 999px; }
+.app-side-foot { margin-top: auto; display: flex; flex-direction: column; gap: 10px; }
+.app-user { padding: 10px 12px; border-top: 1px solid var(--line); }
+.app-main { padding: 36px 40px 80px; min-width: 0; }
+.app-inner { max-width: 900px; margin: 0 auto; }
+.app-head { display: flex; justify-content: space-between; align-items: end; margin-bottom: 24px; }
+.app-head h1 { font-size: 2rem; }
+.app-head .hint { margin-top: 8px; display: flex; align-items: center; gap: 8px; }
+.dot { width: 9px; height: 9px; border-radius: 50%; background: #b8b8cc; display: inline-block; }
+.dot.on { background: #22c55e; box-shadow: 0 0 0 3px rgba(34,197,94,.22); }
+.link { background: none; border: 0; padding: 0; font: inherit; font-weight: 600; color: var(--accent); cursor: pointer; text-align: left; }
+.link:hover { text-decoration: underline; }
+
+.steps { border-color: #cfd2ff; background: var(--accent-soft); }
+.steps-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.steps-top h2 { margin: 0; font-size: 1.15rem; }
+.steps ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.steps li { display: flex; align-items: center; gap: 12px; padding: 0; }
+.tick { width: 20px; height: 20px; border-radius: 50%; border: 2px solid #a5a9f0; background: #fff; flex: none; }
+.steps li.done .tick { background: var(--accent); border-color: var(--accent); box-shadow: inset 0 0 0 4px #fff; }
+.steps li.done .link { color: var(--muted); text-decoration: line-through; }
+
+.home-grid { display: grid; grid-template-columns: 1fr 320px; gap: 24px; align-items: start; }
+.home-grid .stats { grid-template-columns: repeat(3, 1fr); }
+.home-grid .stat .num { font-size: 2.25rem; }
+.note { display: block; width: 100%; margin-bottom: 12px; padding: 14px 16px; border: 1px solid var(--line); border-radius: 14px; background: var(--paper); font: inherit; color: var(--ink); text-align: left; cursor: pointer; }
+.note:hover { border-color: var(--accent); }
+.home-grid .preview { position: static; min-height: 0; }
+
+@media (max-width: 900px) {
+  .home-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 760px) {
+  .app { grid-template-columns: 1fr; }
+  .app-side { position: fixed; z-index: 20; inset: auto 0 0 0; height: auto; flex-direction: row; align-items: center; gap: 0; padding: 6px 8px; border-right: 0; border-top: 1px solid var(--line); }
+  .app-brand, .app-user { display: none; }
+  .app-nav { flex-direction: row; flex: 1; justify-content: space-around; }
+  .app-side-foot { margin: 0; flex-direction: row; }
+  .nav-item { flex-direction: column; gap: 2px; padding: 6px 8px; font-size: 11px; width: auto; }
+  .nav-plan { display: none; }
+  .nav-count { position: absolute; margin: 0; transform: translate(14px, -10px); }
+  .nav-item { position: relative; }
+  .app-main { padding: 22px 16px 100px; }
+}
