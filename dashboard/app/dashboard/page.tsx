@@ -360,6 +360,26 @@ export default function DashboardPage() {
     }
   }
 
+  const [importUrl, setImportUrl] = useState("");
+  const [importBusy, setImportBusy] = useState(false);
+  const [importMsg, setImportMsg] = useState("");
+  const [importErr, setImportErr] = useState("");
+
+  async function importFromWebsite() {
+    setImportBusy(true);
+    setImportErr("");
+    setImportMsg("");
+    try {
+      const data = await call("/api/import-website", { method: "POST", body: JSON.stringify({ url: importUrl || form.domain }) });
+      setForm((f) => ({ ...f, context: f.context.trim() ? `${f.context.trim()}\n\n${data.text}` : data.text }));
+      setImportMsg(`Imported from ${data.pages} page${data.pages === 1 ? "" : "s"}. Review it below, then save.`);
+    } catch (err) {
+      setImportErr((err as Error).message);
+    } finally {
+      setImportBusy(false);
+    }
+  }
+
   const renderUnanswered = (q: QuestionCount) => (
     <li key={q.question}>
       <div className="un-row">
@@ -826,6 +846,25 @@ export default function DashboardPage() {
               <section className="card">
                 <h2>What your bot knows</h2>
                 <p className="hint" style={{ marginTop: 0 }}>The chatbot answers only from this. Include hours, services, prices, your area, how to book and how to reach you. The more specific, the better.</p>
+                <div className="import-box">
+                  <div className="import-head"><b>Import from your website</b>{isFree && <span className="pro">Pro</span>}</div>
+                  <div className="import-row">
+                    <input type="text" aria-label="Website address" value={importUrl} placeholder={form.domain || "yourwebsite.com"} disabled={isFree}
+                      onChange={(e) => setImportUrl(e.target.value)} />
+                    {isFree ? (
+                      <button type="button" className="btn secondary" onClick={() => setTab("plan")}>See Pro</button>
+                    ) : (
+                      <button type="button" className="btn secondary" disabled={importBusy} onClick={importFromWebsite}>
+                        {importBusy ? "Reading your site..." : "Import"}
+                      </button>
+                    )}
+                  </div>
+                  <p className="hint" style={{ margin: "6px 0 0" }}>
+                    {isFree ? "Pro reads your website and fills this in for you." : "We read your main pages and write the info for you. You can edit it before saving."}
+                  </p>
+                  {importMsg && <p className="ok" style={{ margin: "8px 0 0" }}>{importMsg}</p>}
+                  {importErr && <p className="error" style={{ margin: "8px 0 0" }}>{importErr}</p>}
+                </div>
                 <textarea id="context" aria-label="Business information" value={form.context} maxLength={8000} required
                   placeholder="Hours, services, prices, service area, how to book, phone number..."
                   onChange={(e) => update("context", e.target.value)} />

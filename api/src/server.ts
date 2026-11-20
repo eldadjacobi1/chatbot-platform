@@ -12,6 +12,7 @@ import { cannedReply, getCached, setCached, GIBBERISH_REPLY } from "./savings.js
 import { botRoutes } from "./botRoutes.js";
 import { styleKey } from "./appearance.js";
 import { leadRoutes } from "./leads.js";
+import { importRoutes } from "./importSite.js";
 import { billingRoutes, getPlanCached, PLAN_LIMITS } from "./billing.js";
 import {
   createToken,
@@ -51,6 +52,7 @@ await app.register(cors, {
 await app.register(botRoutes);
 await app.register(billingRoutes);
 await app.register(leadRoutes);
+await app.register(importRoutes);
 if (!process.env.CLERK_SECRET_KEY) {
   app.log.warn("CLERK_SECRET_KEY not set: dashboard API requests will be rejected.");
 }
