@@ -14,6 +14,7 @@ export const bots = pgTable("bots", {
   allowedDomains: text("allowed_domains").array().notNull(),
   enabled: boolean("enabled").notNull().default(true),
   // Look and personality (see appearance.ts).
+  collectLeads: boolean("collect_leads").notNull().default(true),
   theme: text("theme").notNull().default("clean"),
   color: text("color").notNull().default("#4338ca"),
   title: text("title").notNull().default(""),

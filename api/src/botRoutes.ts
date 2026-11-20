@@ -17,6 +17,7 @@ function toDto(bot: Bot) {
     context: bot.context,
     domain: bot.allowedDomains[0] ?? "",
     enabled: bot.enabled,
+    collectLeads: bot.collectLeads,
     theme: bot.theme,
     color: bot.color,
     title: bot.title,
@@ -48,6 +49,7 @@ type BotInput = {
   context: string;
   domain: string;
   enabled?: boolean;
+  collectLeads?: boolean;
   appearance: Partial<Appearance>;
 };
 
@@ -74,6 +76,7 @@ function parseInput(body: unknown): { value: BotInput } | { error: string } {
     value: {
       name, greeting, context, domain,
       enabled: typeof b.enabled === "boolean" ? b.enabled : undefined,
+      collectLeads: typeof b.collectLeads === "boolean" ? b.collectLeads : undefined,
       appearance: appearance.value,
     },
   };
@@ -99,7 +102,7 @@ export async function botRoutes(app: FastifyInstance) {
       });
     }
 
-    const { name, greeting, context, domain, enabled, appearance } = parsed.value;
+    const { name, greeting, context, domain, enabled, collectLeads, appearance } = parsed.value;
     if ((await getPlanCached(userId)) === "free") {
       const err = paidOnlyError(appearance, { instructions: "" });
       if (err) return reply.code(403).send({ error: err });
@@ -114,6 +117,7 @@ export async function botRoutes(app: FastifyInstance) {
         context,
         allowedDomains: [domain],
         enabled: enabled ?? true,
+        ...(collectLeads === undefined ? {} : { collectLeads }),
         ...appearance,
       })
       .returning();
@@ -125,7 +129,7 @@ export async function botRoutes(app: FastifyInstance) {
     const parsed = parseInput(req.body);
     if ("error" in parsed) return reply.code(400).send({ error: parsed.error });
 
-    const { name, greeting, context, domain, enabled, appearance } = parsed.value;
+    const { name, greeting, context, domain, enabled, collectLeads, appearance } = parsed.value;
     if ((await getPlanCached(req.userId!)) === "free") {
       const [existing] = await db
         .select()
@@ -144,6 +148,7 @@ export async function botRoutes(app: FastifyInstance) {
         context,
         allowedDomains: [domain],
         ...(enabled === undefined ? {} : { enabled }),
+        ...(collectLeads === undefined ? {} : { collectLeads }),
         ...appearance,
       })
       .where(and(eq(bots.id, id), eq(bots.ownerId, req.userId!)))

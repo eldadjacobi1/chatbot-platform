@@ -11,6 +11,7 @@ import { checkLimits, afterAnswer } from "./limits.js";
 import { cannedReply, getCached, setCached, GIBBERISH_REPLY } from "./savings.js";
 import { botRoutes } from "./botRoutes.js";
 import { styleKey } from "./appearance.js";
+import { leadRoutes } from "./leads.js";
 import { billingRoutes, getPlanCached, PLAN_LIMITS } from "./billing.js";
 import {
   createToken,
@@ -45,6 +46,7 @@ await app.register(cors, {
 });
 await app.register(botRoutes);
 await app.register(billingRoutes);
+await app.register(leadRoutes);
 if (!process.env.CLERK_SECRET_KEY) {
   app.log.warn("CLERK_SECRET_KEY not set: dashboard API requests will be rejected.");
 }
@@ -157,6 +159,7 @@ app.post("/chat", async (req, reply) => {
       const unhelpful = free === GIBBERISH_REPLY || isUnsure(free);
       const closing = afterAnswer(token, unhelpful, bot.name);
       if (closing) reply.raw.write(`data: ${JSON.stringify({ text: "\n\n" + closing })}\n\n`);
+      if (bot.collectLeads && (unhelpful || closing)) reply.raw.write(`data: ${JSON.stringify({ lead: true })}\n\n`);
       reply.raw.write("data: [DONE]\n\n");
       return;
     }
@@ -171,6 +174,7 @@ app.post("/chat", async (req, reply) => {
     logQuestion(bot.id, message, "ai", isUnsure(answer));
     const closing = afterAnswer(token, isUnsure(answer), bot.name);
     if (closing) reply.raw.write(`data: ${JSON.stringify({ text: "\n\n" + closing })}\n\n`);
+    if (bot.collectLeads && (isUnsure(answer) || closing)) reply.raw.write(`data: ${JSON.stringify({ lead: true })}\n\n`);
     reply.raw.write("data: [DONE]\n\n");
   } catch (err) {
     req.log.error(err);
