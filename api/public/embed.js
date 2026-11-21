@@ -14,12 +14,12 @@
   button.type = "button";
   button.setAttribute("aria-label", "Open chat");
   button.innerHTML =
-    '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" ' +
+    '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:26px;height:26px;min-width:26px;display:block;flex:none;margin:0;padding:0" ' +
     'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
     '<path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.6 8.6 0 0 1-3.6-.8L3 21l1.9-5.4A8.4 8.4 0 1 1 21 11.5z"/></svg>';
   button.style.cssText =
     "position:fixed;right:20px;bottom:20px;width:58px;height:58px;border-radius:50%;" +
-    "border:0;background:#4338ca;cursor:pointer;display:flex;align-items:center;justify-content:center;" +
+    "border:0;padding:0;color:#fff;background:#4338ca;cursor:pointer;display:flex;align-items:center;justify-content:center;" +
     "box-shadow:0 6px 20px rgba(67,56,202,.35);z-index:2147483646;";
 
   var frame = document.createElement("iframe");
@@ -53,7 +53,7 @@
       if (label) {
         var span = document.createElement("span");
         span.textContent = label;
-        span.style.cssText = "color:#fff;font:600 15px/1 -apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;margin-left:10px;";
+        span.style.cssText = "color:inherit;font:600 15px/1 -apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;margin-left:10px;";
         button.appendChild(span);
         button.style.width = "auto";
         button.style.height = "52px";
@@ -61,6 +61,10 @@
         button.style.borderRadius = theme === "bold" ? "12px" : "999px";
       }
       frame.style.borderRadius = theme === "bold" ? "12px" : theme === "soft" ? "28px" : "20px";
+      // Dark icon/text on light colors so it stays readable.
+      var n = parseInt(color.slice(1), 16);
+      var lum = (0.299 * ((n >> 16) & 255) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) / 255;
+      button.style.color = lum > 0.6 ? "#14142b" : "#fff";
       button.style.background = color;
       button.style.boxShadow = "0 6px 20px " + color + "59";
       button.style.right = button.style.left = "";
