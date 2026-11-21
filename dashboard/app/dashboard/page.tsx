@@ -125,7 +125,7 @@ function timeAgo(iso: string): string {
 }
 
 const HEADS: Record<string, [string, string]> = {
-  reports: ["Reports", "The questions your visitors asked, and the ones your bot couldn't answer."],
+  reports: ["Reports", "See what your visitors asked and how well your bot answered. Add answers to the questions it couldn't handle, and it gets better over time."],
   leads: ["Leads", "Visitors who asked to be contacted. Reach out, then mark each lead as Contacted or Done."],
   appearance: ["Design", "Choose how your chat looks and sounds. The preview updates as you change things."],
   settings: ["Bot setup", "What your bot knows about your business. It answers only from this."],
@@ -682,12 +682,6 @@ export default function DashboardPage() {
             </header>
           )}
 
-          {bot && tab === "reports" && report && (
-            <div className="note static">
-              See what visitors asked your chatbot and how well it answered. Find the questions it couldn&apos;t answer, add the answers, and it gets better over time.
-            </div>
-          )}
-
           {bot && tab === "reports" && report && report.total === 0 && (
             <div className="card empty">
               <h2>No questions yet</h2>
@@ -714,7 +708,6 @@ export default function DashboardPage() {
                       </button>
                     </div>
                   </div>
-                  <p className="hint">Out of everything visitors asked your bot, this is how much it could answer using your business info. The closer to 100%, the better.</p>
                   <div className="rate-line">
                     <span className="rate-num">{Math.round(((report.total - report.unansweredCount) / report.total) * 100)}%</span>
                     <p className="hint">{report.total - report.unansweredCount} of {report.total} questions answered in the last {report.days} days.{report.unansweredCount > 0 && <> <b>{report.unansweredCount} {report.unansweredCount === 1 ? "needs" : "need"} an answer.</b></>}</p>
@@ -731,8 +724,6 @@ export default function DashboardPage() {
                 </div>
               ) : (
                 <div className="card qlist">
-                  <h2>Questions visitors asked</h2>
-                  <p className="hint">The number next to each question is how many times it was asked. If your bot couldn&apos;t answer one, click <b>Add answer</b> and it will know next time. If it&apos;s not a real question (spam or a test), click <b>Ignore</b>.</p>
                   {ignoredQ && (
                     <div className="note static">
                       Ignored &ldquo;{ignoredQ}&rdquo;. It no longer counts in your answer rate.
