@@ -76,6 +76,36 @@ function toText(html: string): string {
     .replace(/[ \t]+/g, " ").replace(/\n\s*\n+/g, "\n").trim();
 }
 
+// Best guess at the site's brand color: theme-color meta tag first, then the most
+// common vivid color written in the page's own HTML/CSS. Returns "#rrggbb" or null.
+function vivid(hex: string): boolean {
+  const n = parseInt(hex.slice(1), 16);
+  const r = ((n >> 16) & 255) / 255, g = ((n >> 8) & 255) / 255, b = (n & 255) / 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  const l = (max + min) / 2;
+  const s = max === min ? 0 : (max - min) / (1 - Math.abs(2 * l - 1));
+  return s > 0.3 && l > 0.2 && l < 0.75;
+}
+
+function normHex(h: string): string {
+  const x = h.replace("#", "").toLowerCase();
+  return "#" + (x.length === 3 ? x.split("").map((c) => c + c).join("") : x);
+}
+
+function detectColor(html: string): string | null {
+  const meta = html.match(/<meta[^>]+name=["']theme-color["'][^>]*content=["'](#[0-9a-f]{3,6})["']/i)
+    ?? html.match(/<meta[^>]+content=["'](#[0-9a-f]{3,6})["'][^>]*name=["']theme-color["']/i);
+  if (meta && [4, 7].includes(meta[1].length) && vivid(normHex(meta[1]))) return normHex(meta[1]);
+  const counts = new Map<string, number>();
+  for (const m of html.matchAll(/#([0-9a-f]{6}|[0-9a-f]{3})\b/gi)) {
+    const c = normHex(m[0]);
+    if (vivid(c)) counts.set(c, (counts.get(c) ?? 0) + 1);
+  }
+  let best: string | null = null, top = 0;
+  for (const [c, n] of counts) if (n > top) { best = c; top = n; }
+  return top >= 2 ? best : null;
+}
+
 function pickLinks(html: string, base: URL): URL[] {
   const found = new Map<string, URL>();
   for (const m of html.matchAll(/<a\s[^>]*href=["']([^"'#]+)["']/gi)) {
@@ -135,7 +165,7 @@ export async function importRoutes(app: FastifyInstance) {
         : "";
       const text = await mergeKnowledge({ current, incoming: source, source: "website" });
       if (!text) return reply.code(502).send({ error: "Nothing came back. Try again." });
-      return { text, pages: pages.length };
+      return { text, pages: pages.length, color: detectColor(home.html) };
     } catch (err) {
       const msg = err instanceof Error ? err.message : "";
       const known = /address|redirect|web page|website answered|empty/i.test(msg);

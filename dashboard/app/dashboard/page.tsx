@@ -423,6 +423,7 @@ export default function DashboardPage() {
 
   const [importUrl, setImportUrl] = useState("");
   const [importBusy, setImportBusy] = useState(false);
+  const [colorFromSite, setColorFromSite] = useState(false);
   const [importMsg, setImportMsg] = useState("");
   const [importErr, setImportErr] = useState("");
 
@@ -432,8 +433,9 @@ export default function DashboardPage() {
     setImportMsg("");
     try {
       const data = await call("/api/import-website", { method: "POST", body: JSON.stringify({ url: importUrl || form.domain, existing: form.context }) });
-      setForm((f) => ({ ...f, context: data.text }));
-      setImportMsg(`Done. We read ${data.pages} page${data.pages === 1 ? "" : "s"} and combined them with what you wrote. Review it below, then save.`);
+      setForm((f) => ({ ...f, context: data.text, ...(data.color ? { color: data.color } : {}) }));
+      setColorFromSite(!!data.color);
+      setImportMsg(`Done. We read ${data.pages} page${data.pages === 1 ? "" : "s"} and combined them with what you wrote.${data.color ? " We also matched your chat color to your website (see Design)." : ""} Review it below, then save.`);
     } catch (err) {
       setImportErr((err as Error).message);
     } finally {
@@ -903,9 +905,17 @@ export default function DashboardPage() {
                           className={form.color === c ? "swatch on" : "swatch"} style={{ background: c }}
                           onClick={() => update("color", c)} />
                       ))}
-                      <input type="color" aria-label="Custom color" value={form.color}
-                        onChange={(e) => update("color", e.target.value)} />
+                      <input type="color" aria-label="Custom color" value={/^#[0-9a-f]{6}$/i.test(form.color) ? form.color : "#4338ca"}
+                        onChange={(e) => { setColorFromSite(false); update("color", e.target.value); }} />
+                      <input type="text" aria-label="Color code" className="hex" value={form.color} maxLength={7} spellCheck={false}
+                        onChange={(e) => {
+                          let v = e.target.value.trim();
+                          if (v && !v.startsWith("#")) v = "#" + v;
+                          setColorFromSite(false);
+                          update("color", v);
+                        }} />
                     </div>
+                    {colorFromSite && <p className="hint">We matched this color to your website. Change it anytime.</p>}
 
                     <div className="two">
                       <div>
