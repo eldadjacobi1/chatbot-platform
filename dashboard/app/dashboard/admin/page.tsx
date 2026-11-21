@@ -51,8 +51,7 @@ export default function AdminPage() {
           <h2>This page is private</h2>
           {myId ? (
             <>
-              <p className="hint">To open it with this account, add this value to the <b>ADMIN_USER_IDS</b> variable in Railway, then deploy:</p>
-              <p><code>{myId}</code></p>
+              <p className="hint">This account is not an admin. In Clerk, open this user and set its public metadata to <code>{`{"role":"admin"}`}</code>, then sign out and back in.</p>
             </>
           ) : (
             <p className="hint">Sign in to continue.</p>

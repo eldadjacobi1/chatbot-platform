@@ -9,16 +9,18 @@ const admins = new Set((process.env.ADMIN_USER_IDS ?? "").split(",").map((s) => 
 const PRICE_IN = 0.15;
 const PRICE_OUT = 0.6;
 
+const isAdmin = (req: { userId?: string; role?: string }) => req.role === "admin" || admins.has(req.userId ?? "");
+
 export async function adminRoutes(app: FastifyInstance) {
   // Tells the dashboard whether to show the admin page. A non-admin also learns their own id, so
   // the first admin can copy it into ADMIN_USER_IDS.
   app.get("/api/admin/me", { preHandler: requireUser }, async (req) => {
-    const admin = admins.has(req.userId!);
+    const admin = isAdmin(req);
     return admin ? { admin } : { admin, userId: req.userId };
   });
 
   app.get("/api/admin/overview", { preHandler: requireUser }, async (req, reply) => {
-    if (!admins.has(req.userId!)) return reply.code(404).send({ error: "Not found." });
+    if (!isAdmin(req)) return reply.code(404).send({ error: "Not found." });
 
     const [feedback, usage, totals] = await Promise.all([
       pool.query("SELECT id, email, page, message, created_at FROM feedback ORDER BY id DESC LIMIT 100"),

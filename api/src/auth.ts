@@ -7,6 +7,8 @@ declare module "fastify" {
   interface FastifyRequest {
     // Set by requireUser: the Clerk id of the logged-in owner.
     userId?: string;
+    // Set by requireUser: "admin" when the Clerk public metadata says so (needs the session token claim).
+    role?: string;
   }
 }
 
@@ -27,6 +29,9 @@ export async function requireUser(req: FastifyRequest, reply: FastifyReply) {
     const sub = result?.data?.sub ?? result?.sub;
     if (result?.errors || !sub) throw new Error("invalid token");
     req.userId = sub;
+    const claims = result?.data ?? result;
+    const meta = claims?.metadata ?? claims?.public_metadata;
+    req.role = typeof meta?.role === "string" ? meta.role : typeof claims?.role === "string" ? claims.role : undefined;
   } catch {
     return reply.code(401).send({ error: "Your login expired. Please sign in again." });
   }
