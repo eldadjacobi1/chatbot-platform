@@ -682,6 +682,12 @@ export default function DashboardPage() {
             </header>
           )}
 
+          {bot && tab === "reports" && report && (
+            <div className="note static">
+              <b>What is this page?</b> It shows what visitors asked your chatbot and how well it answered. Use it to find questions your bot couldn&apos;t answer, add the answers, and make it better over time.
+            </div>
+          )}
+
           {bot && tab === "reports" && report && report.total === 0 && (
             <div className="card empty">
               <h2>No questions yet</h2>
