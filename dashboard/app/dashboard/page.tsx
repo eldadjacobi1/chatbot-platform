@@ -684,7 +684,7 @@ export default function DashboardPage() {
 
           {bot && tab === "reports" && report && (
             <div className="note static">
-              <b>What is this page?</b> It shows what visitors asked your chatbot and how well it answered. Use it to find questions your bot couldn&apos;t answer, add the answers, and make it better over time.
+              See what visitors asked your chatbot and how well it answered. Find the questions it couldn&apos;t answer, add the answers, and it gets better over time.
             </div>
           )}
 
