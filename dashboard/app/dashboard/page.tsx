@@ -675,7 +675,7 @@ export default function DashboardPage() {
                   {message && <span className="ok">{message}</span>}
                   {error && <span className="error">{error}</span>}
                   <button className="btn" type="submit" form={tab === "appearance" ? "design-form" : "setup-form"} disabled={saving}>
-                    {saving ? "Saving..." : "Save changes"}
+                    {saving ? "Saving..." : "Save"}
                   </button>
                 </div>
               )}
