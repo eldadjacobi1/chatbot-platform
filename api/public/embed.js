@@ -8,6 +8,8 @@
     console.error("Chat widget: missing data-bot attribute.");
     return;
   }
+  if (window.__chattrLoaded === botId) return; // already on this page
+  window.__chattrLoaded = botId;
   var base = new URL(script.src).origin;
 
   var button = document.createElement("button");
@@ -53,7 +55,7 @@
       if (label) {
         var span = document.createElement("span");
         span.textContent = label;
-        span.style.cssText = "color:inherit;font:600 15px/1 -apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;margin-left:10px;";
+        span.style.cssText = "color:inherit;font:600 15px/1 -apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;margin-left:10px;text-transform:none;letter-spacing:normal;";
         button.appendChild(span);
         button.style.width = "auto";
         button.style.height = "52px";
