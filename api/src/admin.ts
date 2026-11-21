@@ -19,11 +19,28 @@ export async function adminRoutes(app: FastifyInstance) {
     return admin ? { admin } : { admin, userId: req.userId };
   });
 
+  app.patch("/api/admin/feedback/:id", { preHandler: requireUser }, async (req, reply) => {
+    if (!isAdmin(req)) return reply.code(404).send({ error: "Not found." });
+    const id = Number((req.params as { id: string }).id);
+    const archived = (req.body as { archived?: unknown } | undefined)?.archived === true;
+    if (!Number.isInteger(id)) return reply.code(400).send({ error: "Bad id." });
+    await pool.query("UPDATE feedback SET archived = $1 WHERE id = $2", [archived, id]);
+    return { ok: true };
+  });
+
+  app.delete("/api/admin/feedback/:id", { preHandler: requireUser }, async (req, reply) => {
+    if (!isAdmin(req)) return reply.code(404).send({ error: "Not found." });
+    const id = Number((req.params as { id: string }).id);
+    if (!Number.isInteger(id)) return reply.code(400).send({ error: "Bad id." });
+    await pool.query("DELETE FROM feedback WHERE id = $1", [id]);
+    return { ok: true };
+  });
+
   app.get("/api/admin/overview", { preHandler: requireUser }, async (req, reply) => {
     if (!isAdmin(req)) return reply.code(404).send({ error: "Not found." });
 
     const [feedback, usage, totals] = await Promise.all([
-      pool.query("SELECT id, email, page, message, created_at FROM feedback ORDER BY id DESC LIMIT 100"),
+      pool.query("SELECT id, email, page, message, created_at, archived FROM feedback ORDER BY id DESC LIMIT 200"),
       pool.query(`
         SELECT u.bot_id, b.name,
                sum(u.requests)::int AS requests,
@@ -52,7 +69,7 @@ export async function adminRoutes(app: FastifyInstance) {
       totals: totals.rows[0],
       totalCostUsd: Number(bots.reduce((s, b) => s + b.estimatedCostUsd, 0).toFixed(4)),
       bots,
-      feedback: feedback.rows.map((r) => ({ id: r.id, email: r.email, page: r.page, message: r.message, createdAt: r.created_at })),
+      feedback: feedback.rows.map((r) => ({ id: r.id, email: r.email, page: r.page, message: r.message, createdAt: r.created_at, archived: r.archived })),
     };
   });
 }

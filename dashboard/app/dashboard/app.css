@@ -366,3 +366,9 @@ button.side-link { border: 0; background: none; font: inherit; font-size: .875re
 .admin-fb li { padding: 14px 0; border-bottom: 1px solid var(--line); }
 .admin-fb li:last-child { border: 0; }
 .admin-fb p { margin: 0 0 4px; white-space: pre-wrap; }
+
+.admin-fb-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.admin-fb-head .seg { margin: 0; }
+.admin-fb-actions { display: flex; gap: 8px; margin-top: 10px; }
+.admin-fb-actions .btn.ghost { background: #fff; color: var(--muted); border: 1.5px solid var(--line); }
+.admin-fb-actions .btn.ghost:hover { background: var(--bg); color: var(--ink); }

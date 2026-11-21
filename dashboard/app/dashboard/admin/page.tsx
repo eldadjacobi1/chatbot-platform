@@ -12,7 +12,7 @@ type Overview = {
   totals: { bots: number; owners: number; leads: number };
   totalCostUsd: number;
   bots: { botId: string; name: string; requests: number; promptTokens: number; completionTokens: number; estimatedCostUsd: number }[];
-  feedback: { id: number; email: string; page: string; message: string; createdAt: string }[];
+  feedback: { id: number; email: string; page: string; message: string; createdAt: string; archived: boolean }[];
 };
 
 export default function AdminPage() {
@@ -20,6 +20,27 @@ export default function AdminPage() {
   const [data, setData] = useState<Overview | null>(null);
   const [myId, setMyId] = useState("");
   const [state, setState] = useState<"loading" | "ok" | "denied">("loading");
+  const [showArchived, setShowArchived] = useState(false);
+
+  async function changeFeedback(id: number, action: "archive" | "restore" | "delete") {
+    if (action === "delete" && !window.confirm("Delete this message for good?")) return;
+    const token = await getToken();
+    const res = await fetch(`${API}/api/admin/feedback/${id}`, {
+      method: action === "delete" ? "DELETE" : "PATCH",
+      headers: { Authorization: `Bearer ${token}`, ...(action === "delete" ? {} : { "Content-Type": "application/json" }) },
+      ...(action === "delete" ? {} : { body: JSON.stringify({ archived: action === "archive" }) }),
+    });
+    if (!res.ok) return;
+    setData((d) =>
+      d && {
+        ...d,
+        feedback:
+          action === "delete"
+            ? d.feedback.filter((f) => f.id !== id)
+            : d.feedback.map((f) => (f.id === id ? { ...f, archived: action === "archive" } : f)),
+      },
+    );
+  }
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -91,16 +112,26 @@ export default function AdminPage() {
           </div>
 
           <div className="card">
-            <h2>Feedback</h2>
-            {data.feedback.length === 0 ? (
-              <p className="hint">No feedback yet.</p>
+            <div className="admin-fb-head">
+              <h2>Feedback</h2>
+              <div className="seg small" role="tablist" aria-label="Feedback filter">
+                <button type="button" role="tab" aria-selected={!showArchived} className={!showArchived ? "seg-btn on" : "seg-btn"} onClick={() => setShowArchived(false)}>Open <em>{data.feedback.filter((f) => !f.archived).length}</em></button>
+                <button type="button" role="tab" aria-selected={showArchived} className={showArchived ? "seg-btn on" : "seg-btn"} onClick={() => setShowArchived(true)}>Archived <em>{data.feedback.filter((f) => f.archived).length}</em></button>
+              </div>
+            </div>
+            {data.feedback.filter((f) => f.archived === showArchived).length === 0 ? (
+              <p className="hint">{showArchived ? "Nothing archived." : "No open feedback."}</p>
             ) : (
               <ul className="admin-fb">
-                {data.feedback.map((f) => (
+                {data.feedback.filter((f) => f.archived === showArchived).map((f) => (
                   <li key={f.id}>
                     <p>{f.message}</p>
                     <span className="hint">
                       {f.email ? <a href={`mailto:${f.email}`}>{f.email}</a> : "no email"} &middot; {f.page || "dashboard"} &middot; {new Date(f.createdAt).toLocaleString()}
+                    </span>
+                    <span className="admin-fb-actions">
+                      <button type="button" className="btn ghost small" onClick={() => changeFeedback(f.id, f.archived ? "restore" : "archive")}>{f.archived ? "Restore" : "Archive"}</button>
+                      <button type="button" className="btn ghost small ignore" onClick={() => changeFeedback(f.id, "delete")}>Delete</button>
                     </span>
                   </li>
                 ))}
