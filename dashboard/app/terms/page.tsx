@@ -37,6 +37,9 @@ export default function Terms() {
       <h2>Availability</h2>
       <p>We work to keep {BRAND} running, but we do not promise it will always be available or error-free. We may change or stop features, and we may suspend accounts that break these terms.</p>
 
+      <h2>Your responsibility for your chatbot</h2>
+      <p>You are responsible for what your chatbot tells your visitors and for the information and instructions you give it. You agree to cover us against claims from your visitors or other third parties that come from your use of the chatbot or your content.</p>
+
       <h2>Liability</h2>
       <p>The service is provided &ldquo;as is&rdquo;. To the extent the law allows, we are not liable for indirect or lost-profit damages, and our total liability is limited to what you paid us in the 12 months before the claim.</p>
 

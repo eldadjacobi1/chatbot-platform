@@ -57,6 +57,7 @@
     .lead p { margin: 0; color: var(--muted); }
     .lead .err { color: #b91c1c; }
     :focus-visible { outline: 3px solid #a5a0f5; outline-offset: 2px; }
+      #ai-note { text-align: center; font-size: 11.5px; color: var(--muted); padding: 2px 14px 10px; line-height: 1.35; }
   </style>
 </head>
 <body>
@@ -68,6 +69,7 @@
     <input id="input" placeholder="Type your question..." maxlength="500" autocomplete="off" />
     <button id="send" type="button">Send</button>
   </div>
+  <div id="ai-note">AI assistant. It can make mistakes, so please confirm important details with us.</div>
 
   <script>
     // Filled in by the server: bot name, greeting, and the signed session token.
