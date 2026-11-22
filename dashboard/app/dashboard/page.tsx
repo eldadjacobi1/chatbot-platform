@@ -22,6 +22,7 @@ type Bot = {
   title: string;
   avatar: string;
   position: "right" | "left";
+  textColor: "auto" | "white" | "dark";
   tone: string;
   audience: string;
   instructions: string;
@@ -67,6 +68,7 @@ const emptyForm: Form = {
   title: "",
   avatar: "",
   position: "right",
+  textColor: "auto",
   tone: "friendly",
   audience: "general",
   instructions: "",
@@ -77,6 +79,14 @@ const THEMES = [
   { id: "bold", name: "Bold", text: "Solid header, squarer corners, \"Chat with us\" button.", label: "Chat with us" },
   { id: "soft", name: "Soft", text: "Tinted background, extra-round bubbles, \"Ask us\" button.", label: "Ask us" },
 ];
+function onColor(color: string, pref: string): string {
+  if (pref === "white") return "#fff";
+  if (pref === "dark") return "#14142b";
+  const n = parseInt(color.slice(1), 16);
+  const lum = (0.299 * ((n >> 16) & 255) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) / 255;
+  return /^#[0-9a-f]{6}$/i.test(color) && lum > 0.6 ? "#14142b" : "#fff";
+}
+
 const COLORS = ["#4338ca", "#0f766e", "#be123c", "#c2410c", "#1d4ed8", "#14142b"];
 // Free plan: presets only. (Pro unlocks custom color, button position and extra instructions.)
 const TONES = [
@@ -917,6 +927,13 @@ export default function DashboardPage() {
                     </div>
                     {colorFromSite && <p className="hint">We matched this color to your website. Change it anytime.</p>}
 
+                    <label htmlFor="textColor">Text color on the color</label>
+                    <select id="textColor" value={form.textColor} onChange={(e) => update("textColor", e.target.value)}>
+                      <option value="auto">Auto (best for readability)</option>
+                      <option value="white">White</option>
+                      <option value="dark">Dark</option>
+                    </select>
+
                     <div className="two">
                       <div>
                         <label htmlFor="title">Chat title</label>
@@ -979,13 +996,13 @@ export default function DashboardPage() {
                             ))}
                           </div>
                         )}
-                        <div className="pv-you" style={{ background: form.color }}>What are your hours?</div>
+                        <div className="pv-you" style={{ background: form.color, color: onColor(form.color, form.textColor) }}>What are your hours?</div>
                         <div className="pv-bot">We&apos;re open every day from 9 to 6.</div>
                       </div>
-                      <div className="pv-input"><span>Type your question...</span><b style={{ background: form.color }}>Send</b></div>
+                      <div className="pv-input"><span>Type your question...</span><b style={{ background: form.color, color: onColor(form.color, form.textColor) }}>Send</b></div>
                     </div>
-                    <div className={form.position === "left" ? "pv-launch left" : "pv-launch"} style={{ background: form.color }}>
-                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <div className={form.position === "left" ? "pv-launch left" : "pv-launch"} style={{ background: form.color, color: onColor(form.color, form.textColor) }}>
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                         <path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.6 8.6 0 0 1-3.6-.8L3 21l1.9-5.4A8.4 8.4 0 1 1 21 11.5z" />
                       </svg>
                       {THEMES.find((t) => t.id === form.theme)?.label && (

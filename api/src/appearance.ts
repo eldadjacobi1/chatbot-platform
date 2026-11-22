@@ -5,6 +5,8 @@ export const AUDIENCES = ["general", "kids", "seniors", "professionals"] as cons
 export const THEMES = ["clean", "bold", "soft"] as const;
 export type Theme = (typeof THEMES)[number];
 export const POSITIONS = ["right", "left"] as const;
+export const TEXT_COLORS = ["auto", "white", "dark"] as const;
+export type TextColor = (typeof TEXT_COLORS)[number];
 
 export type Tone = (typeof TONES)[number];
 export type Audience = (typeof AUDIENCES)[number];
@@ -16,6 +18,7 @@ export type Appearance = {
   title: string;
   avatar: string;
   position: Position;
+  textColor: TextColor;
   tone: Tone;
   audience: Audience;
   instructions: string;
@@ -51,6 +54,10 @@ export function parseAppearance(b: Record<string, unknown>): { value: Partial<Ap
   if (b.position !== undefined) {
     if (!POSITIONS.includes(b.position as Position)) return { error: "Position must be left or right." };
     out.position = b.position as Position;
+  }
+  if (b.textColor !== undefined) {
+    if (!TEXT_COLORS.includes(b.textColor as TextColor)) return { error: "Text color must be auto, white or dark." };
+    out.textColor = b.textColor as TextColor;
   }
   if (b.tone !== undefined) {
     if (!TONES.includes(b.tone as Tone)) return { error: "Unknown tone." };

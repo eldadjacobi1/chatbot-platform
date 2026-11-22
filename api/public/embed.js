@@ -66,7 +66,8 @@
       // Dark icon/text on light colors so it stays readable.
       var n = parseInt(color.slice(1), 16);
       var lum = (0.299 * ((n >> 16) & 255) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) / 255;
-      button.style.color = lum > 0.6 ? "#14142b" : "#fff";
+      var tc = info.textColor;
+      button.style.color = tc === "white" ? "#fff" : tc === "dark" ? "#14142b" : lum > 0.6 ? "#14142b" : "#fff";
       button.style.background = color;
       button.style.boxShadow = "0 6px 20px " + color + "59";
       button.style.right = button.style.left = "";

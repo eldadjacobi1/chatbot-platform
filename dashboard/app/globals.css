@@ -128,7 +128,7 @@ pre { background: #14142b; color: #e9e9fb; padding: 16px; border-radius: 12px; o
 .theme span:not(.pro) { display: block; color: var(--muted); font-size: 14px; margin-top: 2px; }
 .theme.on { border-color: var(--accent); background: #eef0ff; }
 .pv-launch { gap: 8px; width: fit-content; height: 50px; padding: 0 14px; }
-.pv-launch span { color: #fff; font-weight: 600; font-size: 14px; }
+.pv-launch span { color: inherit; font-weight: 600; font-size: 14px; }
 .preview.theme-bold .pv-head { background: var(--pv); color: #fff; border-bottom: 0; }
 .preview.theme-bold .pv-window { border-radius: 10px; }
 .preview.theme-bold .pv-bot, .preview.theme-bold .pv-you, .preview.theme-bold .pv-input b { border-radius: 8px; }

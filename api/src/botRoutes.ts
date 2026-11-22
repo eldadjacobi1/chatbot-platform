@@ -26,6 +26,7 @@ function toDto(bot: Bot) {
     title: bot.title,
     avatar: bot.avatar,
     position: bot.position,
+    textColor: bot.textColor,
     tone: bot.tone,
     audience: bot.audience,
     instructions: bot.instructions,

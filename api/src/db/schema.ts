@@ -21,6 +21,7 @@ export const bots = pgTable("bots", {
   title: text("title").notNull().default(""),
   avatar: text("avatar").notNull().default(""),
   position: text("position").notNull().default("right"),
+  textColor: text("text_color").notNull().default("auto"),
   tone: text("tone").notNull().default("friendly"),
   audience: text("audience").notNull().default("general"),
   instructions: text("instructions").notNull().default(""),

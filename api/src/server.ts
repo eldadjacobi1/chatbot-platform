@@ -94,7 +94,7 @@ app.get("/bot-status/:botId", async (req, reply) => {
   return reply
     .header("Access-Control-Allow-Origin", "*")
     .header("Cache-Control", "no-store")
-    .send({ show, color: bot?.color, position: bot?.position, theme: bot?.theme });
+    .send({ show, color: bot?.color, position: bot?.position, theme: bot?.theme, textColor: bot?.textColor });
 });
 
 // --- The chat window shown inside the iframe.
@@ -117,6 +117,7 @@ app.get("/widget/:botId", async (req, reply) => {
     title: bot.title || bot.name,
     avatar: bot.avatar,
     color: bot.color,
+    textColor: bot.textColor,
     theme: bot.theme,
     suggestions: bot.suggestions,
     greeting: bot.greeting,
