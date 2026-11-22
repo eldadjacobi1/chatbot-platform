@@ -84,7 +84,7 @@ function onColor(color: string, pref: string): string {
   if (pref === "dark") return "#14142b";
   const n = parseInt(color.slice(1), 16);
   const lum = (0.299 * ((n >> 16) & 255) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) / 255;
-  return /^#[0-9a-f]{6}$/i.test(color) && lum > 0.6 ? "#14142b" : "#fff";
+  return /^#[0-9a-f]{6}$/i.test(color) && lum > 0.75 ? "#14142b" : "#fff";
 }
 
 const COLORS = ["#4338ca", "#0f766e", "#be123c", "#c2410c", "#1d4ed8", "#14142b"];
