@@ -23,12 +23,4 @@ export async function feedbackRoutes(app: FastifyInstance) {
     await pool.query("INSERT INTO feedback (user_id, email, page, message) VALUES ($1, $2, $3, $4)", [req.userId, email, page, message]);
     return { ok: true };
   });
-
-  // Admin: read the latest feedback. Protected by the ADMIN_KEY variable.
-  app.get("/api/admin/feedback", async (req, reply) => {
-    const key = process.env.ADMIN_KEY;
-    if (!key || req.headers["x-admin-key"] !== key) return reply.code(404).send({ error: "Not found." });
-    const { rows } = await pool.query("SELECT id, email, page, message, created_at FROM feedback ORDER BY id DESC LIMIT 100");
-    return { feedback: rows };
-  });
 }

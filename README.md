@@ -19,7 +19,7 @@ npm run db:seed   # add the demo bot
 npm run dev
 ```
 
-Open http://localhost:3000 (redirects to /demo, a fake customer site with the chat widget).
+Open http://localhost:3000 (redirects to /demo, a fake customer site with the chat widget). Start the API with ENABLE_DEMO=1 to turn the demo page on.
 
 Never commit `.env`. On Railway, set `OPENAI_API_KEY` under Variables.
 

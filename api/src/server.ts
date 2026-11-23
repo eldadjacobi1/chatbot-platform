@@ -14,7 +14,7 @@ import { styleKey } from "./appearance.js";
 import { leadRoutes } from "./leads.js";
 import { importRoutes } from "./importSite.js";
 import { turnstileRoutes, turnstileEnabled, turnstileSiteKey, isVerified } from "./turnstile.js";
-import { recordUsage, usageRoutes } from "./usage.js";
+import { recordUsage } from "./usage.js";
 import { feedbackRoutes } from "./feedback.js";
 import { adminRoutes } from "./admin.js";
 import { billingRoutes, getPlanCached, PLAN_LIMITS } from "./billing.js";
@@ -58,7 +58,6 @@ await app.register(billingRoutes);
 await app.register(leadRoutes);
 await app.register(importRoutes);
 await app.register(turnstileRoutes);
-await app.register(usageRoutes);
 await app.register(feedbackRoutes);
 await app.register(adminRoutes);
 if (!process.env.CLERK_SECRET_KEY) {
@@ -69,9 +68,16 @@ const MAX_MESSAGE_LENGTH = 500;
 const apiRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
 const readLocal = (...parts: string[]) => readFile(join(apiRoot, ...parts), "utf8");
 
-// --- Demo "customer website" with the widget embedded: http://localhost:3000/demo
-app.get("/", async (_req, reply) => reply.redirect("/demo"));
-app.get("/demo", async (_req, reply) => reply.type("text/html").send(await readLocal("test", "demo.html")));
+// --- Demo "customer website" for local testing only: set ENABLE_DEMO=1 (never in production).
+if (process.env.ENABLE_DEMO === "1") {
+  app.get("/", async (_req, reply) => reply.redirect("/demo"));
+  app.get("/demo", async (_req, reply) => reply.type("text/html").send(await readLocal("test", "demo.html")));
+}
+
+// Browsers must not guess file types (stops a file being run as a script).
+app.addHook("onSend", async (_req, reply) => {
+  reply.header("X-Content-Type-Options", "nosniff");
+});
 
 app.get("/health", async () => ({ ok: true }));
 
