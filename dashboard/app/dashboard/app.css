@@ -384,3 +384,7 @@ button.side-link { border: 0; background: none; font: inherit; font-size: .875re
 @keyframes unsaved-in { from { opacity: 0; transform: translate(-50%, 12px); } to { opacity: 1; transform: translate(-50%, 0); } }
 @media (max-width: 760px) { .unsaved { left: 50%; bottom: 76px; } }
 @media (prefers-reduced-motion: reduce) { .unsaved { animation: none; } }
+
+.head-save .ok { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px 7px 11px; border-radius: 999px; background: #e3f5ea; color: #1b6e3d; font-size: .9375rem; animation: ok-life 2s ease forwards; }
+@keyframes ok-life { 0% { opacity: 0; transform: translateY(4px); } 12% { opacity: 1; transform: none; } 82% { opacity: 1; } 100% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .head-save .ok { animation: none; } }

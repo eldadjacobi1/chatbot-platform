@@ -521,6 +521,12 @@ export default function DashboardPage() {
   );
 
   useEffect(() => { window.scrollTo({ top: 0 }); }, [tab]);
+  // The "Saved" note disappears by itself after 2 seconds.
+  useEffect(() => {
+    if (!message) return;
+    const t = setTimeout(() => setMessage(""), 2000);
+    return () => clearTimeout(t);
+  }, [message]);
   // Warn before closing the tab or leaving with unsaved changes.
   useEffect(() => {
     if (!bot || !dirty) return;
@@ -700,7 +706,12 @@ export default function DashboardPage() {
               </div>
               {(tab === "appearance" || tab === "settings") && (
                 <div className="head-save">
-                  {message && <span className="ok">{message}</span>}
+                  {message && (
+                    <span className="ok" key={message + saving}>
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
+                      {message}
+                    </span>
+                  )}
                   {error && <span className="error">{error}</span>}
                   <button className="btn" type="submit" form={tab === "appearance" ? "design-form" : "setup-form"} disabled={saving || !dirty} title={dirty ? undefined : "No changes to save"}>
                     {saving ? "Saving..." : "Save"}
