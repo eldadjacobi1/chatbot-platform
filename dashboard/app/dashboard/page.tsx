@@ -487,7 +487,7 @@ export default function DashboardPage() {
   const leadsHint = newLeadCount > 0
     ? `${newLeadCount} new ${newLeadCount === 1 ? "lead is" : "leads are"} waiting. Reach out, then mark each one Contacted or Done.`
     : "You're all caught up. New leads appear here when visitors leave their details.";
-  const NEXT: Record<string, [string, string]> = { new: ["Mark contacted", "contacted"], contacted: ["Mark done", "done"], done: ["Reopen", "new"] };
+  const NEXT: Record<string, [string, string]> = { new: ["Contacted", "contacted"], contacted: ["Done", "done"], done: ["Reopen", "new"] };
   const STATUS_LABEL: Record<string, string> = { new: "New", contacted: "Contacted", done: "Done" };
   const [leadFilter, setLeadFilter] = useState<"all" | "new" | "contacted" | "done">("all");
   const [copiedLead, setCopiedLead] = useState<number | null>(null);
@@ -924,7 +924,12 @@ export default function DashboardPage() {
                         <div className="lead-side">
                           <time className="lead-time" title={new Date(l.createdAt).toLocaleString()}>{timeAgo(l.createdAt)}</time>
                           <span className={`chip st-${l.status ?? "new"}`}><i />{STATUS_LABEL[l.status ?? "new"]}</span>
-                          <button type="button" className="btn ghost small" onClick={() => setLeadStatus(l, NEXT[l.status ?? "new"][1])}>{NEXT[l.status ?? "new"][0]}</button>
+                          <button type="button" className="btn ghost small" onClick={() => setLeadStatus(l, NEXT[l.status ?? "new"][1])}>
+                            {NEXT[l.status ?? "new"][1] !== "new" && (
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
+                            )}
+                            {NEXT[l.status ?? "new"][0]}
+                          </button>
                           <details className="more">
                             <summary aria-label="More actions">&middot;&middot;&middot;</summary>
                             <div className="more-menu"><button type="button" onClick={() => deleteLead(l)}>Delete lead</button></div>
