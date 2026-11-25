@@ -521,6 +521,23 @@ export default function DashboardPage() {
   );
 
   useEffect(() => { window.scrollTo({ top: 0 }); }, [tab]);
+  // Close an open "..." menu when you click anywhere else or press Escape.
+  useEffect(() => {
+    const closeOthers = (e: MouseEvent) => {
+      document.querySelectorAll("details.more[open]").forEach((d) => {
+        if (!d.contains(e.target as Node)) d.removeAttribute("open");
+      });
+    };
+    const closeAll = (e: KeyboardEvent) => {
+      if (e.key === "Escape") document.querySelectorAll("details.more[open]").forEach((d) => d.removeAttribute("open"));
+    };
+    document.addEventListener("click", closeOthers);
+    document.addEventListener("keydown", closeAll);
+    return () => {
+      document.removeEventListener("click", closeOthers);
+      document.removeEventListener("keydown", closeAll);
+    };
+  }, []);
   // The "Saved" note disappears by itself after 2 seconds.
   useEffect(() => {
     if (!message) return;
