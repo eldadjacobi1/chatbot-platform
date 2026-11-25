@@ -373,3 +373,14 @@ button.side-link { border: 0; background: none; font: inherit; font-size: .875re
 .admin-fb-actions .btn.ghost { background: #fff; color: var(--muted); border: 1.5px solid var(--line); }
 .admin-fb-actions .btn.ghost:hover { background: var(--bg); color: var(--ink); }
 .head-save .btn:disabled { background: #d9d9e6; color: #9a9ab0; box-shadow: none; cursor: default; opacity: 1; }
+
+.unsaved { position: fixed; bottom: 20px; left: calc(50% + 120px); transform: translateX(-50%); z-index: 30; display: flex; align-items: center; gap: 14px; padding: 9px 10px 9px 20px; background: #14142b; color: #fff; border-radius: 999px; box-shadow: 0 8px 24px rgba(20,20,43,.3); font-size: .9375rem; white-space: nowrap; animation: unsaved-in .22s ease-out; }
+.unsaved span { display: inline-flex; align-items: center; font-weight: 600; }
+.unsaved span i { width: 8px; height: 8px; border-radius: 50%; background: #f5b53c; margin-right: 8px; }
+.unsaved-discard { background: transparent; border: 0; color: #c9c9de; font: inherit; padding: 8px 6px; cursor: pointer; }
+.unsaved-discard:hover { color: #fff; }
+.unsaved-save { background: #fff; color: #14142b; border: 0; border-radius: 999px; padding: 9px 20px; font: inherit; font-weight: 700; cursor: pointer; }
+.unsaved-save:disabled { opacity: .6; cursor: default; }
+@keyframes unsaved-in { from { opacity: 0; transform: translate(-50%, 12px); } to { opacity: 1; transform: translate(-50%, 0); } }
+@media (max-width: 760px) { .unsaved { left: 50%; bottom: 76px; } }
+@media (prefers-reduced-motion: reduce) { .unsaved { animation: none; } }

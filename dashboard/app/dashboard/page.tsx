@@ -521,6 +521,13 @@ export default function DashboardPage() {
   );
 
   useEffect(() => { window.scrollTo({ top: 0 }); }, [tab]);
+  // Warn before closing the tab or leaving with unsaved changes.
+  useEffect(() => {
+    if (!bot || !dirty) return;
+    const warn = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = ""; };
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [bot, dirty]);
 
   const update = (field: keyof Form, value: string | boolean) =>
     setForm((f) => ({ ...f, [field]: value }));
@@ -701,6 +708,16 @@ export default function DashboardPage() {
                 </div>
               )}
             </header>
+          )}
+
+          {bot && baseline && dirty && (tab === "appearance" || tab === "settings") && (
+            <div className="unsaved" role="status">
+              <span><i />You have unsaved changes</span>
+              <button type="button" className="unsaved-discard" onClick={() => { setForm(baseline); setColorFromSite(false); setMessage(""); setError(""); }}>Discard</button>
+              <button type="submit" form={tab === "appearance" ? "design-form" : "setup-form"} className="unsaved-save" disabled={saving}>
+                {saving ? "Saving..." : "Save"}
+              </button>
+            </div>
           )}
 
           {bot && tab === "reports" && report && report.total === 0 && (
