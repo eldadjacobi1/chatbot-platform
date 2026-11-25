@@ -372,3 +372,4 @@ button.side-link { border: 0; background: none; font: inherit; font-size: .875re
 .admin-fb-actions { display: flex; gap: 8px; margin-top: 10px; }
 .admin-fb-actions .btn.ghost { background: #fff; color: var(--muted); border: 1.5px solid var(--line); }
 .admin-fb-actions .btn.ghost:hover { background: var(--bg); color: var(--ink); }
+.head-save .btn:disabled { background: #d9d9e6; color: #9a9ab0; box-shadow: none; cursor: default; opacity: 1; }

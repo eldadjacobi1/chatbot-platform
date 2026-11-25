@@ -166,6 +166,10 @@ export default function DashboardPage() {
   const { user } = useUser();
   const [bot, setBot] = useState<Bot | null>(null);
   const [form, setForm] = useState<Form>(emptyForm);
+  // What is saved on the server. Save is only active when the form differs from it.
+  const [baseline, setBaseline] = useState<Form | null>(null);
+  const stable = (f: Form) => JSON.stringify(Object.keys(f).sort().map((k) => [k, (f as Record<string, unknown>)[k]]));
+  const dirty = !baseline || stable(form) !== stable(baseline);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
@@ -252,6 +256,7 @@ export default function DashboardPage() {
           setBot(first);
           const { id: _id, ...rest } = first;
           setForm(rest);
+          setBaseline(rest);
         }
       })
       .catch((e: Error) => setError(e.message))
@@ -359,6 +364,9 @@ export default function DashboardPage() {
         : await call("/api/bots", { method: "POST", body: JSON.stringify(form) });
       const wasNew = !bot;
       setBot(data.bot);
+      const { id: _savedId, ...savedForm } = data.bot as Bot;
+      setForm(savedForm);
+      setBaseline(savedForm);
       setMessage(wasNew ? "" : "Saved.");
       if (wasNew) setTab("install");
     } catch (err) {
@@ -392,6 +400,7 @@ export default function DashboardPage() {
       });
       setBot(data.bot);
       setForm((f) => ({ ...f, context: data.bot.context }));
+      setBaseline((b) => (b ? { ...b, context: data.bot.context } : b));
       setAnswering(null);
       setAnswerText("");
       setAnswerSaved(true);
@@ -686,7 +695,7 @@ export default function DashboardPage() {
                 <div className="head-save">
                   {message && <span className="ok">{message}</span>}
                   {error && <span className="error">{error}</span>}
-                  <button className="btn" type="submit" form={tab === "appearance" ? "design-form" : "setup-form"} disabled={saving}>
+                  <button className="btn" type="submit" form={tab === "appearance" ? "design-form" : "setup-form"} disabled={saving || !dirty} title={dirty ? undefined : "No changes to save"}>
                     {saving ? "Saving..." : "Save"}
                   </button>
                 </div>
