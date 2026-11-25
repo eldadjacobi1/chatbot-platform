@@ -388,3 +388,14 @@ button.side-link { border: 0; background: none; font: inherit; font-size: .875re
 .head-save .ok { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px 7px 11px; border-radius: 999px; background: #e3f5ea; color: #1b6e3d; font-size: .9375rem; animation: ok-life 2s ease forwards; }
 @keyframes ok-life { 0% { opacity: 0; transform: translateY(4px); } 12% { opacity: 1; transform: none; } 82% { opacity: 1; } 100% { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .head-save .ok { animation: none; } }
+
+.st-toggle { display: inline-flex; gap: 2px; padding: 3px; background: #f0f0f7; border-radius: 999px; flex: none; }
+.st-toggle button { display: inline-flex; align-items: center; gap: 6px; border: 0; background: transparent; color: var(--muted); font: inherit; font-size: .84rem; font-weight: 650; padding: 6px 13px; border-radius: 999px; cursor: pointer; }
+.st-toggle button:hover:not(.on) { color: var(--ink); }
+.st-toggle button.on { background: #fff; color: var(--ink); box-shadow: 0 1px 4px rgba(20,20,43,.14); cursor: default; }
+.st-toggle button i { width: 8px; height: 8px; border-radius: 50%; background: #8a8aa0; }
+.st-toggle button.st-new i { background: #2f8f55; }
+.st-toggle button.st-contacted i { background: #b45a1d; }
+.st-toggle button.st-done i { background: #8a8aa0; }
+.st-toggle button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+@media (max-width: 700px) { .lead-side { justify-content: flex-start; } .st-toggle { order: 3; width: 100%; justify-content: space-between; } .st-toggle button { flex: 1; justify-content: center; } }
