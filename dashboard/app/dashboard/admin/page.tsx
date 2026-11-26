@@ -140,7 +140,7 @@ export default function AdminPage() {
                         <td>{u.leads}</td>
                         <td>${u.costUsd < 0.01 ? u.costUsd.toFixed(4) : u.costUsd.toFixed(2)}</td>
                         <td>{u.signedUp ? new Date(u.signedUp).toLocaleDateString(undefined, { month: "short", day: "numeric" }) : "-"}</td>
-                        <td>{ago(u.lastActive)}</td>
+                        <td style={{ color: u.lastActive && Date.now() - u.lastActive < 2 * 864e5 ? "#15803d" : "var(--muted)", fontWeight: 600 }}>{ago(u.lastActive)}</td>
                       </tr>
                       {openUser === u.id && (
                         <tr>
