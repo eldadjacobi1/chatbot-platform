@@ -811,7 +811,8 @@ export default function DashboardPage() {
                       <>
                         <div className="seg" role="tablist" aria-label="Filter questions">
                           {([["all", "All", all.length], ["needs", "Needs answer", need.size], ["answered", "Answered", all.length - need.size]] as const).map(([f, label, n]) => (
-                            <button key={f} type="button" role="tab" aria-selected={repFilter === f} className={repFilter === f ? "seg-btn on" : "seg-btn"} onClick={() => { setRepFilter(f); setRepAll(false); }}>
+                            <button key={f} type="button" role="tab" aria-selected={repFilter === f} className={`seg-btn${repFilter === f ? " on" : ""}${f === "needs" && n > 0 ? " hot warn" : ""}`} onClick={() => { setRepFilter(f); setRepAll(false); }}>
+                              {f === "needs" && n > 0 && <span className="seg-dot" aria-hidden="true" />}
                               {label} <em>{n}</em>
                             </button>
                           ))}
@@ -893,7 +894,8 @@ export default function DashboardPage() {
                     {(["all", "new", "contacted", "done"] as const).map((f) => {
                       const n = f === "all" ? leads.leads.length : leads.leads.filter((l) => (l.status ?? "new") === f).length;
                       return (
-                        <button key={f} type="button" role="tab" aria-selected={leadFilter === f} className={leadFilter === f ? "seg-btn on" : "seg-btn"} onClick={() => setLeadFilter(f)}>
+                        <button key={f} type="button" role="tab" aria-selected={leadFilter === f} className={`seg-btn${leadFilter === f ? " on" : ""}${f === "new" && n > 0 ? " hot" : ""}`} onClick={() => setLeadFilter(f)}>
+                          {f === "new" && n > 0 && <span className="seg-dot" aria-hidden="true" />}
                           {f === "all" ? "All" : f === "new" ? "New" : f === "contacted" ? "Contacted" : "Done"} <em>{n}</em>
                         </button>
                       );

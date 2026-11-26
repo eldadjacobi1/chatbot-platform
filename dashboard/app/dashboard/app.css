@@ -292,6 +292,14 @@ code { background: var(--accent-soft); padding: 1px 6px; border-radius: 6px; fon
 .seg-btn { padding: 7px 16px; border: 0; border-radius: 9px; background: none; font: inherit; font-weight: 650; font-size: .9rem; color: var(--muted); cursor: pointer; }
 .seg-btn em { font-style: normal; margin-left: 5px; opacity: .65; }
 .seg-btn:hover { color: var(--ink); }
+/* A tab with something waiting: colored count + a dot that pulses until you open it. */
+.seg-btn.hot { --hot: #1f9d55; color: var(--ink); }
+.seg-btn.hot.warn { --hot: #c2610c; }
+.seg-btn.hot em { opacity: 1; background: var(--hot); color: #fff; border-radius: 99px; padding: 1px 8px; font-size: .78rem; }
+.seg-dot { display: inline-block; width: 8px; height: 8px; margin-right: 7px; border-radius: 50%; background: var(--hot, #1f9d55); vertical-align: 1px; }
+.seg-btn.hot:not(.on) .seg-dot { animation: seg-pulse 1.8s ease-out infinite; }
+@keyframes seg-pulse { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--hot) 50%, transparent); } 70%, 100% { box-shadow: 0 0 0 7px transparent; } }
+@media (prefers-reduced-motion: reduce) { .seg-btn.hot:not(.on) .seg-dot { animation: none; } }
 .seg-btn.on { background: #fff; color: var(--ink); box-shadow: 0 1px 3px rgba(20,20,43,.14); }
 .chip { display: inline-flex; align-items: center; gap: 7px; padding: 4px 12px; border-radius: 999px; font-size: .85rem; font-weight: 700; }
 .chip i { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
