@@ -407,3 +407,9 @@ button.side-link { border: 0; background: none; font: inherit; font-size: .875re
 .st-toggle button.st-done i { background: #8a8aa0; }
 .st-toggle button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 @media (max-width: 700px) { .lead-side { justify-content: flex-start; } .st-toggle { order: 3; width: 100%; justify-content: space-between; } .st-toggle button { flex: 1; justify-content: center; } }
+
+/* Admin: plan labels */
+.plan-pill { display: inline-block; padding: 2px 10px; border-radius: 99px; font-size: .78rem; font-weight: 650; text-transform: capitalize; background: #eeeef6; color: #55557a; }
+.plan-pill.pro { background: #e0e7ff; color: #3730a3; }
+.plan-pill.business { background: #fef3c7; color: #b45309; }
+.admin-table tbody tr[style*="pointer"]:hover td { background: #f7f7fb; }

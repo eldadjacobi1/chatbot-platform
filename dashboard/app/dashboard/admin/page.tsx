@@ -114,10 +114,10 @@ export default function AdminPage() {
       {state === "ok" && data && (
         <>
           <div className="admin-stats">
-            <div className="card"><span className="num">{data.totals.owners}</span><span className="hint">Owners</span></div>
-            <div className="card"><span className="num">{data.totals.bots}</span><span className="hint">Bots</span></div>
-            <div className="card"><span className="num">{data.totals.leads}</span><span className="hint">Leads</span></div>
-            <div className="card"><span className="num">${data.totalCostUsd.toFixed(2)}</span><span className="hint">AI cost, {data.month}</span></div>
+            <div className="card"><span className="num">{users ? users.length : "-"}</span><span className="hint">Users</span></div>
+            <div className="card"><span className="num">{users ? users.filter((u) => u.lastActive && Date.now() - u.lastActive < 7 * 864e5).length : "-"}</span><span className="hint">Active this week</span></div>
+            <div className="card"><span className="num">{users ? users.filter((u) => u.plan !== "free").length : "-"}</span><span className="hint">On a paid plan</span></div>
+            <div className="card"><span className="num">${data.totalCostUsd < 0.01 ? data.totalCostUsd.toFixed(4) : data.totalCostUsd.toFixed(2)}</span><span className="hint">AI cost, {data.month}</span></div>
           </div>
 
           <div className="card">
@@ -134,11 +134,11 @@ export default function AdminPage() {
                     <Fragment key={u.id}>
                       <tr onClick={() => toggleUser(u.id)} style={{ cursor: "pointer" }}>
                         <td>{u.email || u.id}</td>
-                        <td style={{ textTransform: "capitalize" }}>{u.plan}</td>
+                        <td><span className={`plan-pill ${u.plan}`}>{u.plan}</span></td>
                         <td>{u.bots}</td>
                         <td>{u.questions30d}</td>
                         <td>{u.leads}</td>
-                        <td>${u.costUsd.toFixed(2)}</td>
+                        <td>${u.costUsd < 0.01 ? u.costUsd.toFixed(4) : u.costUsd.toFixed(2)}</td>
                         <td>{u.signedUp ? new Date(u.signedUp).toLocaleDateString(undefined, { month: "short", day: "numeric" }) : "-"}</td>
                         <td>{ago(u.lastActive)}</td>
                       </tr>
