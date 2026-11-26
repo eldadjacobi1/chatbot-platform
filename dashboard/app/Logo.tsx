@@ -1,4 +1,4 @@
-// The Chattr mark: a chat bubble shaped like the letter C.
+// The Chatknock mark: a chat bubble shaped like the letter C.
 export default function Logo({ size = 30 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 64 64" aria-hidden="true">

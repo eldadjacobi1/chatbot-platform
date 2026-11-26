@@ -83,7 +83,7 @@ export default function Home() {
       <header className="lp-nav">
         <Link href="/" className="lp-brand">
           <Logo size={32} />
-          Chattr
+          Chatknock
         </Link>
         <nav className="lp-links" aria-label="Sections">
           <a href="#examples">Examples</a>
@@ -100,7 +100,7 @@ export default function Home() {
         <div className="lp-hero-text">
           <h1>Customers ask. Your website answers.</h1>
           <p>
-            Chattr puts a chatbot on your site that answers from your own business information,
+            Chatknock puts a chatbot on your site that answers from your own business information,
             day or night, collects the leads it can&apos;t help with, and shows you what people really want to know.
           </p>
           <div className="lp-cta">
@@ -111,9 +111,9 @@ export default function Home() {
         </div>
 
         <div className="lp-live" id="live">
-          <div className="lp-live-bar"><span className="lp-dot" />Live. This is a real Chattr chatbot.</div>
+          <div className="lp-live-bar"><span className="lp-dot" />Live. This is a real Chatknock chatbot.</div>
           <iframe
-            title="Live chat with Chattr"
+            title="Live chat with Chatknock"
             src={`${API}/widget/${DEMO_BOT}`}
             sandbox="allow-scripts allow-same-origin"
             loading="lazy"
@@ -137,7 +137,7 @@ export default function Home() {
             <p>Most never call or email, so you never learn what they wanted.</p>
           </div>
         </div>
-        <p className="lp-sub">Chattr answers from your own information at any hour, and shows you what people ask.</p>
+        <p className="lp-sub">Chatknock answers from your own information at any hour, and shows you what people ask.</p>
       </section>
 
       <section className="lp-section" id="examples">
@@ -277,7 +277,7 @@ export default function Home() {
       </section>
 
       <footer className="lp-footer">
-        <span className="lp-foot-brand"><Logo size={24} />Chattr</span>
+        <span className="lp-foot-brand"><Logo size={24} />Chatknock</span>
         <Link href="/sign-in">Sign in</Link>
         <Link href="/sign-up">Get started</Link>
         <Link href="/contact">Contact</Link>

@@ -557,7 +557,7 @@ export default function DashboardPage() {
   return (
     <div className="app">
       <aside className="app-side">
-        <button type="button" className="app-brand" onClick={() => setTab("overview")} aria-label="Chattr home"><Logo size={28} />Chattr</button>
+        <button type="button" className="app-brand" onClick={() => setTab("overview")} aria-label="Chatknock home"><Logo size={28} />Chatknock</button>
         {bot && (
           <nav className="app-nav" aria-label="Main">
             {NAV.map(([id, label, icon]) => (

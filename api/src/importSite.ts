@@ -42,7 +42,7 @@ async function fetchPage(start: URL): Promise<{ url: URL; html: string }> {
     const res = await fetch(url, {
       redirect: "manual",
       signal: AbortSignal.timeout(8000),
-      headers: { "User-Agent": "ChattrImporter/1.0", Accept: "text/html" },
+      headers: { "User-Agent": "ChatknockImporter/1.0", Accept: "text/html" },
     });
     if (res.status >= 300 && res.status < 400 && res.headers.get("location")) {
       url = new URL(res.headers.get("location")!, url);

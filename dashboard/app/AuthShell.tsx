@@ -5,7 +5,7 @@ export default function AuthShell({ children }: { children: React.ReactNode }) {
   return (
     <main className="auth">
       <section className="auth-side">
-        <div className="auth-brand"><Logo size={34} />Chattr</div>
+        <div className="auth-brand"><Logo size={34} />Chatknock</div>
         <div>
           <h1>Customers ask. Your website answers.</h1>
           <ul>
