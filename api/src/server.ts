@@ -103,6 +103,18 @@ app.get("/bot-status/:botId", async (req, reply) => {
     .send({ show, color: bot?.color, position: bot?.position, theme: bot?.theme, textColor: bot?.textColor });
 });
 
+// Friendly page for when the chat is opened on a website that isn't on the bot's list.
+function blockedPage(): string {
+  const base = (process.env.APP_URL ?? process.env.DASHBOARD_ORIGIN ?? "").replace(/\/+$/, "");
+  const href = base.replace(/[^a-zA-Z0-9:/._-]/g, "");
+  const link = href ? `<a href="${href}/dashboard" target="_blank" rel="noopener">Set it up in your dashboard</a>` : "";
+  return `<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<style>body{margin:0;display:flex;align-items:center;justify-content:center;min-height:100vh;box-sizing:border-box;padding:24px;font:15px/1.5 system-ui,sans-serif;color:#14142b;text-align:center;background:#fff}
+h1{font-size:16px;margin:0 0 6px}p{margin:0 0 12px;color:#55557a}a{color:#4338ca;font-weight:600}</style>
+<div><h1>This chat isn't turned on for this website yet</h1>
+<p>If you own this website, add its address to your chatbot's settings and the chat will appear.</p>${link}</div>`;
+}
+
 // --- The chat window shown inside the iframe.
 // Only served if the embedding website is on the bot's allowed list.
 app.get("/widget/:botId", async (req, reply) => {
@@ -113,7 +125,7 @@ app.get("/widget/:botId", async (req, reply) => {
   const host = hostFromReferer(req.headers.referer);
   if (!host || !(isAllowedHost(host, bot.allowedDomains) || dashboardHosts.includes(host))) {
     req.log.warn({ botId, host }, "widget blocked: website not allowed");
-    return reply.code(403).send("This chat is not enabled for this website.");
+    return reply.code(403).type("text/html").header("Cache-Control", "no-store").send(blockedPage());
   }
 
   const template = await readLocal("public", "widget.html");
