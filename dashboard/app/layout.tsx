@@ -6,7 +6,7 @@ import "./globals.css";
 const sans = Inter_Tight({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
 
 export const metadata: Metadata = {
-  title: "Chatbot Platform",
+  title: "Chatknock",
   description: "A website chatbot for your business",
 };
 
