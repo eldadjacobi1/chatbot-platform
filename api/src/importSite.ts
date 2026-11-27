@@ -68,7 +68,7 @@ async function fetchPage(start: URL): Promise<{ url: URL; html: string }> {
 
 function toText(html: string): string {
   return html
-    .replace(/<(script|style|noscript|svg|nav|footer|iframe)[\s\S]*?<\/\1>/gi, " ")
+    .replace(/<(script|style|noscript|svg|nav|iframe)[\s\S]*?<\/\1>/gi, " ")
     .replace(/<!--[\s\S]*?-->/g, " ")
     .replace(/<(br|\/p|\/div|\/li|\/h[1-6]|\/tr)[^>]*>/gi, "\n")
     .replace(/<[^>]+>/g, " ")
@@ -76,8 +76,22 @@ function toText(html: string): string {
     .replace(/[ \t]+/g, " ").replace(/\n\s*\n+/g, "\n").trim();
 }
 
-// Best guess at the site's brand color: theme-color meta tag first, then the most
-// common vivid color written in the page's own HTML/CSS. Returns "#rrggbb" or null.
+// Facts that sites hide in tags rather than visible text: phone, email and schema.org data (hours, address).
+function structuredInfo(html: string): string {
+  const out = new Set<string>();
+  for (const m of html.matchAll(/href=["']tel:([^"']+)["']/gi)) out.add(`Phone: ${decodeURIComponent(m[1]).trim()}`);
+  for (const m of html.matchAll(/href=["']mailto:([^"'?]+)/gi)) out.add(`Email: ${m[1].trim()}`);
+  for (const m of html.matchAll(/<script[^>]+application\/ld\+json[^>]*>([\s\S]*?)<\/script>/gi)) {
+    try {
+      const txt = JSON.stringify(JSON.parse(m[1].trim()));
+      out.add(`Business data: ${txt.slice(0, 1500)}`);
+    } catch { /* ignore broken JSON */ }
+  }
+  return [...out].slice(0, 12).join("\n");
+}
+
+// Best guess at the site's brand color: theme-color meta tag, then a CSS variable named like
+// "primary" or "brand", then the most common vivid color in the page and its style files.
 function vivid(hex: string): boolean {
   const n = parseInt(hex.slice(1), 16);
   const r = ((n >> 16) & 255) / 255, g = ((n >> 8) & 255) / 255, b = (n & 255) / 255;
@@ -92,18 +106,54 @@ function normHex(h: string): string {
   return "#" + (x.length === 3 ? x.split("").map((c) => c + c).join("") : x);
 }
 
-function detectColor(html: string): string | null {
+function rgbToHex(r: string, g: string, b: string): string {
+  return "#" + [r, g, b].map((v) => Math.min(255, Number(v)).toString(16).padStart(2, "0")).join("");
+}
+
+// All colors written in the text, as "#rrggbb", from #hex and rgb()/rgba() forms.
+function colorsIn(text: string): string[] {
+  const out: string[] = [];
+  for (const m of text.matchAll(/#([0-9a-f]{6}|[0-9a-f]{3})\b/gi)) out.push(normHex(m[0]));
+  for (const m of text.matchAll(/rgba?\(\s*(\d{1,3})[\s,]+(\d{1,3})[\s,]+(\d{1,3})/gi)) out.push(rgbToHex(m[1], m[2], m[3]));
+  return out;
+}
+
+function detectColor(html: string, css: string): string | null {
   const meta = html.match(/<meta[^>]+name=["']theme-color["'][^>]*content=["'](#[0-9a-f]{3,6})["']/i)
     ?? html.match(/<meta[^>]+content=["'](#[0-9a-f]{3,6})["'][^>]*name=["']theme-color["']/i);
   if (meta && [4, 7].includes(meta[1].length) && vivid(normHex(meta[1]))) return normHex(meta[1]);
-  const counts = new Map<string, number>();
-  for (const m of html.matchAll(/#([0-9a-f]{6}|[0-9a-f]{3})\b/gi)) {
-    const c = normHex(m[0]);
-    if (vivid(c)) counts.set(c, (counts.get(c) ?? 0) + 1);
+
+  const all = html + "\n" + css;
+  for (const m of all.matchAll(/--[\w-]*(?:primary|brand|accent|main)[\w-]*\s*:\s*([^;}\n]+)/gi)) {
+    const c = colorsIn(m[1])[0];
+    if (c && vivid(c)) return c;
   }
+  const counts = new Map<string, number>();
+  for (const c of colorsIn(all)) if (vivid(c)) counts.set(c, (counts.get(c) ?? 0) + 1);
   let best: string | null = null, top = 0;
   for (const [c, n] of counts) if (n > top) { best = c; top = n; }
   return top >= 2 ? best : null;
+}
+
+// Up to 3 style files linked from the page, joined. Failures are ignored.
+async function fetchStyles(html: string, base: URL): Promise<string> {
+  const hrefs: URL[] = [];
+  for (const m of html.matchAll(/<link\s[^>]*>/gi)) {
+    if (!/rel=["']stylesheet["']/i.test(m[0])) continue;
+    const h = m[0].match(/href=["']([^"']+)["']/i);
+    if (!h) continue;
+    try { hrefs.push(new URL(h[1], base)); } catch { /* ignore */ }
+  }
+  let css = "";
+  for (const u of hrefs.slice(0, 3)) {
+    try {
+      await assertPublic(u);
+      const res = await fetch(u, { redirect: "manual", signal: AbortSignal.timeout(5000), headers: { "User-Agent": "ChatknockImporter/1.0" } });
+      if (!res.ok || !(res.headers.get("content-type") ?? "").includes("css")) continue;
+      css += "\n" + (await res.text()).slice(0, 300_000);
+    } catch { /* skip */ }
+  }
+  return css;
 }
 
 function pickLinks(html: string, base: URL): URL[] {
@@ -148,11 +198,11 @@ export async function importRoutes(app: FastifyInstance) {
 
     try {
       const home = await fetchPage(start);
-      const pages = [{ url: home.url, text: toText(home.html).slice(0, PAGE_CHARS) }];
+      const pages = [{ url: home.url, text: (toText(home.html).slice(0, PAGE_CHARS) + "\n" + structuredInfo(home.html)).trim() }];
       for (const link of pickLinks(home.html, home.url)) {
         try {
           const p = await fetchPage(link);
-          pages.push({ url: p.url, text: toText(p.html).slice(0, PAGE_CHARS) });
+          pages.push({ url: p.url, text: (toText(p.html).slice(0, PAGE_CHARS) + "\n" + structuredInfo(p.html)).trim() });
         } catch { /* skip pages that fail */ }
       }
       const source = pages.map((p) => `--- ${p.url.href}\n${p.text}`).join("\n\n");
@@ -165,7 +215,7 @@ export async function importRoutes(app: FastifyInstance) {
         : "";
       const text = await mergeKnowledge({ current, incoming: source, source: "website" });
       if (!text) return reply.code(502).send({ error: "Nothing came back. Try again." });
-      return { text, pages: pages.length, color: detectColor(home.html) };
+      return { text, pages: pages.length, color: detectColor(home.html, await fetchStyles(home.html, home.url)) };
     } catch (err) {
       const msg = err instanceof Error ? err.message : "";
       const known = /address|redirect|web page|website answered|empty/i.test(msg);

@@ -1256,7 +1256,7 @@ export default function DashboardPage() {
                     )}
                   </div>
                   <p className="hint" style={{ margin: "6px 0 0" }}>
-                    {isFree ? "Pro reads your website and fills this in for you." : "We read your main pages and combine them with what you already wrote. You can edit the result before saving."}
+                    {isFree ? "Pro reads your website and fills this in for you." : "We read only your public pages, like any visitor would, and an AI summarizes them with what you already wrote. Nothing is saved until you review it and press Save."}
                   </p>
                   {importMsg && <p className="ok" style={{ margin: "8px 0 0" }}>{importMsg}</p>}
                   {importErr && <p className="error" style={{ margin: "8px 0 0" }}>{importErr}</p>}
