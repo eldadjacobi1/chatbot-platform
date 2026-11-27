@@ -1092,8 +1092,11 @@ export default function DashboardPage() {
                           className={form.color === c ? "swatch on" : "swatch"} style={{ background: c }}
                           onClick={() => update("color", c)} />
                       ))}
-                      <input type="color" aria-label="Custom color" value={/^#[0-9a-f]{6}$/i.test(form.color) ? form.color : "#4338ca"}
-                        onChange={(e) => { setColorFromSite(false); update("color", e.target.value); }} />
+                      <label className="custom-color">
+                        <input type="color" aria-label="Pick any color" value={/^#[0-9a-f]{6}$/i.test(form.color) ? form.color : "#4338ca"}
+                          onChange={(e) => { setColorFromSite(false); update("color", e.target.value); }} />
+                        <span>Pick your own</span>
+                      </label>
                       <input type="text" aria-label="Color code" className="hex" value={form.color} maxLength={7} spellCheck={false}
                         onChange={(e) => {
                           let v = e.target.value.trim();
@@ -1240,17 +1243,23 @@ export default function DashboardPage() {
                       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.6 8.6 0 0 1-3.6-.8L3 21l1.9-5.4A8.4 8.4 0 1 1 21 11.5z" /></svg>
                     </span>
                   </div>
-                  <label>Color</label>
+                  <label>Choose a color</label>
                   <div className="swatches">
+                    {!COLORS.includes(form.color) && /^#[0-9a-f]{6}$/i.test(form.color) && (
+                      <button type="button" aria-label={`Selected color ${form.color}`} className="swatch on" style={{ background: form.color }} />
+                    )}
                     {COLORS.map((c) => (
                       <button key={c} type="button" aria-label={`Use color ${c}`}
                         className={form.color === c ? "swatch on" : "swatch"} style={{ background: c }}
                         onClick={() => { colorTouched.current = true; setColorFromSite(false); update("color", c); }} />
                     ))}
-                    <input type="color" aria-label="Custom color" value={/^#[0-9a-f]{6}$/i.test(form.color) ? form.color : "#4338ca"}
-                      onChange={(e) => { colorTouched.current = true; setColorFromSite(false); update("color", e.target.value); }} />
+                    <label className="custom-color">
+                      <input type="color" aria-label="Pick any color" value={/^#[0-9a-f]{6}$/i.test(form.color) ? form.color : "#4338ca"}
+                        onChange={(e) => { colorTouched.current = true; setColorFromSite(false); update("color", e.target.value); }} />
+                      <span>Pick your own</span>
+                    </label>
                   </div>
-                  <p className="hint">You can change the color and the chat style any time in Design.</p>
+                  <p className="hint">{colorFromSite ? "The first color is matched to your website. Click any color to try it." : "Click a color to try it, or choose your own. The button above updates right away."}</p>
                   <div className="row" style={{ marginTop: 24 }}>
                     <button type="button" className="btn secondary" onClick={() => setWizStep(2)}>Back</button>
                     <button className="btn" disabled={saving}>{saving ? "Creating..." : "Create my chatbot"}</button>

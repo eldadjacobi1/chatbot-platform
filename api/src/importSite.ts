@@ -124,7 +124,7 @@ function lum(hex: string): number {
   const f = (v: number) => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
   return 0.2126 * f((n >> 16) & 255) + 0.7152 * f((n >> 8) & 255) + 0.0722 * f(n & 255);
 }
-function darken(hex: string): string {
+function darken(hex: string, extra = 0.08): string {
   const n = parseInt(hex.slice(1), 16);
   const r = ((n >> 16) & 255) / 255, g = ((n >> 8) & 255) / 255, b = (n & 255) / 255;
   const max = Math.max(r, g, b), min = Math.min(r, g, b), d = max - min;
@@ -138,11 +138,37 @@ function darken(hex: string): string {
     const [rr, gg, bb] = h < 60 ? [c, x, 0] : h < 120 ? [x, c, 0] : h < 180 ? [0, c, x] : h < 240 ? [0, x, c] : h < 300 ? [x, 0, c] : [c, 0, x];
     return "#" + [rr, gg, bb].map((v) => Math.round((v + m) * 255).toString(16).padStart(2, "0")).join("");
   };
-  l = Math.max(0.2, l - 0.08);
+  l = Math.max(0.2, l - extra);
   let out = toHex(l);
-  // Contrast against white must be at least 4.5:1.
-  while (1.05 / (lum(out) + 0.05) < 4.5 && l > 0.15) { l -= 0.03; out = toHex(l); }
+  // Contrast against white must be at least 3:1 (the standard for buttons and icons).
+  while (1.05 / (lum(out) + 0.05) < 3 && l > 0.15) { l -= 0.03; out = toHex(l); }
   return out;
+}
+
+// For sites with no vivid color (cream, beige, grey-blue): take the most used tinted color and make a
+// deeper version of the same hue, so the button matches the site but still stands out.
+function softColor(all: string): string | null {
+  const counts = new Map<string, number>();
+  for (const c of colorsIn(all)) {
+    const n = parseInt(c.slice(1), 16);
+    const r = ((n >> 16) & 255) / 255, g = ((n >> 8) & 255) / 255, b = (n & 255) / 255;
+    const max = Math.max(r, g, b), min = Math.min(r, g, b);
+    if (max - min < 0.04 || max < 0.15) continue; // plain grey, white or black
+    counts.set(c, (counts.get(c) ?? 0) + 1);
+  }
+  let best: string | null = null, top = 0;
+  for (const [c, n] of counts) if (n > top) { best = c; top = n; }
+  if (!best) return null;
+  const n = parseInt(best.slice(1), 16);
+  const r = ((n >> 16) & 255) / 255, g = ((n >> 8) & 255) / 255, b = (n & 255) / 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b), d = max - min;
+  let h = 0;
+  if (d) h = max === r ? ((g - b) / d) % 6 : max === g ? (b - r) / d + 2 : (r - g) / d + 4;
+  h = (h * 60 + 360) % 360;
+  const sat = 0.4, L = 0.58;
+  const c = (1 - Math.abs(2 * L - 1)) * sat, x = c * (1 - Math.abs(((h / 60) % 2) - 1)), m = L - c / 2;
+  const [rr, gg, bb] = h < 60 ? [c, x, 0] : h < 120 ? [x, c, 0] : h < 180 ? [0, c, x] : h < 240 ? [0, x, c] : h < 300 ? [x, 0, c] : [c, 0, x];
+  return darken("#" + [rr, gg, bb].map((v) => Math.round((v + m) * 255).toString(16).padStart(2, "0")).join(""), 0);
 }
 
 function detectColor(html: string, css: string): string | null {
@@ -159,7 +185,8 @@ function detectColor(html: string, css: string): string | null {
   for (const c of colorsIn(all)) if (vivid(c)) counts.set(c, (counts.get(c) ?? 0) + 1);
   let best: string | null = null, top = 0;
   for (const [c, n] of counts) if (n > top) { best = c; top = n; }
-  return top >= 2 && best ? darken(best) : null;
+  if (top >= 2 && best) return darken(best);
+  return softColor(all);
 }
 
 // Up to 3 style files linked from the page, joined. Failures are ignored.
@@ -220,7 +247,11 @@ export async function importRoutes(app: FastifyInstance) {
     try {
       const start = new URL(/^https?:\/\//i.test(raw.trim()) ? raw.trim() : `https://${raw.trim()}`);
       const home = await fetchPage(start);
-      return { color: detectColor(home.html, await fetchStyles(home.html, home.url)) };
+      let html = home.html;
+      for (const link of pickLinks(home.html, home.url).slice(0, 2)) {
+        try { html += "\n" + (await fetchPage(link)).html; } catch { /* skip */ }
+      }
+      return { color: detectColor(html, await fetchStyles(home.html, home.url)) };
     } catch {
       return { color: null };
     }
@@ -240,10 +271,12 @@ export async function importRoutes(app: FastifyInstance) {
 
     try {
       const home = await fetchPage(start);
+      const htmls = [home.html];
       const pages = [{ url: home.url, text: (toText(home.html).slice(0, PAGE_CHARS) + "\n" + structuredInfo(home.html)).trim() }];
       for (const link of pickLinks(home.html, home.url)) {
         try {
           const p = await fetchPage(link);
+          htmls.push(p.html);
           pages.push({ url: p.url, text: (toText(p.html).slice(0, PAGE_CHARS) + "\n" + structuredInfo(p.html)).trim() });
         } catch { /* skip pages that fail */ }
       }
@@ -257,7 +290,7 @@ export async function importRoutes(app: FastifyInstance) {
         : "";
       const text = await mergeKnowledge({ current, incoming: source, source: "website" });
       if (!text) return reply.code(502).send({ error: "Nothing came back. Try again." });
-      return { text, pages: pages.length, color: detectColor(home.html, await fetchStyles(home.html, home.url)) };
+      return { text, pages: pages.length, color: detectColor(htmls.join("\n"), await fetchStyles(home.html, home.url)) };
     } catch (err) {
       const msg = err instanceof Error ? err.message : "";
       const known = /address|redirect|web page|website answered|empty/i.test(msg);
