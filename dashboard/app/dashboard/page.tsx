@@ -1338,11 +1338,7 @@ export default function DashboardPage() {
                 <section className="card bill-card">
                   <div>
                     <h2>Your subscription</h2>
-                    <ul className="bill-list">
-                      <li>Switch to another plan</li>
-                      <li>Update your card or see invoices</li>
-                      <li>Cancel and go back to Free</li>
-                    </ul>
+                    <p className="bill-text">Switch plan, update your card, see invoices, or cancel and go back to Free.</p>
                     <p className="hint">Opens Stripe&apos;s secure page.{allBots.length > 1 ? " If your new plan allows fewer chatbots, the extra ones are paused, not deleted." : ""}</p>
                   </div>
                   <button className="btn" type="button" disabled={billingBusy} onClick={() => openBilling("portal")}>
