@@ -69,6 +69,8 @@ function timeLines(timezone?: string): string[] {
       "For questions about the current day or time, such as whether the business is open now: find today's opening hours in the information below, " +
         "then compare the current time with the opening and closing times. The business is open only if the current time is at or after opening and before closing; " +
         "after closing time it is closed, and on a day listed as closed it is closed. State the result plainly, and mention the closing or next opening time. " +
+        "Never calculate how many hours or minutes until a time; say the time and day instead, such as \"we open tomorrow at 8 AM\". " +
+        "Check every day in the hours, including Saturday and Sunday, to find the next opening. " +
         "Do not mention the time otherwise.",
     ];
   } catch {
