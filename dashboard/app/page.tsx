@@ -146,7 +146,6 @@ export default function Home() {
         <p className="lp-sub">
           Pick a design, your brand color and a tone of voice. These three chatbots run on the same product.
         </p>
-        <video className="lp-demo" src="/demo.mp4" autoPlay muted loop playsInline controls preload="metadata" />
         <Examples />
       </section>
 
