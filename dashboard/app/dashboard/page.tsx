@@ -220,6 +220,7 @@ export default function DashboardPage() {
   const [hideSteps, setHideSteps] = useState(false);
   const [wizStep, setWizStep] = useState(1);
   const colorTouched = useRef(false);
+  const [tzEdit, setTzEdit] = useState(false);
   const [flags, setFlags] = useState<{ tested: boolean; installed: boolean }>({ tested: false, installed: false });
   useEffect(() => {
     try {
@@ -529,6 +530,24 @@ export default function DashboardPage() {
   const [colorFromSite, setColorFromSite] = useState(false);
   const [importMsg, setImportMsg] = useState("");
   const [importErr, setImportErr] = useState("");
+
+  // A bot with no time zone yet gets the browser's, saved quietly, so the chat can tell if you're open now.
+  useEffect(() => {
+    if (!bot || bot.timezone) return;
+    const tz = browserZone();
+    if (!tz) return;
+    (async () => {
+      try {
+        const { id: _id, ...rest } = bot;
+        const data = await call(`/api/bots/${bot.id}`, { method: "PUT", body: JSON.stringify({ ...rest, timezone: tz }) });
+        setBot(data.bot);
+        setAllBots((list) => list.map((b) => (b.id === data.bot.id ? data.bot : b)));
+        setForm((f) => ({ ...f, timezone: tz }));
+        setBaseline((b) => (b ? { ...b, timezone: tz } : b));
+      } catch { /* try again next visit */ }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bot?.id]);
 
   // Setup guide: look up the website's color in the background and pre-select it.
   async function detectWizardColor() {
@@ -1299,11 +1318,17 @@ export default function DashboardPage() {
                 </div>
                 <p className="hint">The chat only works on this website (and its subdomains).</p>
                 <label htmlFor="timezone">Time zone</label>
-                <select id="timezone" value={form.timezone} onChange={(e) => update("timezone", e.target.value)}>
-                  <option value="">Not set</option>
-                  {zoneList(form.timezone).map((z) => <option key={z} value={z}>{z.replace(/_/g, " ")}</option>)}
-                </select>
-                <p className="hint">Lets the chat answer &quot;Are you open right now?&quot; using your opening hours.</p>
+                {tzEdit ? (
+                  <select id="timezone" value={form.timezone} onChange={(e) => update("timezone", e.target.value)}>
+                    {zoneList(form.timezone).map((z) => <option key={z} value={z}>{z.replace(/_/g, " ")}</option>)}
+                  </select>
+                ) : (
+                  <p id="timezone" style={{ margin: "4px 0 0" }}>
+                    <b>{form.timezone ? form.timezone.replace(/_/g, " ") : "Detecting..."}</b>{" "}
+                    <button type="button" className="link" onClick={() => setTzEdit(true)}>Change</button>
+                  </p>
+                )}
+                <p className="hint">Detected from your browser. Lets the chat answer &quot;Are you open right now?&quot; using your opening hours.</p>
               </section>
 
               <section className="card">
