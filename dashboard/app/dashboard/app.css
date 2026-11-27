@@ -445,3 +445,7 @@ button.side-link { border: 0; background: none; font: inherit; font-size: .875re
 .bot-item.add { color: var(--accent); font-weight: 700; padding-left: 12px; }
 .bot-av { flex: none; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font-style: normal; font-size: .75rem; font-weight: 800; color: #fff; }
 .bot-list-full { margin: 4px 0 0; padding: 0 10px; font-size: .75rem; color: var(--muted); }
+
+.bot-paused { margin-left: auto; padding: 1px 8px; border-radius: 999px; background: #fff3e0; color: #c2610c; font-size: .6875rem; font-style: normal; font-weight: 700; }
+.paused-note { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 20px; padding: 14px 18px; border: 1px solid #f6d7a8; border-radius: 14px; background: #fff8ec; }
+.paused-note p { margin: 4px 0 0; font-size: .9rem; color: #6b4a1a; }

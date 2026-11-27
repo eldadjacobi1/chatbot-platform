@@ -10,6 +10,7 @@ const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000";
 
 type Bot = {
   id: string;
+  paused?: boolean;
   name: string;
   greeting: string;
   context: string;
@@ -619,6 +620,7 @@ export default function DashboardPage() {
               <button key={b.id} type="button" className={`bot-item${bot?.id === b.id ? " on" : ""}`} aria-current={bot?.id === b.id ? "true" : undefined} onClick={() => selectBot(b)}>
                 <i className="bot-av" style={{ background: BOT_COLORS[i % BOT_COLORS.length] }}>{(b.name.trim()[0] ?? "?").toUpperCase()}</i>
                 <span>{b.name}</span>
+                {b.paused && <em className="bot-paused">Paused</em>}
               </button>
             ))}
             {!bot && (
@@ -673,6 +675,15 @@ export default function DashboardPage() {
       )}
       <main className="app-main">
         <div className="app-inner">
+      {bot?.paused && (
+        <div className="paused-note" role="status">
+          <div>
+            <b>This chatbot is paused.</b>
+            <p>Your plan allows {maxBots} chatbot{maxBots === 1 ? "" : "s"}, so only your oldest {maxBots === 1 ? "one is" : `${maxBots} are`} running. The chat is hidden on this website. Upgrade to turn it back on, or delete a chatbot you don&apos;t need.</p>
+          </div>
+          <button type="button" className="btn small" onClick={() => setTab("plan")}>See plans</button>
+        </div>
+      )}
       {loading ? (
         <p>Loading...</p>
       ) : (
@@ -1312,7 +1323,7 @@ export default function DashboardPage() {
                 <div className="card row" style={{ justifyContent: "space-between" }}>
                   <div>
                     <b>Billing</b>
-                    <p className="hint" style={{ margin: 0 }}>Switch plan, update your card or cancel.</p>
+                    <p className="hint" style={{ margin: 0 }}>Switch plan, update your card or cancel.{allBots.length > 1 ? " If your new plan allows fewer chatbots, the extra ones are paused (not deleted)." : ""}</p>
                   </div>
                   <button className="btn secondary" type="button" disabled={billingBusy} onClick={() => openBilling("portal")}>
                     Manage billing

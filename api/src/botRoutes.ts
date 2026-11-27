@@ -9,6 +9,7 @@ import { requireUser } from "./auth.js";
 import { getReport } from "./reports.js";
 import { parseAppearance, paidOnlyError, type Appearance } from "./appearance.js";
 import { getPlanCached, PLAN_LIMITS } from "./billing.js";
+import { allowedBotIds } from "./bots.js";
 
 // What the dashboard sees. One domain per bot for now.
 function toDto(bot: Bot) {
@@ -103,7 +104,8 @@ function parseInput(body: unknown): { value: BotInput } | { error: string } {
 export async function botRoutes(app: FastifyInstance) {
   app.get("/api/bots", { preHandler: requireUser }, async (req) => {
     const rows = await db.select().from(bots).where(eq(bots.ownerId, req.userId!));
-    return { bots: rows.map(toDto) };
+    const ids = await allowedBotIds(req.userId!);
+    return { bots: rows.map((r) => ({ ...toDto(r), paused: !ids.has(r.id) })) };
   });
 
   app.post("/api/bots", { preHandler: requireUser }, async (req, reply) => {
@@ -174,7 +176,8 @@ export async function botRoutes(app: FastifyInstance) {
       .returning();
 
     if (!row) return reply.code(404).send({ error: "Chatbot not found." });
-    return { bot: toDto(row) };
+    const ids = await allowedBotIds(req.userId!);
+    return { bot: { ...toDto(row), paused: !ids.has(row.id) } };
   });
 
   // Deletes a bot and what it collected. Usage totals stay, so the admin cost numbers remain right.
