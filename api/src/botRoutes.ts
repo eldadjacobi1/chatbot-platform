@@ -1,7 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import { randomBytes } from "node:crypto";
 import { and, eq } from "drizzle-orm";
-import { db } from "./db/index.js";
+import { db, pool } from "./db/index.js";
 import { bots, messages, type Bot } from "./db/schema.js";
 import { normalize } from "./savings.js";
 import { mergeKnowledge } from "./knowledge.js";
@@ -175,6 +175,17 @@ export async function botRoutes(app: FastifyInstance) {
 
     if (!row) return reply.code(404).send({ error: "Chatbot not found." });
     return { bot: toDto(row) };
+  });
+
+  // Deletes a bot and what it collected. Usage totals stay, so the admin cost numbers remain right.
+  app.delete("/api/bots/:id", { preHandler: requireUser }, async (req, reply) => {
+    const { id } = req.params as { id: string };
+    const [row] = await db.select({ id: bots.id }).from(bots).where(and(eq(bots.id, id), eq(bots.ownerId, req.userId!)));
+    if (!row) return reply.code(404).send({ error: "Chatbot not found." });
+    await pool.query("DELETE FROM leads WHERE bot_id = $1", [id]);
+    await pool.query("DELETE FROM messages WHERE bot_id = $1", [id]);
+    await db.delete(bots).where(and(eq(bots.id, id), eq(bots.ownerId, req.userId!)));
+    return { ok: true };
   });
 
   // Owner's report: most asked and unanswered questions (last 30 days).

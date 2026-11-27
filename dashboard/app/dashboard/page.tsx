@@ -165,6 +165,10 @@ export default function DashboardPage() {
   const { getToken, isLoaded } = useAuth();
   const { user } = useUser();
   const [bot, setBot] = useState<Bot | null>(null);
+  const [allBots, setAllBots] = useState<Bot[]>([]);
+  const [swOpen, setSwOpen] = useState(false);
+  const [delOpen, setDelOpen] = useState(false);
+  const [delBusy, setDelBusy] = useState(false);
   const [form, setForm] = useState<Form>(emptyForm);
   // What is saved on the server. Save is only active when the form differs from it.
   const [baseline, setBaseline] = useState<Form | null>(null);
@@ -251,7 +255,11 @@ export default function DashboardPage() {
     if (!isLoaded) return;
     call("/api/bots")
       .then((data) => {
-        const first: Bot | undefined = data.bots[0];
+        const list: Bot[] = data.bots;
+        setAllBots(list);
+        let saved = "";
+        try { saved = localStorage.getItem("chatknock-bot") ?? ""; } catch {}
+        const first: Bot | undefined = list.find((b) => b.id === saved) ?? list[0];
         if (first) {
           setBot(first);
           const { id: _id, ...rest } = first;
@@ -364,6 +372,8 @@ export default function DashboardPage() {
         : await call("/api/bots", { method: "POST", body: JSON.stringify(form) });
       const wasNew = !bot;
       setBot(data.bot);
+      setAllBots((list) => (wasNew ? [...list, data.bot] : list.map((b) => (b.id === data.bot.id ? data.bot : b))));
+      try { localStorage.setItem("chatknock-bot", data.bot.id); } catch {}
       const { id: _savedId, ...savedForm } = data.bot as Bot;
       setForm(savedForm);
       setBaseline(savedForm);
@@ -373,6 +383,51 @@ export default function DashboardPage() {
       setError((err as Error).message);
     } finally {
       setSaving(false);
+    }
+  }
+
+  const maxBots = ({ free: 1, pro: 1, business: 3 } as Record<string, number>)[billing?.plan ?? "free"] ?? 1;
+
+  function selectBot(b: Bot) {
+    setBot(b);
+    const { id: _id, ...rest } = b;
+    setForm(rest);
+    setBaseline(rest);
+    setTab("overview");
+    setSwOpen(false);
+    setDelOpen(false);
+    setMessage("");
+    setError("");
+    setReport(null);
+    setLeads(null);
+    try { localStorage.setItem("chatknock-bot", b.id); } catch {}
+  }
+
+  function startAdd() {
+    setBot(null);
+    setForm(emptyForm);
+    setBaseline(null);
+    setWizStep(1);
+    setSwOpen(false);
+    setError("");
+    setMessage("");
+  }
+
+  async function deleteBot() {
+    if (!bot) return;
+    setDelBusy(true);
+    setError("");
+    try {
+      await call(`/api/bots/${bot.id}`, { method: "DELETE" });
+      const rest = allBots.filter((b) => b.id !== bot.id);
+      setAllBots(rest);
+      setDelOpen(false);
+      if (rest[0]) selectBot(rest[0]);
+      else startAdd();
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setDelBusy(false);
     }
   }
 
@@ -558,6 +613,29 @@ export default function DashboardPage() {
     <div className="app">
       <aside className="app-side">
         <button type="button" className="app-brand" onClick={() => setTab("overview")} aria-label="Chatknock home"><Logo size={28} />Chatknock</button>
+        {allBots.length > 0 && (maxBots > 1 || allBots.length > 1) && (
+          <div className="bot-switch">
+            <button type="button" className="bot-switch-btn" aria-expanded={swOpen} onClick={() => setSwOpen((v) => !v)}>
+              <span><small>Chatbot</small>{bot ? bot.name : "New chatbot"}</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg>
+            </button>
+            {swOpen && (
+              <div className="bot-menu" role="menu">
+                <p className="bot-menu-count">Your chatbots ({allBots.length} of {maxBots})</p>
+                {allBots.map((b) => (
+                  <button key={b.id} type="button" role="menuitem" className={`bot-menu-item${bot?.id === b.id ? " on" : ""}`} onClick={() => selectBot(b)}>
+                    <span>{b.name}</span><small>{bot?.id === b.id ? "✓" : b.domain}</small>
+                  </button>
+                ))}
+                {allBots.length < maxBots ? (
+                  <button type="button" role="menuitem" className="bot-menu-item add" onClick={startAdd}>+ Add chatbot</button>
+                ) : (
+                  <p className="bot-menu-full">Your plan allows {maxBots} chatbot{maxBots === 1 ? "" : "s"}.</p>
+                )}
+              </div>
+            )}
+          </div>
+        )}
         {bot && (
           <nav className="app-nav" aria-label="Main">
             {NAV.map(([id, label, icon]) => (
@@ -1190,6 +1268,22 @@ export default function DashboardPage() {
                 </label>
               </section>
             </form>
+          )}
+
+          {bot && tab === "settings" && (
+            <section className="card danger-zone">
+              <h2>Delete this chatbot</h2>
+              <p className="hint">Removes the chatbot, its questions and its leads. The chat on your website stops working right away. This can&apos;t be undone.</p>
+              {!delOpen ? (
+                <button type="button" className="btn danger" onClick={() => setDelOpen(true)}>Delete chatbot</button>
+              ) : (
+                <div className="row">
+                  <button type="button" className="btn danger solid" disabled={delBusy} onClick={deleteBot}>{delBusy ? "Deleting..." : `Yes, delete "${bot.name}"`}</button>
+                  <button type="button" className="btn secondary" disabled={delBusy} onClick={() => setDelOpen(false)}>Cancel</button>
+                </div>
+              )}
+              {error && <p className="error">{error}</p>}
+            </section>
           )}
 
           {bot && tab === "plan" && (

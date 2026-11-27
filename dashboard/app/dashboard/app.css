@@ -413,3 +413,21 @@ button.side-link { border: 0; background: none; font: inherit; font-size: .875re
 .plan-pill.pro { background: #e0e7ff; color: #3730a3; }
 .plan-pill.business { background: #fef3c7; color: #b45309; }
 .admin-table tbody tr[style*="pointer"]:hover td { background: #f7f7fb; }
+
+/* Chatbot switcher + delete */
+.bot-switch { position: relative; }
+.bot-switch-btn { display: flex; justify-content: space-between; align-items: center; gap: 8px; width: 100%; padding: 9px 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--paper); font: inherit; font-weight: 700; color: var(--ink); text-align: left; cursor: pointer; }
+.bot-switch-btn:hover { border-color: #c9c9e6; }
+.bot-switch-btn small { display: block; font-weight: 500; font-size: .75rem; color: var(--muted); }
+.bot-menu { position: absolute; left: 0; right: 0; top: calc(100% + 6px); z-index: 20; padding: 6px; border: 1px solid var(--line); border-radius: 12px; background: var(--paper); box-shadow: 0 12px 30px rgba(40, 30, 120, .18); }
+.bot-menu-count, .bot-menu-full { margin: 0; padding: 6px 10px 4px; font-size: .75rem; color: var(--muted); }
+.bot-menu-item { display: flex; justify-content: space-between; gap: 10px; width: 100%; padding: 9px 10px; border: 0; border-radius: 8px; background: none; font: inherit; font-weight: 600; color: var(--ink); text-align: left; cursor: pointer; }
+.bot-menu-item small { font-weight: 500; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bot-menu-item:hover { background: var(--bg); }
+.bot-menu-item.on { background: var(--accent-soft); color: var(--accent); }
+.bot-menu-item.add { margin-top: 4px; border-top: 1px solid var(--line); border-radius: 0 0 8px 8px; padding-top: 11px; color: var(--accent); }
+.danger-zone { margin-top: 24px; border-color: #f1c9c9; }
+.btn.danger { background: #fff; color: #d9382f; border: 1px solid #d9382f; }
+.btn.danger:hover { background: #fdf0ef; }
+.btn.danger.solid { background: #d9382f; color: #fff; }
+.btn.danger.solid:hover { background: #bf2f27; }
