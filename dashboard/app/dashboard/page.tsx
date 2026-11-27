@@ -120,6 +120,8 @@ const PLAN_DETAILS = [
     features: ["3 chatbots", "1,500 messages a day", "Everything in Pro"] },
 ] as const;
 
+const BOT_COLORS = ["#4338ca", "#16a34a", "#d97706"];
+
 const NAV_COLORS: Record<string, string> = {
   overview: "#4338ca", reports: "#0ea5e9", leads: "#16a34a", appearance: "#db2777", settings: "#d97706", install: "#7c3aed", plan: "#0f766e",
 };
@@ -166,7 +168,6 @@ export default function DashboardPage() {
   const { user } = useUser();
   const [bot, setBot] = useState<Bot | null>(null);
   const [allBots, setAllBots] = useState<Bot[]>([]);
-  const [swOpen, setSwOpen] = useState(false);
   const [delOpen, setDelOpen] = useState(false);
   const [delBusy, setDelBusy] = useState(false);
   const [form, setForm] = useState<Form>(emptyForm);
@@ -386,15 +387,6 @@ export default function DashboardPage() {
     }
   }
 
-  useEffect(() => {
-    if (!swOpen) return;
-    const away = (e: MouseEvent) => { if (!(e.target as Element).closest?.(".bot-switch")) setSwOpen(false); };
-    const esc = (e: KeyboardEvent) => { if (e.key === "Escape") setSwOpen(false); };
-    document.addEventListener("mousedown", away);
-    document.addEventListener("keydown", esc);
-    return () => { document.removeEventListener("mousedown", away); document.removeEventListener("keydown", esc); };
-  }, [swOpen]);
-
   const maxBots = ({ free: 1, pro: 1, business: 3 } as Record<string, number>)[billing?.plan ?? "free"] ?? 1;
 
   function selectBot(b: Bot) {
@@ -403,7 +395,6 @@ export default function DashboardPage() {
     setForm(rest);
     setBaseline(rest);
     setTab("overview");
-    setSwOpen(false);
     setDelOpen(false);
     setMessage("");
     setError("");
@@ -417,7 +408,6 @@ export default function DashboardPage() {
     setForm(emptyForm);
     setBaseline(null);
     setWizStep(1);
-    setSwOpen(false);
     setError("");
     setMessage("");
   }
@@ -623,25 +613,21 @@ export default function DashboardPage() {
       <aside className="app-side">
         <button type="button" className="app-brand" onClick={() => setTab("overview")} aria-label="Chatknock home"><Logo size={28} />Chatknock</button>
         {allBots.length > 0 && (maxBots > 1 || allBots.length > 1) && (
-          <div className="bot-switch">
-            <button type="button" className="bot-switch-btn" aria-expanded={swOpen} onClick={() => setSwOpen((v) => !v)}>
-              <span><small>Switch chatbot</small>{bot ? bot.name : "New chatbot"}</span>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M8 9l4-4 4 4M8 15l4 4 4-4" /></svg>
-            </button>
-            {swOpen && (
-              <div className="bot-menu" role="menu">
-                <p className="bot-menu-count">Your chatbots ({allBots.length} of {maxBots})</p>
-                {allBots.map((b) => (
-                  <button key={b.id} type="button" role="menuitem" className={`bot-menu-item${bot?.id === b.id ? " on" : ""}`} onClick={() => selectBot(b)}>
-                    <span>{b.name}</span><small>{bot?.id === b.id ? "✓" : b.domain}</small>
-                  </button>
-                ))}
-                {allBots.length < maxBots ? (
-                  <button type="button" role="menuitem" className="bot-menu-item add" onClick={startAdd}>+ Add chatbot</button>
-                ) : (
-                  <p className="bot-menu-full">Your plan allows {maxBots} chatbot{maxBots === 1 ? "" : "s"}.</p>
-                )}
-              </div>
+          <div className="bot-list" role="group" aria-label="Your chatbots">
+            <p className="bot-list-title">Your chatbots</p>
+            {allBots.map((b, i) => (
+              <button key={b.id} type="button" className={`bot-item${bot?.id === b.id ? " on" : ""}`} aria-current={bot?.id === b.id ? "true" : undefined} onClick={() => selectBot(b)}>
+                <i className="bot-av" style={{ background: BOT_COLORS[i % BOT_COLORS.length] }}>{(b.name.trim()[0] ?? "?").toUpperCase()}</i>
+                <span>{b.name}</span>
+              </button>
+            ))}
+            {!bot && (
+              <span className="bot-item on"><i className="bot-av" style={{ background: "#9ca3af" }}>+</i><span>New chatbot</span></span>
+            )}
+            {allBots.length < maxBots ? (
+              !bot ? null : <button type="button" className="bot-item add" onClick={startAdd}>+ Add chatbot</button>
+            ) : (
+              <p className="bot-list-full">Your plan allows {maxBots} chatbot{maxBots === 1 ? "" : "s"}.</p>
             )}
           </div>
         )}
