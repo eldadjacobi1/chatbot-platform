@@ -57,6 +57,7 @@ const FAQ = [
   {
     q: "How do I add it to my website?",
     a: "Paste one line of code before the closing body tag of your site. It works on any website where you can add code.",
+    link: { text: "Try it free", href: "/sign-up" },
   },
   {
     q: "What stops it from running up costs?",
@@ -264,7 +265,15 @@ export default function Home() {
           {FAQ.map((f) => (
             <details key={f.q}>
               <summary>{f.q}</summary>
-              <p>{f.a}</p>
+              <p>
+                {f.a}
+                {"link" in f && f.link && (
+                  <>
+                    {" "}
+                    <Link href={f.link.href}>{f.link.text}</Link>
+                  </>
+                )}
+              </p>
             </details>
           ))}
         </div>
