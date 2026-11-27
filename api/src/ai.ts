@@ -60,12 +60,16 @@ export const isUnsure = (answer: string) => answer.toLowerCase().includes("i'm n
 function timeLines(timezone?: string): string[] {
   if (!timezone) return [];
   try {
-    const now = new Intl.DateTimeFormat("en-US", {
-      timeZone: timezone, weekday: "long", month: "long", day: "numeric", hour: "numeric", minute: "2-digit",
-    }).format(new Date());
+    const d = new Date();
+    const day = new Intl.DateTimeFormat("en-US", { timeZone: timezone, weekday: "long", month: "long", day: "numeric" }).format(d);
+    const t12 = new Intl.DateTimeFormat("en-US", { timeZone: timezone, hour: "numeric", minute: "2-digit" }).format(d);
+    const t24 = new Intl.DateTimeFormat("en-GB", { timeZone: timezone, hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(d);
     return [
-      `Right now at the business it is ${now} (${timezone}).`,
-      "Use this only to answer questions about the current day or time, such as whether the business is open now, using the opening hours below. Do not mention the time otherwise.",
+      `Current time at the business: ${day}, ${t12} (${t24} in 24-hour time), time zone ${timezone}.`,
+      "For questions about the current day or time, such as whether the business is open now: find today's opening hours in the information below, " +
+        "then compare the current time with the opening and closing times. The business is open only if the current time is at or after opening and before closing; " +
+        "after closing time it is closed, and on a day listed as closed it is closed. State the result plainly, and mention the closing or next opening time. " +
+        "Do not mention the time otherwise.",
     ];
   } catch {
     return [];
