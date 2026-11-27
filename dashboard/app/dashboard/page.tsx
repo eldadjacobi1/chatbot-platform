@@ -386,6 +386,15 @@ export default function DashboardPage() {
     }
   }
 
+  useEffect(() => {
+    if (!swOpen) return;
+    const away = (e: MouseEvent) => { if (!(e.target as Element).closest?.(".bot-switch")) setSwOpen(false); };
+    const esc = (e: KeyboardEvent) => { if (e.key === "Escape") setSwOpen(false); };
+    document.addEventListener("mousedown", away);
+    document.addEventListener("keydown", esc);
+    return () => { document.removeEventListener("mousedown", away); document.removeEventListener("keydown", esc); };
+  }, [swOpen]);
+
   const maxBots = ({ free: 1, pro: 1, business: 3 } as Record<string, number>)[billing?.plan ?? "free"] ?? 1;
 
   function selectBot(b: Bot) {
@@ -616,8 +625,8 @@ export default function DashboardPage() {
         {allBots.length > 0 && (maxBots > 1 || allBots.length > 1) && (
           <div className="bot-switch">
             <button type="button" className="bot-switch-btn" aria-expanded={swOpen} onClick={() => setSwOpen((v) => !v)}>
-              <span><small>Chatbot</small>{bot ? bot.name : "New chatbot"}</span>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg>
+              <span><small>Switch chatbot</small>{bot ? bot.name : "New chatbot"}</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M8 9l4-4 4 4M8 15l4 4 4-4" /></svg>
             </button>
             {swOpen && (
               <div className="bot-menu" role="menu">
