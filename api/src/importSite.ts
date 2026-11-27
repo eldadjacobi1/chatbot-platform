@@ -118,21 +118,48 @@ function colorsIn(text: string): string[] {
   return out;
 }
 
+// Makes a color a little deeper so the chat button stays visible on a white page.
+function lum(hex: string): number {
+  const n = parseInt(hex.slice(1), 16);
+  const f = (v: number) => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
+  return 0.2126 * f((n >> 16) & 255) + 0.7152 * f((n >> 8) & 255) + 0.0722 * f(n & 255);
+}
+function darken(hex: string): string {
+  const n = parseInt(hex.slice(1), 16);
+  const r = ((n >> 16) & 255) / 255, g = ((n >> 8) & 255) / 255, b = (n & 255) / 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b), d = max - min;
+  let h = 0;
+  if (d) h = max === r ? ((g - b) / d) % 6 : max === g ? (b - r) / d + 2 : (r - g) / d + 4;
+  h = (h * 60 + 360) % 360;
+  let l = (max + min) / 2;
+  const sat = d === 0 ? 0 : d / (1 - Math.abs(2 * l - 1));
+  const toHex = (L: number) => {
+    const c = (1 - Math.abs(2 * L - 1)) * sat, x = c * (1 - Math.abs(((h / 60) % 2) - 1)), m = L - c / 2;
+    const [rr, gg, bb] = h < 60 ? [c, x, 0] : h < 120 ? [x, c, 0] : h < 180 ? [0, c, x] : h < 240 ? [0, x, c] : h < 300 ? [x, 0, c] : [c, 0, x];
+    return "#" + [rr, gg, bb].map((v) => Math.round((v + m) * 255).toString(16).padStart(2, "0")).join("");
+  };
+  l = Math.max(0.2, l - 0.08);
+  let out = toHex(l);
+  // Contrast against white must be at least 4.5:1.
+  while (1.05 / (lum(out) + 0.05) < 4.5 && l > 0.15) { l -= 0.03; out = toHex(l); }
+  return out;
+}
+
 function detectColor(html: string, css: string): string | null {
   const meta = html.match(/<meta[^>]+name=["']theme-color["'][^>]*content=["'](#[0-9a-f]{3,6})["']/i)
     ?? html.match(/<meta[^>]+content=["'](#[0-9a-f]{3,6})["'][^>]*name=["']theme-color["']/i);
-  if (meta && [4, 7].includes(meta[1].length) && vivid(normHex(meta[1]))) return normHex(meta[1]);
+  if (meta && [4, 7].includes(meta[1].length) && vivid(normHex(meta[1]))) return darken(normHex(meta[1]));
 
   const all = html + "\n" + css;
   for (const m of all.matchAll(/--[\w-]*(?:primary|brand|accent|main)[\w-]*\s*:\s*([^;}\n]+)/gi)) {
     const c = colorsIn(m[1])[0];
-    if (c && vivid(c)) return c;
+    if (c && vivid(c)) return darken(c);
   }
   const counts = new Map<string, number>();
   for (const c of colorsIn(all)) if (vivid(c)) counts.set(c, (counts.get(c) ?? 0) + 1);
   let best: string | null = null, top = 0;
   for (const [c, n] of counts) if (n > top) { best = c; top = n; }
-  return top >= 2 ? best : null;
+  return top >= 2 && best ? darken(best) : null;
 }
 
 // Up to 3 style files linked from the page, joined. Failures are ignored.
@@ -170,12 +197,14 @@ function pickLinks(html: string, base: URL): URL[] {
   return [...found.values()].slice(0, MAX_PAGES - 1);
 }
 
-const used = new Map<string, { day: string; n: number }>();
-function allow(userId: string): boolean {
+type Used = Map<string, { day: string; n: number }>;
+const used: Used = new Map();
+const usedColor: Used = new Map();
+function allow(userId: string, map: Used = used, max = PER_DAY): boolean {
   const day = new Date().toISOString().slice(0, 10);
-  const cur = used.get(userId);
-  if (!cur || cur.day !== day) { used.set(userId, { day, n: 1 }); return true; }
-  if (cur.n >= PER_DAY) return false;
+  const cur = map.get(userId);
+  if (!cur || cur.day !== day) { map.set(userId, { day, n: 1 }); return true; }
+  if (cur.n >= max) return false;
   cur.n++;
   return true;
 }
@@ -184,6 +213,19 @@ const apiKey = process.env.OPENAI_API_KEY;
 const client = apiKey ? new OpenAI({ apiKey }) : null;
 
 export async function importRoutes(app: FastifyInstance) {
+  // Just the brand color of a website, for the setup guide. No AI, so every plan can use it.
+  app.post("/api/site-color", { preHandler: requireUser }, async (req) => {
+    const raw = ((req.body ?? {}) as { url?: unknown }).url;
+    if (typeof raw !== "string" || !raw.trim() || !allow(req.userId!, usedColor, 30)) return { color: null };
+    try {
+      const start = new URL(/^https?:\/\//i.test(raw.trim()) ? raw.trim() : `https://${raw.trim()}`);
+      const home = await fetchPage(start);
+      return { color: detectColor(home.html, await fetchStyles(home.html, home.url)) };
+    } catch {
+      return { color: null };
+    }
+  });
+
   app.post("/api/import-website", { preHandler: requireUser }, async (req, reply) => {
     if (!PLAN_LIMITS[await getPlanCached(req.userId!)].aiTools) {
       return reply.code(403).send({ error: "Importing from your website is part of Pro." });

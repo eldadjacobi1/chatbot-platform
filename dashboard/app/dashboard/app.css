@@ -463,3 +463,10 @@ button.side-link { border: 0; background: none; font: inherit; font-size: .875re
 .bill-card .hint { margin: 0; }
 .bill-card .btn { flex: none; }
 @media (max-width: 700px) { .bill-card { flex-wrap: wrap; } }
+
+/* Setup guide: look step */
+.wiz-preview { position: relative; height: 150px; margin: 4px 0 22px; border: 1px solid var(--line); border-radius: 14px; background: #fff; overflow: hidden; }
+.wiz-preview-bar { display: flex; gap: 6px; padding: 10px 12px; border-bottom: 1px solid var(--line); background: #f6f6fa; }
+.wiz-preview-bar i { width: 9px; height: 9px; border-radius: 50%; background: var(--line); }
+.wiz-preview-name { display: block; padding: 18px 20px; font-weight: 700; font-size: 1.15rem; }
+.wiz-preview-btn { position: absolute; right: 16px; bottom: 16px; width: 52px; height: 52px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 18px rgba(20,20,43,.25); transition: background .15s; }

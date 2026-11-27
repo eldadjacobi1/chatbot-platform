@@ -208,6 +208,7 @@ export default function DashboardPage() {
   const customized = !!bot && (bot.theme !== "clean" || bot.color !== "#4338ca" || !!bot.title || bot.tone !== "friendly" || bot.audience !== "general" || bot.suggestions.length > 0);
   const [hideSteps, setHideSteps] = useState(false);
   const [wizStep, setWizStep] = useState(1);
+  const colorTouched = useRef(false);
   const [flags, setFlags] = useState<{ tested: boolean; installed: boolean }>({ tested: false, installed: false });
   useEffect(() => {
     try {
@@ -421,6 +422,8 @@ export default function DashboardPage() {
 
   function startAdd() {
     setBot(null);
+    colorTouched.current = false;
+    setColorFromSite(false);
     setForm(emptyForm);
     setBaseline(null);
     setWizStep(1);
@@ -515,6 +518,17 @@ export default function DashboardPage() {
   const [colorFromSite, setColorFromSite] = useState(false);
   const [importMsg, setImportMsg] = useState("");
   const [importErr, setImportErr] = useState("");
+
+  // Setup guide: look up the website's color in the background and pre-select it.
+  async function detectWizardColor() {
+    try {
+      const d = await call("/api/site-color", { method: "POST", body: JSON.stringify({ url: form.domain }) });
+      if (d.color && !colorTouched.current) {
+        setForm((f) => ({ ...f, color: d.color }));
+        setColorFromSite(true);
+      }
+    } catch { /* the default color stays */ }
+  }
 
   async function importFromWebsite() {
     setImportBusy(true);
@@ -1179,14 +1193,14 @@ export default function DashboardPage() {
           )}
 
           {!bot && (
-            <form className="wizard" onSubmit={(e) => { if (wizStep === 1) { e.preventDefault(); setWizStep(2); } else save(e); }}>
+            <form className="wizard" onSubmit={(e) => { if (wizStep === 1) { e.preventDefault(); colorTouched.current = false; detectWizardColor(); setWizStep(2); } else if (wizStep === 2) { e.preventDefault(); setWizStep(3); } else save(e); }}>
               <div className="wiz-dots" aria-label={`Step ${wizStep} of 3`}>
                 {[1, 2, 3].map((n) => <i key={n} className={n <= wizStep ? "on" : ""} />)}
               </div>
               {wizStep === 1 ? (
                 <>
                   <h1>Let&apos;s set up your chatbot</h1>
-                  <p className="lead">Two quick questions. It takes about two minutes.</p>
+                  <p className="lead">Three quick steps. It takes about two minutes.</p>
                   <label htmlFor="name">What&apos;s your business called?</label>
                   <input id="name" type="text" value={form.name} maxLength={80} required autoFocus placeholder="Joe's Pizza"
                     onChange={(e) => update("name", e.target.value)} />
@@ -1198,7 +1212,7 @@ export default function DashboardPage() {
                     <button className="btn">Continue</button>
                   </div>
                 </>
-              ) : (
+              ) : wizStep === 2 ? (
                 <>
                   <h1>What should your chatbot know?</h1>
                   <p className="lead">It answers visitors only from what you write here. Include opening hours, services, prices, your area and how to reach you.</p>
@@ -1212,6 +1226,33 @@ export default function DashboardPage() {
                   </p>
                   <div className="row" style={{ marginTop: 24 }}>
                     <button type="button" className="btn secondary" onClick={() => setWizStep(1)}>Back</button>
+                    <button className="btn">Continue</button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <h1>Pick your look</h1>
+                  <p className="lead">This is the chat button your visitors will see.{colorFromSite ? " We matched it to your website." : ""}</p>
+                  <div className="wiz-preview" aria-hidden="true">
+                    <span className="wiz-preview-bar"><i /><i /><i /></span>
+                    <span className="wiz-preview-name">{form.name || "Your business"}</span>
+                    <span className="wiz-preview-btn" style={{ background: form.color }}>
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.6 8.6 0 0 1-3.6-.8L3 21l1.9-5.4A8.4 8.4 0 1 1 21 11.5z" /></svg>
+                    </span>
+                  </div>
+                  <label>Color</label>
+                  <div className="swatches">
+                    {COLORS.map((c) => (
+                      <button key={c} type="button" aria-label={`Use color ${c}`}
+                        className={form.color === c ? "swatch on" : "swatch"} style={{ background: c }}
+                        onClick={() => { colorTouched.current = true; setColorFromSite(false); update("color", c); }} />
+                    ))}
+                    <input type="color" aria-label="Custom color" value={/^#[0-9a-f]{6}$/i.test(form.color) ? form.color : "#4338ca"}
+                      onChange={(e) => { colorTouched.current = true; setColorFromSite(false); update("color", e.target.value); }} />
+                  </div>
+                  <p className="hint">You can change the color and the chat style any time in Design.</p>
+                  <div className="row" style={{ marginTop: 24 }}>
+                    <button type="button" className="btn secondary" onClick={() => setWizStep(2)}>Back</button>
                     <button className="btn" disabled={saving}>{saving ? "Creating..." : "Create my chatbot"}</button>
                   </div>
                   {error && <p className="error">{error}</p>}
