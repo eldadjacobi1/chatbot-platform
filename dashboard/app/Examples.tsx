@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { SITES } from "./sites";
 
 type Theme = "clean" | "bold" | "soft";
@@ -121,7 +121,19 @@ function MockSite({ ex }: { ex: Example }) {
 
 export default function Examples() {
   const [active, setActive] = useState(EXAMPLES[0].id);
+  const [auto, setAuto] = useState(true);
   const ex = EXAMPLES.find((e) => e.id === active) ?? EXAMPLES[0];
+
+  useEffect(() => {
+    if (!auto) return;
+    const t = setInterval(() => {
+      setActive((cur) => {
+        const i = EXAMPLES.findIndex((e) => e.id === cur);
+        return EXAMPLES[(i + 1) % EXAMPLES.length].id;
+      });
+    }, 6000);
+    return () => clearInterval(t);
+  }, [auto]);
 
   return (
     <div className="ex-wrap">
@@ -133,7 +145,10 @@ export default function Examples() {
             role="tab"
             aria-selected={e.id === active}
             className={e.id === active ? "ex-tab on" : "ex-tab"}
-            onClick={() => setActive(e.id)}
+            onClick={() => {
+              setAuto(false);
+              setActive(e.id);
+            }}
           >
             <b>{e.business}</b>
             <span>{e.themeName} design, {e.tone} tone</span>
