@@ -431,3 +431,6 @@ button.side-link { border: 0; background: none; font: inherit; font-size: .875re
 .btn.danger:hover { background: #fdf0ef; }
 .btn.danger.solid { background: #d9382f; color: #fff; }
 .btn.danger.solid:hover { background: #bf2f27; }
+.danger-zone .hint { margin: 6px 0 18px; }
+.danger-zone .btn { margin-top: 0; }
+.danger-zone .row { margin-top: 0; }
