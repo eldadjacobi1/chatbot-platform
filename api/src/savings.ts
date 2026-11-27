@@ -13,7 +13,10 @@ export function normalize(text: string): string {
 const GREETING = /^(hi|hello|hey|hola|yo|good (morning|afternoon|evening)|hi there|hello there)( there)?$/;
 const HOW_ARE_YOU = /^(hi |hello |hey )?(how are you|how r u|how are you doing|hows it going|whats up|sup)( today)?$/;
 const THANKS = /^(thanks|thank you|thx|ty|thanks a lot|thank you very much|great thanks|ok thanks|okay thanks)$/;
-const BYE = /^(bye|goodbye|see you|see ya|have a good day|that is all|thats all|no thanks|nothing else)$/;
+const BYE = /^(bye|goodbye|see you|see ya|see you later|good night|goodnight|take care|have a good day|that is all|thats all|no thanks|nothing else)$/;
+const OK = /^(ok|okay|cool|great|got it|alright|sounds good|nice)$/;
+const ARE_YOU_BOT = /^(are you|r u) (a |an )?(bot|robot|ai|human|real|real person|person|real human)( or (a )?(bot|human|person|ai))?$/;
+const HELP = /^(help|help me|i need help|can you help me|can you help)$/;
 
 function looksLikeGibberish(norm: string): boolean {
   if (norm.length < 2) return true;
@@ -48,6 +51,9 @@ export function cannedReply(message: string): string | null {
   if (GREETING.test(n)) return "Hi! You can ask me about our hours, services, prices or how to book.";
   if (THANKS.test(n)) return "You're welcome! Is there anything else I can help with?";
   if (BYE.test(n)) return "Thanks for stopping by! Have a great day.";
+  if (OK.test(n)) return "Great! Is there anything else I can help with?";
+  if (ARE_YOU_BOT.test(n)) return "I'm an AI assistant. For anything I can't answer, please contact the business directly.";
+  if (HELP.test(n)) return "Sure! What would you like to know?";
   if (looksLikeGibberish(n)) return GIBBERISH_REPLY;
   return null;
 }
