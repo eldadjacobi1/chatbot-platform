@@ -141,6 +141,8 @@ app.get("/widget/:botId", async (req, reply) => {
     greeting: bot.greeting,
     token: createToken(bot.id),
     turnstileSiteKey: turnstileEnabled ? turnstileSiteKey : "",
+    // Free plan shows "Powered by Chatknock"; paid plans and our own demo bot do not.
+    branding: !!bot.ownerId && (await getPlanCached(bot.ownerId)) === "free",
   }).replace(/</g, "\\u003c");
 
   return reply

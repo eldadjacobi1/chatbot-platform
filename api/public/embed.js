@@ -26,7 +26,7 @@
 
   var frame = document.createElement("iframe");
   frame.title = "Chat";
-  frame.setAttribute("sandbox", "allow-scripts allow-same-origin");
+  frame.setAttribute("sandbox", "allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox");
   frame.style.cssText =
     "position:fixed;right:20px;bottom:90px;width:min(360px,calc(100vw - 32px));" +
     "height:min(520px,calc(100vh - 100px));border:0;border-radius:20px;" +
