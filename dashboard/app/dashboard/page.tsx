@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useAuth, useUser, UserButton } from "@clerk/nextjs";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Logo from "../Logo";
 import "./app.css";
 
@@ -387,6 +387,21 @@ export default function DashboardPage() {
       setSaving(false);
     }
   }
+
+  // The address shows the open screen (chatknock.com/dashboard?tab=leads), so refresh and shared links return to it.
+  const TABS: Tab[] = ["overview", "reports", "leads", "appearance", "settings", "install", "plan"];
+  const skipUrlWrite = useRef(false);
+  useEffect(() => {
+    const t = new URLSearchParams(window.location.search).get("tab") as Tab | null;
+    if (t && TABS.includes(t) && t !== "overview") { skipUrlWrite.current = true; setTab(t); }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  useEffect(() => {
+    if (skipUrlWrite.current) { skipUrlWrite.current = false; return; }
+    const url = new URL(window.location.href);
+    if (tab === "overview") url.searchParams.delete("tab"); else url.searchParams.set("tab", tab);
+    window.history.replaceState(null, "", url.pathname + url.search);
+  }, [tab]);
 
   const maxBots = ({ free: 1, pro: 1, business: 3 } as Record<string, number>)[billing?.plan ?? "free"] ?? 1;
 
