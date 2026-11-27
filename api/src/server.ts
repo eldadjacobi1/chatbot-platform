@@ -8,7 +8,7 @@ import { logQuestion } from "./reports.js";
 import cors from "@fastify/cors";
 import { getBot } from "./bots.js";
 import { checkLimits, afterAnswer } from "./limits.js";
-import { cannedReply, getCached, setCached, GIBBERISH_REPLY } from "./savings.js";
+import { cannedReply, getCached, setCached, isTimeSensitive, GIBBERISH_REPLY } from "./savings.js";
 import { botRoutes } from "./botRoutes.js";
 import { styleKey } from "./appearance.js";
 import { leadRoutes } from "./leads.js";
@@ -188,7 +188,8 @@ app.post("/chat", async (req, reply) => {
   try {
     // Free answers first: canned replies, then the cache. No AI call.
     const canned = cannedReply(message, bot.id);
-    const cached = canned ? null : getCached(bot.id, bot.name, cacheContext, message);
+    const timeSensitive = !!bot.timezone && isTimeSensitive(message);
+    const cached = canned || timeSensitive ? null : getCached(bot.id, bot.name, cacheContext, message);
     const free = canned ?? cached;
     if (free) {
       if (cached) logQuestion(bot.id, message, "cache", isUnsure(cached));
@@ -207,7 +208,7 @@ app.post("/chat", async (req, reply) => {
       answer += text;
       reply.raw.write(`data: ${JSON.stringify({ text })}\n\n`);
     }
-    setCached(bot.id, bot.name, cacheContext, message, answer);
+    if (!timeSensitive) setCached(bot.id, bot.name, cacheContext, message, answer);
     logQuestion(bot.id, message, "ai", isUnsure(answer));
     const closing = afterAnswer(token, isUnsure(answer), bot.name);
     if (closing) reply.raw.write(`data: ${JSON.stringify({ text: "\n\n" + closing })}\n\n`);

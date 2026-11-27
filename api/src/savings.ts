@@ -42,6 +42,12 @@ function isOnlySmallTalk(n: string): boolean {
   return rest === "";
 }
 
+// Questions whose answer depends on the moment they are asked ("are you open now?") are never cached.
+const TIME_SENSITIVE = /\b(now|currently|today|tonight|tomorrow|yesterday|this (morning|afternoon|evening|weekend)|what time is it|what day is it)\b/;
+export function isTimeSensitive(message: string): boolean {
+  return TIME_SENSITIVE.test(normalize(message));
+}
+
 export const GIBBERISH_REPLY = "Sorry, I didn't catch that. Could you rephrase your question?";
 
 // Returns a ready-made answer, or null if the AI should answer.

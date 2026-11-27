@@ -31,6 +31,7 @@ function toDto(bot: Bot) {
     tone: bot.tone,
     audience: bot.audience,
     instructions: bot.instructions,
+    timezone: bot.timezone,
   };
 }
 

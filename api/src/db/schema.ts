@@ -25,6 +25,7 @@ export const bots = pgTable("bots", {
   tone: text("tone").notNull().default("friendly"),
   audience: text("audience").notNull().default("general"),
   instructions: text("instructions").notNull().default(""),
+  timezone: text("timezone").notNull().default(""),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

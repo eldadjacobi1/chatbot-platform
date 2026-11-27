@@ -22,6 +22,7 @@ export type Appearance = {
   tone: Tone;
   audience: Audience;
   instructions: string;
+  timezone: string;
 };
 
 export const DEFAULT_COLOR = "#4338ca";
@@ -71,6 +72,14 @@ export function parseAppearance(b: Record<string, unknown>): { value: Partial<Ap
     const i = str(b.instructions);
     if (i === undefined || i.length > 500) return { error: "Extra instructions can be up to 500 characters." };
     out.instructions = i;
+  }
+  if (b.timezone !== undefined) {
+    const z = str(b.timezone);
+    if (z === undefined) return { error: "Time zone is not valid." };
+    if (z !== "") {
+      try { new Intl.DateTimeFormat("en-US", { timeZone: z }); } catch { return { error: "Time zone is not valid." }; }
+    }
+    out.timezone = z;
   }
   return { value: out };
 }

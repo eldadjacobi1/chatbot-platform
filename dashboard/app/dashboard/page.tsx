@@ -27,6 +27,7 @@ type Bot = {
   tone: string;
   audience: string;
   instructions: string;
+  timezone: string;
 };
 
 type Form = Omit<Bot, "id">;
@@ -73,6 +74,7 @@ const emptyForm: Form = {
   tone: "friendly",
   audience: "general",
   instructions: "",
+  timezone: "",
 };
 
 const THEMES = [
@@ -87,6 +89,15 @@ function onColor(color: string, pref: string): string {
   const lum = (0.299 * ((n >> 16) & 255) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) / 255;
   return /^#[0-9a-f]{6}$/i.test(color) && lum > 0.75 ? "#14142b" : "#fff";
 }
+
+const browserZone = () => { try { return Intl.DateTimeFormat().resolvedOptions().timeZone || ""; } catch { return ""; } };
+const zoneList = (current: string): string[] => {
+  let list: string[] = [];
+  try { list = (Intl as unknown as { supportedValuesOf?: (k: string) => string[] }).supportedValuesOf?.("timeZone") ?? []; } catch {}
+  const set = new Set(list);
+  for (const z of ["UTC", current, browserZone()]) if (z) set.add(z);
+  return [...set].sort();
+};
 
 const COLORS = ["#4338ca", "#0f766e", "#be123c", "#c2410c", "#1d4ed8", "#14142b"];
 // Free plan: presets only. (Pro unlocks custom color, button position and extra instructions.)
@@ -1196,7 +1207,7 @@ export default function DashboardPage() {
           )}
 
           {!bot && (
-            <form className="wizard" onSubmit={(e) => { if (wizStep === 1) { e.preventDefault(); colorTouched.current = false; detectWizardColor(); setWizStep(2); } else if (wizStep === 2) { e.preventDefault(); setWizStep(3); } else save(e); }}>
+            <form className="wizard" onSubmit={(e) => { if (wizStep === 1) { e.preventDefault(); colorTouched.current = false; setForm((f) => ({ ...f, timezone: f.timezone || browserZone() })); detectWizardColor(); setWizStep(2); } else if (wizStep === 2) { e.preventDefault(); setWizStep(3); } else save(e); }}>
               <div className="wiz-dots" aria-label={`Step ${wizStep} of 3`}>
                 {[1, 2, 3].map((n) => <i key={n} className={n <= wizStep ? "on" : ""} />)}
               </div>
@@ -1287,6 +1298,12 @@ export default function DashboardPage() {
                   </div>
                 </div>
                 <p className="hint">The chat only works on this website (and its subdomains).</p>
+                <label htmlFor="timezone">Time zone</label>
+                <select id="timezone" value={form.timezone} onChange={(e) => update("timezone", e.target.value)}>
+                  <option value="">Not set</option>
+                  {zoneList(form.timezone).map((z) => <option key={z} value={z}>{z.replace(/_/g, " ")}</option>)}
+                </select>
+                <p className="hint">Lets the chat answer &quot;Are you open right now?&quot; using your opening hours.</p>
               </section>
 
               <section className="card">
