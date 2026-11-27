@@ -187,7 +187,7 @@ app.post("/chat", async (req, reply) => {
 
   try {
     // Free answers first: canned replies, then the cache. No AI call.
-    const canned = cannedReply(message);
+    const canned = cannedReply(message, bot.id);
     const cached = canned ? null : getCached(bot.id, bot.name, cacheContext, message);
     const free = canned ?? cached;
     if (free) {

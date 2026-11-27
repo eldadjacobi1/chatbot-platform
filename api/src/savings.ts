@@ -45,8 +45,9 @@ function isOnlySmallTalk(n: string): boolean {
 export const GIBBERISH_REPLY = "Sorry, I didn't catch that. Could you rephrase your question?";
 
 // Returns a ready-made answer, or null if the AI should answer.
-export function cannedReply(message: string): string | null {
+export function cannedReply(message: string, botId?: string): string | null {
   const n = normalize(message);
+  if (botId === "bot_chattr_demo" && GREETING.test(n)) return "Hi! Ask me what Chatknock does, how it works, or what it costs.";
   if (HOW_ARE_YOU.test(n) || isOnlySmallTalk(n)) return "I'm doing well, thanks! How can I help you today?";
   if (GREETING.test(n)) return "Hi! You can ask me about our hours, services, prices or how to book.";
   if (THANKS.test(n)) return "You're welcome! Is there anything else I can help with?";
