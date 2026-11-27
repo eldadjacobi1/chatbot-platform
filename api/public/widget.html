@@ -57,7 +57,7 @@
     .lead p { margin: 0; color: var(--muted); }
     .lead .err { color: #b91c1c; }
     :focus-visible { outline: 3px solid #a5a0f5; outline-offset: 2px; }
-      #brand { display: none; text-align: center; font-size: 11.5px; padding: 0 14px 10px; margin-top: -4px; }
+      #brand { display: none; font-size: 10.5px; white-space: nowrap; }
       #brand a { color: var(--muted); text-decoration: none; font-weight: 600; }
       #brand a:hover { text-decoration: underline; }
       #ai-note { text-align: center; font-size: 11.5px; color: var(--muted); padding: 2px 14px 10px; line-height: 1.35; }
@@ -72,13 +72,12 @@
     <input id="input" placeholder="Type your question..." maxlength="500" autocomplete="off" />
     <button id="send" type="button">Send</button>
   </div>
-  <div id="ai-note">AI assistant. It can make mistakes, so please confirm important details with us.</div>
-  <div id="brand"><a href="https://chatknock.com/?ref=widget" target="_blank" rel="noopener">Powered by Chatknock</a></div>
+  <div id="ai-note">AI assistant. It can make mistakes, so please confirm important details with us. <span id="brand">&middot; <a href="https://chatknock.com/?ref=widget" target="_blank" rel="noopener">Powered by Chatknock</a></span></div>
 
   <script>
     // Filled in by the server: bot name, greeting, and the signed session token.
     var CONFIG = __CONFIG__;
-    if (CONFIG.branding) document.getElementById("brand").style.display = "block";
+    if (CONFIG.branding) document.getElementById("brand").style.display = "inline";
 
     var log = document.getElementById("log");
     var form = document.getElementById("form");
