@@ -1320,15 +1320,21 @@ export default function DashboardPage() {
                 })}
               </div>
               {billing?.hasCustomer && (
-                <div className="card row" style={{ justifyContent: "space-between" }}>
+                <section className="card bill-card">
                   <div>
-                    <b>Billing</b>
-                    <p className="hint" style={{ margin: 0 }}>Switch plan, update your card or cancel.{allBots.length > 1 ? " If your new plan allows fewer chatbots, the extra ones are paused (not deleted)." : ""}</p>
+                    <h2>Your subscription</h2>
+                    <ul className="bill-list">
+                      <li>Switch to another plan</li>
+                      <li>Update your card or see invoices</li>
+                      <li>Cancel and go back to Free</li>
+                    </ul>
+                    <p className="hint">Opens Stripe&apos;s secure page.{allBots.length > 1 ? " If your new plan allows fewer chatbots, the extra ones are paused, not deleted." : ""}</p>
                   </div>
-                  <button className="btn secondary" type="button" disabled={billingBusy} onClick={() => openBilling("portal")}>
-                    Manage billing
+                  <button className="btn" type="button" disabled={billingBusy} onClick={() => openBilling("portal")}>
+                    {billingBusy ? "Opening..." : "Manage subscription"}
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ marginLeft: 8, verticalAlign: "-2px" }}><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5" /></svg>
                   </button>
-                </div>
+                </section>
               )}
             </>
           )}
