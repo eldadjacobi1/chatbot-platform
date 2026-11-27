@@ -14,13 +14,7 @@ const pizza = `
 ${nav("Napoli Slice", ["Menu", "Locations", "Catering"], "Order online")}
 <div class="site-hero" style="--bn:linear-gradient(120deg,#ffe3c2,#ffb878)">
   <div class="site-copy"><h4>Pizza that tastes like Naples.</h4><p>Hand-stretched dough, 90 seconds in a wood fire.</p><span class="site-cta">See the menu</span></div>
-  <svg class="site-photo" viewBox="0 0 200 200" aria-hidden="true">
-    <circle cx="100" cy="100" r="92" fill="#d98a3d"/><circle cx="100" cy="100" r="82" fill="#e8a24f"/>
-    <circle cx="100" cy="100" r="72" fill="#c8321f"/>
-    <g fill="#fff4d6"><circle cx="70" cy="70" r="20"/><circle cx="125" cy="62" r="17"/><circle cx="140" cy="115" r="21"/><circle cx="85" cy="130" r="19"/><circle cx="108" cy="95" r="12"/></g>
-    <g fill="#2f7d3b"><path d="M72 66q10-12 18 0q-8 10-18 0Z"/><path d="M128 112q10-12 18 0q-8 10-18 0Z"/><path d="M82 126q10-12 18 0q-8 10-18 0Z"/></g>
-    <path d="M100 100L100 28M100 100L168 128M100 100L40 150" stroke="#e8a24f" stroke-width="3" opacity=".7"/>
-  </svg>
+  <img class="site-photo site-photo-img" src="/pizza-photo.png" alt="">
 </div>
 <div class="site-cards">${card(slice("#c8321f"), "Margherita slice", "$4.50")}${card(slice("#a32a1a"), "Pepperoni slice", "$5.00")}${card('<svg viewBox="0 0 64 48" aria-hidden="true"><g fill="#f2b84b"><ellipse cx="18" cy="26" rx="11" ry="9"/><ellipse cx="38" cy="20" rx="11" ry="9"/><ellipse cx="46" cy="34" rx="11" ry="9"/></g><g fill="#2f7d3b"><circle cx="18" cy="26" r="2"/><circle cx="38" cy="20" r="2"/><circle cx="46" cy="34" r="2"/></g></svg>', "Garlic knots", "$3.00")}</div>
 <div class="site-about"><h5>Open every day until midnight</h5><p>Slices from $4.50. Whole pies for pickup and delivery across Brooklyn.</p></div>`;
